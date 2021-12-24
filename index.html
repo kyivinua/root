@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <title>Google recapcha</title>
+    <script src='https://www.google.com/recaptcha/api.js'></script>
+  </head>
+  <body>
+    <h1>Google reCAPTHA Demo</h1>
+    <form id="comment_form" action='/submit' method="post">
+      <input type="email" placeholder="Type your email" size="40"><br><br>
+      <textarea name="comment" rows="8" cols="39"></textarea><br><br>
+      <div class="g-recaptcha" data-sitekey="6LcUAb4dAAAAAJ5dH2XRhNPY65nuGjmgHTG8JqWl-"></div><br>
+      <input type="submit" name="submit" value="Post comment"><br><br>
+    </form>
+  
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js"></script>
+
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $('#comment_form').submit(function() {
+        $(this).ajaxSubmit({
+          error: function(xhr) {
+            status('Error: ' + xhr.status);
+          },
+         success: function(response) {
+          console.log(response);
+         }
+        });
+        //Very important line, it disable the page refresh.
+        return false;
+      });
+    });
+  </script>
+  </body>
+</html>
