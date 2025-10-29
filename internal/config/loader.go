@@ -18,9 +18,10 @@ type Config struct {
 	Services    []ServiceConfig   `yaml:"services"`
 	Quality     QualityConfig     `yaml:"quality"`
 	Enricher    EnricherConfig    `yaml:"enricher"`
-	Diagrams    DiagramConfig     `yaml:"diagrams"`
-	Templates   TemplateConfig    `yaml:"templates"`
-	Logging     LoggingConfig     `yaml:"logging"`
+	Diagrams        DiagramConfig         `yaml:"diagrams"`
+	Templates       TemplateConfig        `yaml:"templates"`
+	Logging         LoggingConfig         `yaml:"logging"`
+	SharedResources SharedResourcesConfig `yaml:"shared_resources"`
 }
 
 // ServiceConfig represents service-specific configuration.
@@ -100,6 +101,17 @@ type LoggingConfig struct {
 	Level      string `yaml:"level"`
 	Format     string `yaml:"format"` // json, console
 	OutputFile string `yaml:"output_file"`
+}
+
+// SharedResourcesConfig represents shared resource resolution settings.
+type SharedResourcesConfig struct {
+	Enabled                 bool     `yaml:"enabled"`
+	SharedProtoPaths        []string `yaml:"shared_proto_paths"`
+	CommonDirPatterns       []string `yaml:"common_dir_patterns"`
+	AutoDiscover            bool     `yaml:"auto_discover"`
+	ImportStrategy          string   `yaml:"import_strategy"`
+	GenerateVirtualServices bool     `yaml:"generate_virtual_services"`
+	DeduplicateMessages     bool     `yaml:"deduplicate_messages"`
 }
 
 // Load loads configuration from a YAML file.
@@ -257,6 +269,21 @@ func applyDefaults(config *Config) {
 	for i := range config.Services {
 		if !config.Services[i].Enabled {
 			config.Services[i].Enabled = true
+		}
+	}
+
+	// Shared resources defaults
+	if config.SharedResources.ImportStrategy == "" {
+		config.SharedResources.ImportStrategy = "hybrid"
+	}
+	if len(config.SharedResources.CommonDirPatterns) == 0 {
+		config.SharedResources.CommonDirPatterns = []string{
+			"common",
+			"shared",
+			"proto/common",
+			"proto/shared",
+			"api/common",
+			"api/shared",
 		}
 	}
 }

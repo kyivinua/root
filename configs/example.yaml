@@ -159,6 +159,38 @@ templates:
   # Message template file name
   message_template: "message.md.tmpl"
 
+# Shared resources configuration
+shared_resources:
+  # Enable shared resource resolution
+  enabled: true
+
+  # Paths to shared proto files
+  shared_proto_paths:
+    - "./proto/common"
+    - "./proto/shared"
+    - "./api/common"
+
+  # Common directory patterns to auto-discover
+  common_dir_patterns:
+    - "common"
+    - "shared"
+    - "proto/common"
+    - "proto/shared"
+    - "api/common"
+    - "api/shared"
+
+  # Auto-discover shared proto files
+  auto_discover: true
+
+  # Import resolution strategy: local, global, hybrid
+  import_strategy: "hybrid"
+
+  # Generate virtual services for shared protos without services
+  generate_virtual_services: false
+
+  # Deduplicate shared messages across services
+  deduplicate_messages: true
+
 # Logging settings
 logging:
   # Log level: debug, info, warn, error
