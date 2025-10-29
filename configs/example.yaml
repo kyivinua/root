@@ -1,0 +1,121 @@
+# Docgen-Tool Example Configuration
+# This file demonstrates all available configuration options
+
+version: "1.0"
+project_name: "example-project"
+output_dir: "./docs/generated"
+
+# Services to generate documentation for
+services:
+  - name: "UserService"
+    proto_files:
+      - "./proto/user/v1/service.proto"
+      - "./proto/user/v1/models.proto"
+    enabled: true
+    package: "user.v1"
+    version: "1.0"
+
+  - name: "ProductService"
+    proto_files:
+      - "./proto/product/v1/service.proto"
+    enabled: true
+    package: "product.v1"
+    version: "1.0"
+
+  - name: "OrderService"
+    proto_files:
+      - "./proto/order/v1/service.proto"
+    enabled: true
+    package: "order.v1"
+    version: "2.0"
+
+# Quality validation settings
+quality:
+  # Target coverage percentage (0-100)
+  coverage_target: 80
+
+  # Target description quality score (0-100)
+  description_quality_target: 85
+
+  # Automatically fix quality issues
+  auto_fix: true
+
+  # Fail generation if quality gate is not met
+  fail_on_quality_gate: false
+
+  # Minimum method documentation coverage (0-100)
+  min_method_coverage: 75
+
+  # Minimum field documentation coverage (0-100)
+  min_field_coverage: 70
+
+# AI enrichment settings
+enricher:
+  # Provider: currently only "claude" is supported
+  provider: "claude"
+
+  # API key (use environment variable: ${ANTHROPIC_API_KEY})
+  api_key: "${ANTHROPIC_API_KEY}"
+
+  # Enable AI enrichment
+  enabled: false
+
+  # Model to use
+  model: "claude-3-5-sonnet-20241022"
+
+  # Maximum tokens per request
+  max_tokens: 1024
+
+  # Temperature for generation (0.0 - 1.0)
+  temperature: 0.3
+
+  # Enable response caching
+  cache_enabled: true
+
+  # Rate limit: requests per minute
+  rate_limit_per_min: 50
+
+  # Number of parallel requests
+  parallel_requests: 5
+
+# Diagram generation settings
+diagrams:
+  # Enable diagram generation
+  enabled: true
+
+  # Generate service architecture diagrams
+  service_graph: true
+
+  # Generate message structure diagrams
+  message_graph: true
+
+  # Generate sequence diagrams for methods
+  sequence_graph: true
+
+  # Generate overview diagram of all services
+  overview_graph: true
+
+# Template settings (optional)
+templates:
+  # Directory containing custom templates
+  dir: "./templates"
+
+  # Service template file name
+  service_template: "service.md.tmpl"
+
+  # Method template file name
+  method_template: "method.md.tmpl"
+
+  # Message template file name
+  message_template: "message.md.tmpl"
+
+# Logging settings
+logging:
+  # Log level: debug, info, warn, error
+  level: "info"
+
+  # Log format: json, console
+  format: "json"
+
+  # Output file (optional, defaults to stderr)
+  output_file: ""
