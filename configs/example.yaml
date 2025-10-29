@@ -78,6 +78,56 @@ enricher:
   # Number of parallel requests
   parallel_requests: 5
 
+  # Advanced AI enrichment features
+  advanced:
+    # Enable advanced enrichment features
+    enabled: false
+
+    # Use context-aware enrichment (considers full service context)
+    use_context_aware: true
+
+    # Generate code examples for methods
+    use_example_generation: false
+
+    # Extract and maintain terminology consistency
+    use_terminology: true
+
+    # Analyze and suggest API best practices
+    use_best_practices: false
+
+    # Use multi-pass refinement for higher quality
+    use_multi_pass: false
+
+    # Number of refinement passes (2-3 recommended)
+    multi_pass_count: 2
+
+    # Batch size for efficient API usage
+    batch_size: 5
+
+    # Detail level: minimal, standard, detailed, comprehensive
+    detail_level: "standard"
+
+    # Writing tone: technical, conversational, formal
+    tone: "technical"
+
+    # Include code examples in documentation
+    include_code_examples: false
+
+    # Programming languages for examples
+    languages_for_examples:
+      - "go"
+      - "python"
+      - "typescript"
+
+    # Project domain (helps AI understand context)
+    project_domain: "Microservices API"
+
+    # Minimum quality score (0-100) to accept enrichment
+    min_quality_score: 70.0
+
+    # Enable AI-powered quality scoring
+    enable_quality_scoring: false
+
 # Diagram generation settings
 diagrams:
   # Enable diagram generation

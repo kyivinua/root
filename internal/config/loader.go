@@ -44,15 +44,37 @@ type QualityConfig struct {
 
 // EnricherConfig represents AI enrichment settings.
 type EnricherConfig struct {
-	Provider        string `yaml:"provider"`
-	APIKey          string `yaml:"api_key"`
-	Enabled         bool   `yaml:"enabled"`
-	Model           string `yaml:"model"`
-	MaxTokens       int    `yaml:"max_tokens"`
-	Temperature     float64 `yaml:"temperature"`
-	CacheEnabled    bool   `yaml:"cache_enabled"`
-	RateLimitPerMin int    `yaml:"rate_limit_per_min"`
-	ParallelRequests int   `yaml:"parallel_requests"`
+	Provider         string   `yaml:"provider"`
+	APIKey           string   `yaml:"api_key"`
+	Enabled          bool     `yaml:"enabled"`
+	Model            string   `yaml:"model"`
+	MaxTokens        int      `yaml:"max_tokens"`
+	Temperature      float64  `yaml:"temperature"`
+	CacheEnabled     bool     `yaml:"cache_enabled"`
+	RateLimitPerMin  int      `yaml:"rate_limit_per_min"`
+	ParallelRequests int      `yaml:"parallel_requests"`
+
+	// Advanced features
+	Advanced         AdvancedEnricherConfig `yaml:"advanced"`
+}
+
+// AdvancedEnricherConfig represents advanced AI enrichment settings.
+type AdvancedEnricherConfig struct {
+	Enabled              bool     `yaml:"enabled"`
+	UseContextAware      bool     `yaml:"use_context_aware"`
+	UseExampleGeneration bool     `yaml:"use_example_generation"`
+	UseTerminology       bool     `yaml:"use_terminology"`
+	UseBestPractices     bool     `yaml:"use_best_practices"`
+	UseMultiPass         bool     `yaml:"use_multi_pass"`
+	MultiPassCount       int      `yaml:"multi_pass_count"`
+	BatchSize            int      `yaml:"batch_size"`
+	DetailLevel          string   `yaml:"detail_level"`
+	Tone                 string   `yaml:"tone"`
+	IncludeCodeExamples  bool     `yaml:"include_code_examples"`
+	LanguagesForExamples []string `yaml:"languages_for_examples"`
+	ProjectDomain        string   `yaml:"project_domain"`
+	MinQualityScore      float64  `yaml:"min_quality_score"`
+	EnableQualityScoring bool     `yaml:"enable_quality_scoring"`
 }
 
 // DiagramConfig represents diagram generation settings.
@@ -198,6 +220,28 @@ func applyDefaults(config *Config) {
 		}
 		if config.Enricher.ParallelRequests == 0 {
 			config.Enricher.ParallelRequests = 5
+		}
+
+		// Advanced enricher defaults
+		if config.Enricher.Advanced.Enabled {
+			if config.Enricher.Advanced.MultiPassCount == 0 {
+				config.Enricher.Advanced.MultiPassCount = 2
+			}
+			if config.Enricher.Advanced.BatchSize == 0 {
+				config.Enricher.Advanced.BatchSize = 5
+			}
+			if config.Enricher.Advanced.DetailLevel == "" {
+				config.Enricher.Advanced.DetailLevel = "standard"
+			}
+			if config.Enricher.Advanced.Tone == "" {
+				config.Enricher.Advanced.Tone = "technical"
+			}
+			if len(config.Enricher.Advanced.LanguagesForExamples) == 0 {
+				config.Enricher.Advanced.LanguagesForExamples = []string{"go", "python"}
+			}
+			if config.Enricher.Advanced.MinQualityScore == 0 {
+				config.Enricher.Advanced.MinQualityScore = 70.0
+			}
 		}
 	}
 

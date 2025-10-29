@@ -10,6 +10,7 @@ Docgen-tool automatically generates comprehensive, high-quality documentation fo
 
 ## Features
 
+### Core Features
 - **🤖 AI-Powered Enrichment** - Automatic description enhancement using Claude AI
 - **✅ Quality Validation** - Comprehensive coverage and quality metrics with configurable thresholds
 - **📊 Diagram Generation** - Beautiful Mermaid diagrams for services, messages, and sequences
@@ -18,6 +19,17 @@ Docgen-tool automatically generates comprehensive, high-quality documentation fo
 - **🔒 Security-First** - Built with security best practices and input validation
 - **🎨 Customizable** - Flexible templates and configuration options
 - **📈 Quality Gates** - Enforce documentation standards across your team
+
+### Advanced AI Features ✨ NEW
+- **🧠 Context-Aware Enrichment** - Understands service relationships and dependencies
+- **💻 Code Example Generation** - Automatic examples in Go, Python, TypeScript, Java
+- **📚 Terminology Management** - Extracts and maintains consistent terminology
+- **🎯 Best Practice Analysis** - AI-powered API design suggestions
+- **🔄 Multi-Pass Refinement** - Iterative quality improvement
+- **📦 Batch Processing** - Efficient API usage for large projects
+- **⭐ Quality Scoring** - AI-powered documentation quality assessment
+
+See [Advanced AI Features Documentation](docs/ADVANCED_AI.md) for details
 
 ## Quick Start
 
@@ -104,6 +116,7 @@ See [configs/example.yaml](configs/example.yaml) for all options.
 
 - **[Quick Start Guide](docs/QUICKSTART.md)** - Get started in 5 minutes
 - **[Architecture](docs/ARCHITECTURE.md)** - Detailed architecture documentation
+- **[Advanced AI Features](docs/ADVANCED_AI.md)** - Advanced AI enrichment capabilities
 - **[Example Configuration](configs/example.yaml)** - Complete configuration reference
 
 ## Key Components
