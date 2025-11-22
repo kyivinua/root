@@ -24,6 +24,7 @@ type DocModule struct {
 	Name        string       `json:"name"`
 	Version     string       `json:"version,omitempty"`
 	Package     string       `json:"package"`
+	FilePath    string       `json:"file_path,omitempty"` // Added for diagram compatibility
 	Summary     string       `json:"summary,omitempty"`
 	Description string       `json:"description,omitempty"`
 	Services    []DocService `json:"services"`
@@ -44,6 +45,11 @@ type DocService struct {
 	Methods     []DocMethod `json:"methods"`
 }
 
+// FullName returns the FQN for compatibility with diagram types
+func (d *DocService) FullName() string {
+	return d.FQN
+}
+
 // DocMethod represents a service method.
 type DocMethod struct {
 	FQN           string   `json:"fqn"`
@@ -52,11 +58,26 @@ type DocMethod struct {
 	OutputType    string   `json:"output_type"`
 	HTTPMethods   []string `json:"http_methods,omitempty"`
 	HTTPPaths     []string `json:"http_paths,omitempty"`
-	StreamingMode string   `json:"streaming_mode,omitempty"`
+	StreamingMode string   `json:"streaming_mode,omitempty"` // "unary", "client_streaming", "server_streaming", "bidi_streaming"
 	Visibility    string   `json:"visibility,omitempty"`
 	Deprecated    bool     `json:"deprecated"`
 	Summary       string   `json:"summary,omitempty"`
 	Description   string   `json:"description,omitempty"`
+}
+
+// FullName returns the FQN for compatibility with diagram types
+func (d *DocMethod) FullName() string {
+	return d.FQN
+}
+
+// ClientStreaming returns true if this is a client streaming RPC
+func (d *DocMethod) ClientStreaming() bool {
+	return d.StreamingMode == "client_streaming" || d.StreamingMode == "bidi_streaming"
+}
+
+// ServerStreaming returns true if this is a server streaming RPC
+func (d *DocMethod) ServerStreaming() bool {
+	return d.StreamingMode == "server_streaming" || d.StreamingMode == "bidi_streaming"
 }
 
 // DocMessage represents a Protobuf message.
@@ -71,14 +92,21 @@ type DocMessage struct {
 	Deprecated  bool       `json:"deprecated"`
 }
 
+// FullName returns the FQN for compatibility with diagram types
+func (d *DocMessage) FullName() string {
+	return d.FQN
+}
+
 // DocField represents a message field.
 type DocField struct {
 	Name        string `json:"name"`
 	Number      int32  `json:"number"`
 	Label       string `json:"label"` // "optional", "required", "repeated"
 	Type        string `json:"type"`
+	TypeName    string `json:"type_name,omitempty"` // Added for diagram compatibility
 	JSONName    string `json:"json_name,omitempty"`
 	Oneof       string `json:"oneof,omitempty"`
+	OneofGroup  string `json:"oneof_group,omitempty"` // Added for diagram compatibility (alias for Oneof)
 	Required    bool   `json:"required"`
 	Deprecated  bool   `json:"deprecated"`
 	Summary     string `json:"summary,omitempty"`
@@ -95,6 +123,12 @@ type DocEnum struct {
 	Description string         `json:"description,omitempty"`
 	Values      []DocEnumValue `json:"values"`
 	Deprecated  bool           `json:"deprecated"`
+	Visibility  string         `json:"visibility,omitempty"` // Added for diagram compatibility
+}
+
+// FullName returns the FQN for compatibility with diagram types
+func (d *DocEnum) FullName() string {
+	return d.FQN
 }
 
 // DocEnumValue represents an enum value.

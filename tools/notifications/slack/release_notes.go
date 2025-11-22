@@ -1,7 +1,6 @@
 package slack
 
 import (
-	"bufio"
 	"fmt"
 	"os/exec"
 	"regexp"

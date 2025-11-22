@@ -3,7 +3,7 @@ package adapters
 import (
 	"strings"
 
-	"github.com/kyivinua/root/tools/protodocs/enricher"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/enricher"
 )
 
 // AdaptiveRAGStrategy implements SmartStrategy for adaptive RAG usage

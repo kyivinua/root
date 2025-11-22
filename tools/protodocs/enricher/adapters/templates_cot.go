@@ -7,7 +7,7 @@ import (
 	"sync"
 	"text/template"
 
-	"github.com/kyivinua/root/tools/protodocs/enricher"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/enricher"
 )
 
 // CoTTemplateEngine implements PromptTemplateEngine with Chain-of-Thought and XML formatting

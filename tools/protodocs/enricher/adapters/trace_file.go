@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/kyivinua/root/tools/protodocs/enricher"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/enricher"
 )
 
 // FileTraceSink implements TraceSink by writing to JSON files

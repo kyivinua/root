@@ -44,7 +44,7 @@ func (g *DiagramGenerator) generateServiceMapDiagram(model *ApiDocModel) Generat
 	}
 
 	// Process each module
-	for moduleIdx, module := range model.Modules {
+	for _, module := range model.Modules {
 		if len(module.Services) == 0 {
 			continue // Skip modules without services
 		}

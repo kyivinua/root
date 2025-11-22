@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyivinua/root/tools/protodocs/enricher"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/enricher"
 )
 
 // EntropyJudgeSafetyGuard implements SafetyGuard using semantic entropy and LLM-as-judge

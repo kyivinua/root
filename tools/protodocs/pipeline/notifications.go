@@ -87,10 +87,10 @@ func (nm *NotificationManager) NotifyPipelineComplete(success bool, model *ApiDo
 
 	if model != nil {
 		result.TotalModules = len(model.Modules)
-		if stats, ok := model.Statistics["total_services"].(int64); ok {
+		if stats, ok := model.Statistics["total_services"]; ok {
 			result.TotalServices = int(stats)
 		}
-		if stats, ok := model.Statistics["total_messages"].(int64); ok {
+		if stats, ok := model.Statistics["total_messages"]; ok {
 			result.TotalMessages = int(stats)
 		}
 	}

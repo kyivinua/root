@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/kyivinua/docgen-tool/tools/protoctx"
-	"github.com/kyivinua/root/tools/protodocs/diagrams"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/diagrams"
 )
 
 // Pipeline orchestrates the documentation generation pipeline.
@@ -300,7 +300,7 @@ func (p *Pipeline) runEnrichment(model *ApiDocModel) (*ApiDocModel, error) {
 	}
 
 	// Load enriched model
-	enrichedModel, err := LoadApiDocModel(p.config.Enrichment.OutputModelPath)
+	enrichedModel, err := LoadApiDocModelFromFile(p.config.Enrichment.OutputModelPath)
 	if err != nil {
 		p.logger.Printf("Warning: Failed to load enriched model: %v\n", err)
 		p.logger.Println("Continuing with non-enriched model...")
@@ -394,7 +394,7 @@ func convertServices(services []DocService) []diagrams.DocService {
 	for i, svc := range services {
 		result[i] = diagrams.DocService{
 			Name:        svc.Name,
-			FullName:    svc.FullName,
+			FullName:    svc.FullName(),
 			Description: svc.Description,
 			Methods:     convertMethods(svc.Methods),
 			Visibility:  svc.Visibility,
@@ -408,25 +408,40 @@ func convertMethods(methods []DocMethod) []diagrams.DocMethod {
 	for i, method := range methods {
 		result[i] = diagrams.DocMethod{
 			Name:            method.Name,
-			FullName:        method.FullName,
+			FullName:        method.FullName(),
 			Description:     method.Description,
 			InputType:       method.InputType,
 			OutputType:      method.OutputType,
-			ClientStreaming: method.ClientStreaming,
-			ServerStreaming: method.ServerStreaming,
-			HTTPMethods:     convertHTTPMethods(method.HTTPMethods),
+			ClientStreaming: method.ClientStreaming(),
+			ServerStreaming: method.ServerStreaming(),
+			HTTPMethods:     convertHTTPMethods(method.HTTPMethods, method.HTTPPaths),
 			Visibility:      method.Visibility,
 		}
 	}
 	return result
 }
 
-func convertHTTPMethods(httpMethods []HTTPMethodInfo) []diagrams.HTTPMethodInfo {
-	result := make([]diagrams.HTTPMethodInfo, len(httpMethods))
-	for i, hm := range httpMethods {
-		result[i] = diagrams.HTTPMethodInfo{
-			Method: hm.Method,
-			Path:   hm.Path,
+func convertHTTPMethods(httpMethods, httpPaths []string) []diagrams.HTTPMethodInfo {
+	maxLen := len(httpMethods)
+	if len(httpPaths) > maxLen {
+		maxLen = len(httpPaths)
+	}
+
+	result := make([]diagrams.HTTPMethodInfo, 0, maxLen)
+	for i := 0; i < maxLen; i++ {
+		method := ""
+		path := ""
+		if i < len(httpMethods) {
+			method = httpMethods[i]
+		}
+		if i < len(httpPaths) {
+			path = httpPaths[i]
+		}
+		if method != "" || path != "" {
+			result = append(result, diagrams.HTTPMethodInfo{
+				Method: method,
+				Path:   path,
+			})
 		}
 	}
 	return result
@@ -437,10 +452,10 @@ func convertMessages(messages []DocMessage) []diagrams.DocMessage {
 	for i, msg := range messages {
 		result[i] = diagrams.DocMessage{
 			Name:        msg.Name,
-			FullName:    msg.FullName,
+			FullName:    msg.FullName(),
 			Description: msg.Description,
 			Fields:      convertFields(msg.Fields),
-			Visibility:  msg.Visibility,
+			Visibility:  "", // DocMessage in pipeline doesn't have Visibility field
 		}
 	}
 	return result
@@ -467,7 +482,7 @@ func convertEnums(enums []DocEnum) []diagrams.DocEnum {
 	for i, enum := range enums {
 		result[i] = diagrams.DocEnum{
 			Name:        enum.Name,
-			FullName:    enum.FullName,
+			FullName:    enum.FullName(),
 			Description: enum.Description,
 			Values:      convertEnumValues(enum.Values),
 			Visibility:  enum.Visibility,

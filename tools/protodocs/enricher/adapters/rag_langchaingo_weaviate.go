@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kyivinua/root/tools/protodocs/enricher"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/enricher"
 	"github.com/tmc/langchaingo/embeddings"
 	"github.com/tmc/langchaingo/vectorstores"
 	"github.com/tmc/langchaingo/vectorstores/weaviate"
