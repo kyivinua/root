@@ -570,9 +570,53 @@ func (p *Pipeline) runHLDGeneration(model *ApiDocModel) error {
 func (p *Pipeline) runDocsGeneration() error {
 	p.logger.Println("Stage 5: Docs Generation")
 
-	// For now, skip docs generation as it requires buf plugins
-	// TODO: Implement docs generation with buf generate
-	p.logger.Println("Docs generation not yet implemented, skipping")
+	// Use protoc-gen-doc or consolidated generator
+	return p.runConsolidatedDocsGeneration()
+}
+
+// runConsolidatedDocsGeneration generates consolidated documentation using our own generator.
+func (p *Pipeline) runConsolidatedDocsGeneration() error {
+	p.logger.Println("Generating consolidated documentation")
+
+	// Check if consolidated-docgen exists
+	consolidatedBin := filepath.Join("tools", "protodocs", "cmd", "consolidated-docgen", "consolidated-docgen")
+	if _, err := os.Stat(consolidatedBin); os.IsNotExist(err) {
+		// Try to build it
+		p.logger.Println("Building consolidated-docgen...")
+		buildCmd := exec.Command("go", "build", "-o", consolidatedBin,
+			"./tools/protodocs/cmd/consolidated-docgen")
+		if output, err := buildCmd.CombinedOutput(); err != nil {
+			p.logger.Printf("Warning: Could not build consolidated-docgen: %v\n%s", err, string(output))
+			p.logger.Println("Skipping docs generation")
+			return nil
+		}
+	}
+
+	// Ensure output directory exists
+	if err := os.MkdirAll(p.config.Docs.OutputDir, 0755); err != nil {
+		return fmt.Errorf("create output directory: %w", err)
+	}
+
+	// Run consolidated-docgen
+	args := []string{
+		"-proto-dir=" + p.config.ProtoRoot,
+		"-output-dir=" + p.config.Docs.OutputDir,
+	}
+
+	// Add theme if configured
+	if p.config.Diagrams.Theme != "" {
+		args = append(args, "-theme="+p.config.Diagrams.Theme)
+	}
+
+	cmd := exec.Command(consolidatedBin, args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		p.logger.Printf("Docs generation output:\n%s", string(output))
+		return fmt.Errorf("docs generation failed: %w", err)
+	}
+
+	p.logger.Printf("Documentation generated successfully to %s", p.config.Docs.OutputDir)
+	p.logger.Printf("Output:\n%s", string(output))
 
 	return nil
 }
@@ -581,10 +625,113 @@ func (p *Pipeline) runDocsGeneration() error {
 func (p *Pipeline) runOpenAPIGeneration() error {
 	p.logger.Println("Stage 6: OpenAPI Generation")
 
-	// For now, skip OpenAPI generation as it requires buf plugins
-	// TODO: Implement OpenAPI generation with buf generate
-	p.logger.Println("OpenAPI generation not yet implemented, skipping")
+	// Check if buf or protoc-gen-openapi is available
+	if p.config.UseBuf {
+		return p.runBufOpenAPIGeneration()
+	}
 
+	return p.runProtocOpenAPIGeneration()
+}
+
+// runBufOpenAPIGeneration generates OpenAPI using buf.
+func (p *Pipeline) runBufOpenAPIGeneration() error {
+	p.logger.Println("Generating OpenAPI with buf")
+
+	// Check if buf is installed
+	if _, err := exec.LookPath("buf"); err != nil {
+		p.logger.Println("buf not found, skipping OpenAPI generation")
+		return nil
+	}
+
+	// Ensure output directory exists
+	if err := os.MkdirAll(p.config.OpenAPI.OutputDir, 0755); err != nil {
+		return fmt.Errorf("create openapi output directory: %w", err)
+	}
+
+	// Run buf generate for OpenAPI
+	// Note: Requires buf.gen.yaml with protoc-gen-openapiv3 plugin configured
+	args := []string{"generate", "--path", p.config.ProtoRoot}
+
+	// Look for buf.gen.yaml
+	bufGenFile := "buf.gen.yaml"
+	if _, err := os.Stat(bufGenFile); os.IsNotExist(err) {
+		p.logger.Printf("Warning: buf.gen.yaml not found, skipping OpenAPI generation")
+		p.logger.Println("Create buf.gen.yaml with protoc-gen-openapiv3 plugin configuration")
+		return nil
+	}
+
+	cmd := exec.Command("buf", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		p.logger.Printf("buf generate output:\n%s", string(output))
+		p.logger.Println("Skipping OpenAPI generation (plugin may not be installed)")
+		return nil
+	}
+
+	p.logger.Printf("OpenAPI generated successfully to %s", p.config.OpenAPI.OutputDir)
+	return nil
+}
+
+// runProtocOpenAPIGeneration generates OpenAPI using protoc.
+func (p *Pipeline) runProtocOpenAPIGeneration() error {
+	p.logger.Println("Generating OpenAPI with protoc")
+
+	// Check if protoc is installed
+	if _, err := exec.LookPath("protoc"); err != nil {
+		p.logger.Println("protoc not found, skipping OpenAPI generation")
+		return nil
+	}
+
+	// Check if protoc-gen-openapiv3 is installed
+	if _, err := exec.LookPath("protoc-gen-openapiv3"); err != nil {
+		p.logger.Println("protoc-gen-openapiv3 not found, skipping OpenAPI generation")
+		p.logger.Println("Install with: go install github.com/google/gnostic/cmd/protoc-gen-openapi@latest")
+		return nil
+	}
+
+	// Ensure output directory exists
+	if err := os.MkdirAll(p.config.OpenAPI.OutputDir, 0755); err != nil {
+		return fmt.Errorf("create openapi output directory: %w", err)
+	}
+
+	// Find all proto files
+	var protoFiles []string
+	err := filepath.Walk(p.config.ProtoRoot, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".proto" {
+			protoFiles = append(protoFiles, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("find proto files: %w", err)
+	}
+
+	if len(protoFiles) == 0 {
+		p.logger.Println("No proto files found")
+		return nil
+	}
+
+	// Run protoc for each file
+	for _, protoFile := range protoFiles {
+		args := []string{
+			"--openapiv3_out=" + p.config.OpenAPI.OutputDir,
+			"--proto_path=" + p.config.ProtoRoot,
+			"--proto_path=/usr/include", // For well-known types
+			protoFile,
+		}
+
+		cmd := exec.Command("protoc", args...)
+		if output, err := cmd.CombinedOutput(); err != nil {
+			p.logger.Printf("Warning: Failed to generate OpenAPI for %s: %v\n%s",
+				protoFile, err, string(output))
+			continue
+		}
+	}
+
+	p.logger.Printf("OpenAPI generated successfully to %s", p.config.OpenAPI.OutputDir)
 	return nil
 }
 

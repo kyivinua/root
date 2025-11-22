@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+const (
+	maxRetries     = 3
+	retryWaitTime  = 2 * time.Second
+	retryBackoff   = 2 // exponential backoff multiplier
+)
+
 // Client is a Confluence REST API client.
 type Client struct {
 	baseURL    string
@@ -232,4 +238,45 @@ func (c *Client) DeletePage(pageID string) error {
 	}
 
 	return nil
+}
+
+// doRequestWithRetry executes an HTTP request with retry logic for transient failures.
+func (c *Client) doRequestWithRetry(req *http.Request) (*http.Response, error) {
+	var resp *http.Response
+	var err error
+
+	waitTime := retryWaitTime
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			// Wait before retry with exponential backoff
+			time.Sleep(waitTime)
+			waitTime *= retryBackoff
+		}
+
+		// Clone request for retry (body may be consumed)
+		reqCopy := req.Clone(req.Context())
+
+		resp, err = c.httpClient.Do(reqCopy)
+		if err == nil {
+			// Check for retryable status codes
+			if resp.StatusCode < 500 && resp.StatusCode != 429 {
+				// Success or client error (not retryable)
+				return resp, nil
+			}
+
+			// Server error or rate limit - retry
+			if attempt < maxRetries {
+				resp.Body.Close()
+				continue
+			}
+		}
+
+		// Network error - retry
+		if attempt < maxRetries {
+			continue
+		}
+	}
+
+	return resp, err
 }
