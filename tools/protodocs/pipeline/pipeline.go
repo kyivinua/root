@@ -9,6 +9,7 @@ import (
 
 	"github.com/kyivinua/docgen-tool/tools/protoctx"
 	"github.com/kyivinua/docgen-tool/tools/protodocs/diagrams"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/publishers/confluence"
 )
 
 // Pipeline orchestrates the documentation generation pipeline.
@@ -133,6 +134,14 @@ func (p *Pipeline) RunAll() error {
 	// Stage 7: Site Assembly
 	if err := p.runSiteAssembly(); err != nil {
 		return fmt.Errorf("site assembly: %w", err)
+	}
+
+	// Stage 8: Publishers (Confluence, etc.)
+	if p.config.Publishers.Confluence.Enabled {
+		if err := p.runConfluencePublishing(); err != nil {
+			p.logger.Printf("Warning: Confluence publishing failed: %v", err)
+			// Don't fail the pipeline for publishing errors
+		}
 	}
 
 	p.logger.Printf("Pipeline completed successfully. Model: %d modules, %d services, %d messages\n",
@@ -583,10 +592,88 @@ func (p *Pipeline) runOpenAPIGeneration() error {
 func (p *Pipeline) runSiteAssembly() error {
 	p.logger.Println("Stage 7: Site Assembly")
 
-	// For now, skip site assembly as it requires mkdocs/docusaurus
-	// TODO: Implement site assembly with mkdocs build
-	p.logger.Println("Site assembly not yet implemented, skipping")
+	switch p.config.Site.Generator {
+	case "mkdocs":
+		return p.runMkDocsBuild()
+	case "docusaurus":
+		return p.runDocusaurusBuild()
+	case "none", "":
+		p.logger.Println("Site assembly disabled, skipping")
+		return nil
+	default:
+		return fmt.Errorf("unknown site generator: %s", p.config.Site.Generator)
+	}
+}
 
+// runMkDocsBuild builds the site using MkDocs.
+func (p *Pipeline) runMkDocsBuild() error {
+	p.logger.Println("Building site with MkDocs")
+
+	// Check if mkdocs is installed
+	if _, err := exec.LookPath("mkdocs"); err != nil {
+		p.logger.Println("mkdocs not found, skipping site assembly")
+		p.logger.Println("Install with: pip install mkdocs mkdocs-material")
+		return nil
+	}
+
+	// Check if config file exists
+	if p.config.Site.ConfigPath != "" {
+		if _, err := os.Stat(p.config.Site.ConfigPath); os.IsNotExist(err) {
+			p.logger.Printf("mkdocs config not found at %s, skipping", p.config.Site.ConfigPath)
+			return nil
+		}
+	}
+
+	// Build the site
+	args := []string{"build"}
+
+	if p.config.Site.ConfigPath != "" {
+		args = append(args, "-f", p.config.Site.ConfigPath)
+	}
+
+	if p.config.Site.OutputDir != "" {
+		args = append(args, "-d", p.config.Site.OutputDir)
+	}
+
+	cmd := exec.Command("mkdocs", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		p.logger.Printf("mkdocs build output:\n%s", string(output))
+		return fmt.Errorf("mkdocs build failed: %w", err)
+	}
+
+	p.logger.Printf("Site built successfully to %s", p.config.Site.OutputDir)
+	return nil
+}
+
+// runDocusaurusBuild builds the site using Docusaurus.
+func (p *Pipeline) runDocusaurusBuild() error {
+	p.logger.Println("Building site with Docusaurus")
+
+	// Check if npm is installed
+	if _, err := exec.LookPath("npm"); err != nil {
+		p.logger.Println("npm not found, skipping site assembly")
+		p.logger.Println("Install Node.js and npm first")
+		return nil
+	}
+
+	// Check if docusaurus directory exists
+	docusaurusDir := filepath.Dir(p.config.Site.ConfigPath)
+	if _, err := os.Stat(docusaurusDir); os.IsNotExist(err) {
+		p.logger.Printf("Docusaurus directory not found at %s, skipping", docusaurusDir)
+		return nil
+	}
+
+	// Run npm build
+	cmd := exec.Command("npm", "run", "build")
+	cmd.Dir = docusaurusDir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		p.logger.Printf("Docusaurus build output:\n%s", string(output))
+		return fmt.Errorf("docusaurus build failed: %w", err)
+	}
+
+	p.logger.Printf("Site built successfully")
 	return nil
 }
 
@@ -610,4 +697,77 @@ func getCurrentBranch() string {
 	}
 
 	return string(output[:len(output)-1]) // Remove trailing newline
+}
+
+// runConfluencePublishing executes the Confluence publishing stage.
+func (p *Pipeline) runConfluencePublishing() error {
+	p.logger.Println("Stage 8: Confluence Publishing")
+
+	cfg := &p.config.Publishers.Confluence
+
+	// Validate configuration
+	if cfg.BaseURL == "" {
+		return fmt.Errorf("confluence base_url is required")
+	}
+	if cfg.SpaceKey == "" {
+		return fmt.Errorf("confluence space_key is required")
+	}
+
+	// Create publisher
+	publisherCfg := &confluence.PublisherConfig{
+		BaseURL:              cfg.BaseURL,
+		Username:             cfg.Username,
+		APIToken:             cfg.APIToken,
+		SpaceKey:             cfg.SpaceKey,
+		ParentPageID:         cfg.ParentPageID,
+		CreatePagePerService: cfg.CreatePagePerService,
+		PageTitlePrefix:      cfg.PageTitlePrefix,
+		IncludeTOC:           cfg.IncludeTOC,
+		IncludeDiagrams:      cfg.IncludeDiagrams,
+		IncludeCodeExamples:  cfg.IncludeCodeExamples,
+		UpdateExisting:       cfg.UpdateExisting,
+		VersionLabel:         cfg.VersionLabel,
+		VisibilityFilter:     cfg.VisibilityFilter,
+	}
+
+	publisher := confluence.NewPublisher(publisherCfg)
+
+	// Publish documentation
+	var result *confluence.PublishResult
+	var err error
+
+	if cfg.CreatePagePerService {
+		// Publish separate pages for each service
+		result, err = publisher.PublishFromMarkdownFiles(p.config.Docs.OutputDir)
+	} else {
+		// Publish as a single consolidated page
+		title := "API Documentation"
+		if cfg.PageTitlePrefix != "" {
+			title = cfg.PageTitlePrefix + " " + title
+		}
+		result, err = publisher.PublishConsolidatedPage(p.config.Docs.OutputDir, title)
+	}
+
+	if err != nil {
+		return fmt.Errorf("publish to confluence: %w", err)
+	}
+
+	// Log results
+	p.logger.Printf("Confluence publishing complete:")
+	p.logger.Printf("  Pages created: %d", result.PagesCreated)
+	p.logger.Printf("  Pages updated: %d", result.PagesUpdated)
+	p.logger.Printf("  Errors: %d", len(result.Errors))
+
+	for _, url := range result.PageURLs {
+		p.logger.Printf("  📄 %s", url)
+	}
+
+	if len(result.Errors) > 0 {
+		p.logger.Println("Errors encountered:")
+		for _, err := range result.Errors {
+			p.logger.Printf("  ❌ %v", err)
+		}
+	}
+
+	return nil
 }

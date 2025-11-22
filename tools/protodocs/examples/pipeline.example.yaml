@@ -1,0 +1,117 @@
+# ProtoDocs Pipeline Configuration Example
+
+proto_root: "./proto"
+use_buf: true
+
+# Linting configuration
+lint:
+  enable_buf_lint: true
+  enable_comments_check: true
+
+# Breaking change detection
+breaking:
+  enable: true
+  target: ".git#branch=main"
+
+# Documentation enrichment
+enrichment:
+  enabled: false
+  config_path: "configs/enricher.config.yaml"
+  manifest_path: "api-docs/enrichment-manifest.json"
+  tenant: "default"
+  output_model_path: "api-docs/model/api-doc-model-enriched.json"
+
+# High-Level Design generation
+hld:
+  enabled: false
+  config_path: "configs/hld_generator.yaml"
+  input_model_path: "api-docs/model/api-doc-model-enriched.json"
+  output_dir: "api-docs/hld"
+  module_name: "my-api"
+
+# Notifications
+notifications:
+  enabled: true
+  slack:
+    enabled: true
+    webhook_url: "${SLACK_WEBHOOK_URL}"  # Set via environment variable
+    bot_token: "${SLACK_BOT_TOKEN}"
+    channel: "#api-docs"
+    username: "ProtoDocs Bot"
+    icon_emoji: ":book:"
+    notify_on_start: true
+    notify_on_complete: true
+    notify_on_failure: true
+    notify_on_breaking: true
+    notify_on_enrichment: true
+    notify_release_notes: false
+
+# Descriptor build
+descriptors:
+  output_path: "api-docs/descriptors/image.bin"
+
+# Documentation generation
+docs:
+  output_format: "markdown"
+  output_dir: "./api-docs/proto-docs"
+  visibility_filter:
+    - "PUBLIC"
+    - "PARTNER"
+
+# OpenAPI generation
+openapi:
+  enabled: true
+  plugin: "openapiv3"
+  output_dir: "./api-docs/openapi"
+  visibility_filter:
+    - "PUBLIC"
+
+# Diagram generation
+diagrams:
+  enabled: true
+  output_dir: "./api-docs/diagrams"
+  enable_pipeline: true
+  enable_enricher: true
+  enable_component: true
+  enable_transform: true
+  enable_deploy: true
+  enable_data_model: true
+  enable_service_map: true
+  enable_message_hierarchy: false
+  generate_index: true
+  theme: "default"  # default, forest, dark, neutral
+  max_services_per_diagram: 20
+  max_messages_per_diagram: 30
+
+# Static site generation
+site:
+  generator: "mkdocs"  # mkdocs, docusaurus, or none
+  config_path: "./docs-site/mkdocs.yml"
+  output_dir: "./api-docs/site"
+
+# Publishers
+publishers:
+  # Confluence publisher
+  confluence:
+    enabled: false
+    base_url: "https://company.atlassian.net/wiki"
+    username: "${CONFLUENCE_USERNAME}"  # Set via environment variable
+    api_token: "${CONFLUENCE_API_TOKEN}"  # Set via environment variable
+    space_key: "APIDOCS"
+    parent_page_id: "123456789"  # Parent page ID for documentation
+
+    # Page structure
+    create_page_per_service: true  # true = one page per service, false = single consolidated page
+    page_title_prefix: "API Documentation -"
+    include_toc: true
+    include_diagrams: true
+    include_code_examples: true
+
+    # Update behavior
+    update_existing: true
+    version_label: "Auto-generated from CI/CD"
+
+    # Content filtering
+    visibility_filter:
+      - "PUBLIC"
+      - "PARTNER"

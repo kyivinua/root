@@ -12,10 +12,10 @@ type PipelineConfig struct {
 	ProtoRoot string `yaml:"proto_root"`
 	UseBuf    bool   `yaml:"use_buf"`
 
-	Lint         LintConfig         `yaml:"lint"`
-	Breaking     BreakingConfig     `yaml:"breaking"`
-	Enrichment   EnrichmentConfig   `yaml:"enrichment"`
-	HLD          HLDConfig          `yaml:"hld"`
+	Lint          LintConfig          `yaml:"lint"`
+	Breaking      BreakingConfig      `yaml:"breaking"`
+	Enrichment    EnrichmentConfig    `yaml:"enrichment"`
+	HLD           HLDConfig           `yaml:"hld"`
 	Notifications NotificationsConfig `yaml:"notifications"`
 
 	Descriptors DescriptorsConfig `yaml:"descriptors"`
@@ -23,6 +23,7 @@ type PipelineConfig struct {
 	OpenAPI     OpenAPIConfig     `yaml:"openapi"`
 	Diagrams    DiagramsConfig    `yaml:"diagrams"`
 	Site        SiteConfig        `yaml:"site"`
+	Publishers  PublishersConfig  `yaml:"publishers"`
 }
 
 // LintConfig holds lint configuration.
@@ -62,6 +63,35 @@ type SiteConfig struct {
 	Generator  string `yaml:"generator"`   // "mkdocs" or "docusaurus"
 	ConfigPath string `yaml:"config_path"` // path to mkdocs.yml
 	OutputDir  string `yaml:"output_dir"`
+}
+
+// PublishersConfig holds configuration for documentation publishers.
+type PublishersConfig struct {
+	Confluence ConfluenceConfig `yaml:"confluence"`
+}
+
+// ConfluenceConfig holds Confluence publishing configuration.
+type ConfluenceConfig struct {
+	Enabled      bool   `yaml:"enabled"`
+	BaseURL      string `yaml:"base_url"`       // e.g., "https://company.atlassian.net/wiki"
+	Username     string `yaml:"username"`       // Can be set via CONFLUENCE_USERNAME
+	APIToken     string `yaml:"api_token"`      // Can be set via CONFLUENCE_API_TOKEN
+	SpaceKey     string `yaml:"space_key"`      // Confluence space key
+	ParentPageID string `yaml:"parent_page_id"` // Parent page ID for documentation
+
+	// Page structure options
+	CreatePagePerService bool   `yaml:"create_page_per_service"` // true = one page per service, false = single consolidated page
+	PageTitlePrefix      string `yaml:"page_title_prefix"`       // Prefix for page titles
+	IncludeTOC           bool   `yaml:"include_toc"`             // Include table of contents
+	IncludeDiagrams      bool   `yaml:"include_diagrams"`        // Include Mermaid diagrams
+	IncludeCodeExamples  bool   `yaml:"include_code_examples"`   // Include code examples
+
+	// Update behavior
+	UpdateExisting bool   `yaml:"update_existing"`  // Update existing pages or create new versions
+	VersionLabel   string `yaml:"version_label"`    // Version label for pages
+
+	// Content filtering
+	VisibilityFilter []string `yaml:"visibility_filter"` // ["PUBLIC", "PARTNER", "INTERNAL"]
 }
 
 // EnrichmentConfig holds enrichment configuration.
@@ -240,8 +270,20 @@ func DefaultConfig() *PipelineConfig {
 		},
 		Site: SiteConfig{
 			Generator:  "mkdocs",
-			ConfigPath:  "./docs-site/mkdocs.yml",
+			ConfigPath: "./docs-site/mkdocs.yml",
 			OutputDir:  "./api-docs/site",
+		},
+		Publishers: PublishersConfig{
+			Confluence: ConfluenceConfig{
+				Enabled:              false,
+				CreatePagePerService: true,
+				PageTitlePrefix:      "API Documentation -",
+				IncludeTOC:           true,
+				IncludeDiagrams:      true,
+				IncludeCodeExamples:  true,
+				UpdateExisting:       true,
+				VisibilityFilter:     []string{"PUBLIC", "PARTNER"},
+			},
 		},
 	}
 }
