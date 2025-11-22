@@ -12,16 +12,40 @@ import (
 
 // Orchestrator coordinates the multi-agent HLD generation process
 type Orchestrator struct {
-	cfg            Config
-	agents         map[AgentRole]Agent
-	critic         *CriticAgent
-	refinementLoop *RefinementLoop
-	merger         *ResponseMerger
-	logger         zerolog.Logger
+	cfg             Config
+	agents          map[AgentRole]Agent
+	critic          *CriticAgent
+	refinementLoop  *RefinementLoop
+	merger          *ResponseMerger
+	contextEngine   *ContextEngine
+	llmRouter       *LLMRouter
+	enrichedContext *EnrichedContext
+	logger          zerolog.Logger
 }
 
 // NewOrchestrator creates a new orchestrator
 func NewOrchestrator(cfg Config, logger zerolog.Logger) (*Orchestrator, error) {
+	// Validate configuration
+	if err := ValidateConfig(&cfg); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
+	}
+
+	// Initialize Context Engine
+	contextEngine := NewContextEngine(cfg.Context, logger)
+
+	// Initialize LLM Router
+	llmRouter, err := NewLLMRouter(cfg.LLM)
+	if err != nil {
+		logger.Warn().Err(err).Msg("Failed to initialize LLM router, using mock client")
+		// Use mock client as fallback
+		llmRouter = &LLMRouter{
+			cfg: cfg.LLM,
+			providers: map[string]LLMClient{
+				"mock": NewMockLLMClient("mock", "mock-model"),
+			},
+		}
+	}
+
 	// Initialize agents
 	agentMap := make(map[AgentRole]Agent)
 
@@ -60,23 +84,54 @@ func NewOrchestrator(cfg Config, logger zerolog.Logger) (*Orchestrator, error) {
 	// Initialize refinement loop
 	refinementLoop := NewRefinementLoop(cfg.Refinement, critic, merger, logger)
 
+	logger.Info().
+		Int("agents", len(agentMap)).
+		Bool("context_enabled", cfg.Context.Enabled).
+		Bool("rag_enabled", cfg.Context.RAG.Enabled).
+		Msg("Orchestrator initialized")
+
 	return &Orchestrator{
 		cfg:            cfg,
 		agents:         agentMap,
 		critic:         critic,
 		refinementLoop: refinementLoop,
 		merger:         merger,
+		contextEngine:  contextEngine,
+		llmRouter:      llmRouter,
 		logger:         logger,
 	}, nil
 }
 
 // Run executes the HLD generation process
 func (o *Orchestrator) Run(ctx context.Context, docs *ConsolidatedDocs) (*HLDOutput, error) {
+	// Validate input
+	if err := ValidateConsolidatedDocs(docs); err != nil {
+		return nil, fmt.Errorf("invalid input docs: %w", err)
+	}
+
 	o.logger.Info().
 		Str("module", docs.ModuleName).
+		Int("services", len(docs.Services)).
+		Int("messages", len(docs.Messages)).
 		Msg("Starting HLD generation")
 
 	startTime := time.Now()
+
+	// Enrich documentation with context
+	enrichedCtx, err := o.contextEngine.Enrich(ctx, docs)
+	if err != nil {
+		o.logger.Warn().Err(err).Msg("Context enrichment failed, continuing without enrichment")
+		// Create minimal enriched context
+		enrichedCtx = &EnrichedContext{
+			Docs:        docs,
+			RAGContext:  []RAGDocument{},
+			Sources:     make(map[string]ContextSource),
+			GeneratedAt: time.Now(),
+		}
+	}
+
+	// Store enriched context for agents
+	o.enrichedContext = enrichedCtx
 
 	// Run refinement loop with agent thinking function
 	output, err := o.refinementLoop.Run(ctx, docs, o.ParallelThink)
@@ -88,11 +143,20 @@ func (o *Orchestrator) Run(ctx context.Context, docs *ConsolidatedDocs) (*HLDOut
 	output.Metadata.ModuleName = docs.ModuleName
 	output.Metadata.SourceCommit = docs.SourceCommit
 	output.Metadata.Author = "ProtoDocs HLD Generator"
+	output.Metadata.Version = o.cfg.Version
+	output.Metadata.GenerationMode = string(o.cfg.DefaultMode)
+
+	// Validate output
+	if err := ValidateHLDOutput(output); err != nil {
+		o.logger.Warn().Err(err).Msg("Output validation failed")
+		output.Warnings = append(output.Warnings, fmt.Sprintf("Validation warnings: %v", err))
+	}
 
 	duration := time.Since(startTime)
 	o.logger.Info().
 		Float64("final_score", output.FinalScore).
 		Int("rounds", output.RoundsCompleted).
+		Int("rag_docs", len(enrichedCtx.RAGContext)).
 		Dur("duration", duration).
 		Msg("HLD generation completed")
 
@@ -115,6 +179,7 @@ func (o *Orchestrator) ParallelThink(
 	// Build agent input
 	input := &AgentInput{
 		Docs:          docs,
+		EnrichedCtx:   o.enrichedContext,
 		PreviousDraft: previousDraft,
 		Round:         o.refinementLoop.CurrentRound(),
 		Criticism:     o.refinementLoop.LastCriticism(),

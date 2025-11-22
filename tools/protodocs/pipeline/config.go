@@ -15,6 +15,7 @@ type PipelineConfig struct {
 	Lint         LintConfig         `yaml:"lint"`
 	Breaking     BreakingConfig     `yaml:"breaking"`
 	Enrichment   EnrichmentConfig   `yaml:"enrichment"`
+	HLD          HLDConfig          `yaml:"hld"`
 	Notifications NotificationsConfig `yaml:"notifications"`
 
 	Descriptors DescriptorsConfig `yaml:"descriptors"`
@@ -70,6 +71,15 @@ type EnrichmentConfig struct {
 	ManifestPath   string `yaml:"manifest_path"`    // path to output manifest
 	Tenant         string `yaml:"tenant"`           // tenant ID for policy
 	OutputModelPath string `yaml:"output_model_path"` // path to enriched model
+}
+
+// HLDConfig holds High-Level Design generation configuration.
+type HLDConfig struct {
+	Enabled         bool   `yaml:"enabled"`
+	ConfigPath      string `yaml:"config_path"`        // path to hld_generator.yaml
+	InputModelPath  string `yaml:"input_model_path"`   // path to enriched model (from enricher)
+	OutputDir       string `yaml:"output_dir"`         // output directory for HLD
+	ModuleName      string `yaml:"module_name"`        // optional module name override
 }
 
 // NotificationsConfig holds notifications configuration.

@@ -111,6 +111,13 @@ func (p *Pipeline) RunAll() error {
 		}
 	}
 
+	// Stage 4.8: High-Level Design Generation (optional)
+	if p.config.HLD.Enabled {
+		if err := p.runHLDGeneration(model); err != nil {
+			return fmt.Errorf("HLD generation: %w", err)
+		}
+	}
+
 	// Stage 5: Docs Generation
 	if err := p.runDocsGeneration(); err != nil {
 		return fmt.Errorf("docs generation: %w", err)
@@ -479,6 +486,60 @@ func convertEnumValues(values []DocEnumValue) []diagrams.DocEnumValue {
 		}
 	}
 	return result
+}
+
+// runHLDGeneration executes the High-Level Design generation stage.
+func (p *Pipeline) runHLDGeneration(model *ApiDocModel) error {
+	p.logger.Println("Stage 4.8: High-Level Design Generation")
+
+	// Determine input model path
+	inputPath := p.config.HLD.InputModelPath
+	if inputPath == "" {
+		// Use enriched model if enrichment was enabled
+		if p.config.Enrichment.Enabled && p.config.Enrichment.OutputModelPath != "" {
+			inputPath = p.config.Enrichment.OutputModelPath
+		} else {
+			return fmt.Errorf("HLD input model path not configured")
+		}
+	}
+
+	// Determine config path
+	configPath := p.config.HLD.ConfigPath
+	if configPath == "" {
+		configPath = "configs/hld_generator.yaml"
+	}
+
+	// Determine output directory
+	outputDir := p.config.HLD.OutputDir
+	if outputDir == "" {
+		outputDir = "api-docs/hld/"
+	}
+
+	p.logger.Printf("HLD Generation: input=%s, config=%s, output=%s\n", inputPath, configPath, outputDir)
+
+	// Build command to run protodocs-hld
+	args := []string{
+		"--config", configPath,
+		"--input", inputPath,
+		"--output", outputDir,
+	}
+
+	// Add module name if specified
+	if p.config.HLD.ModuleName != "" {
+		args = append(args, "--module", p.config.HLD.ModuleName)
+	}
+
+	cmd := exec.Command("./bin/protodocs-hld", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		p.logger.Printf("HLD generation output:\n%s\n", string(output))
+		return fmt.Errorf("HLD generation failed: %w", err)
+	}
+
+	p.logger.Printf("HLD generation output:\n%s\n", string(output))
+	p.logger.Println("HLD generation completed successfully")
+
+	return nil
 }
 
 // runDocsGeneration executes the docs generation stage.
