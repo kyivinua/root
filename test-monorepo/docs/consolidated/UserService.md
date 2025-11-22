@@ -26,25 +26,25 @@
   - [UpdateUserPreferences](#updateuserpreferences)
   - [SyncUserData](#syncuserdata)
 - [Messages](#messages)
-  - [SearchUsersResponse](#searchusersresponse)
-  - [UserSyncRequest](#usersyncrequest)
-  - [BatchGetUsersResponse](#batchgetusersresponse)
-  - [PreferenceUpdate](#preferenceupdate)
-  - [UpdateUserRequest](#updateuserrequest)
   - [UpdateUserResponse](#updateuserresponse)
+  - [ListUsersRequest](#listusersrequest)
   - [SearchUsersRequest](#searchusersrequest)
-  - [StreamUserUpdatesRequest](#streamuserupdatesrequest)
-  - [UserUpdateEvent](#userupdateevent)
-  - [UserSyncResponse](#usersyncresponse)
   - [CreateUserRequest](#createuserrequest)
   - [CreateUserResponse](#createuserresponse)
-  - [GetUserRequest](#getuserrequest)
   - [DeleteUserRequest](#deleteuserrequest)
-  - [ListUsersRequest](#listusersrequest)
   - [ListUsersResponse](#listusersresponse)
+  - [BatchGetUsersResponse](#batchgetusersresponse)
+  - [UserUpdateEvent](#userupdateevent)
+  - [UserSyncRequest](#usersyncrequest)
+  - [UserSyncResponse](#usersyncresponse)
   - [BatchGetUsersRequest](#batchgetusersrequest)
+  - [StreamUserUpdatesRequest](#streamuserupdatesrequest)
   - [UpdateUserPreferencesResponse](#updateuserpreferencesresponse)
   - [GetUserResponse](#getuserresponse)
+  - [UpdateUserRequest](#updateuserrequest)
+  - [SearchUsersResponse](#searchusersresponse)
+  - [PreferenceUpdate](#preferenceupdate)
+  - [GetUserRequest](#getuserrequest)
 - [Enumerations](#enumerations)
 - [Error Codes](#error-codes)
 - [Examples](#examples)
@@ -523,216 +523,6 @@ sequenceDiagram
 
 This service defines **19 message types**:
 
-### SearchUsersResponse
-
-<a name="searchusersresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.SearchUsersResponse` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `users` | [`User`](#user) | repeated | - |
-| 2 | `metadata` | [`SearchMetadata`](#searchmetadata) | optional | - |
-| 3 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message SearchUsersResponse {
-  repeated User users = 1;
-  optional SearchMetadata metadata = 2;
-  optional PaginationResponse pagination = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class SearchUsersResponse {
-        +User[] users
-        +SearchMetadata metadata
-        +PaginationResponse pagination
-    }
-    SearchUsersResponse "1" --> "*" User
-    SearchUsersResponse --> SearchMetadata
-    SearchUsersResponse --> PaginationResponse
-```
-
----
-
-### UserSyncRequest
-
-<a name="usersyncrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.UserSyncRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `initial` | [`InitialSyncRequest`](#initialsyncrequest) | oneof `request` | - |
-| 2 | `update` | [`UserDataUpdate`](#userdataupdate) | oneof `request` | - |
-| 3 | `ping` | [`Ping`](#ping) | oneof `request` | - |
-
-#### Proto Definition
-
-```protobuf
-message UserSyncRequest {
-
-  oneof request {
-    InitialSyncRequest initial = 1;
-    UserDataUpdate update = 2;
-    Ping ping = 3;
-  }
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UserSyncRequest {
-        +InitialSyncRequest initial
-        +UserDataUpdate update
-        +Ping ping
-    }
-    UserSyncRequest --> InitialSyncRequest
-    UserSyncRequest --> UserDataUpdate
-    UserSyncRequest --> Ping
-```
-
----
-
-### BatchGetUsersResponse
-
-<a name="batchgetusersresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.BatchGetUsersResponse` |
-| **Field Count** | 2 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `users` | [`UsersEntry`](#usersentry) | repeated | - |
-| 2 | `not_found` | TYPE_STRING | repeated | - |
-
-#### Proto Definition
-
-```protobuf
-message BatchGetUsersResponse {
-  repeated UsersEntry users = 1;
-  repeated TYPE_STRING not_found = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class BatchGetUsersResponse {
-        +UsersEntry[] users
-        +TYPE_STRING[] not_found
-    }
-    BatchGetUsersResponse "1" --> "*" UsersEntry
-```
-
----
-
-### PreferenceUpdate
-
-<a name="preferenceupdate"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.PreferenceUpdate` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_id` | TYPE_STRING | optional | - |
-| 2 | `key` | TYPE_STRING | optional | - |
-| 3 | `value` | TYPE_STRING | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message PreferenceUpdate {
-  optional TYPE_STRING user_id = 1;
-  optional TYPE_STRING key = 2;
-  optional TYPE_STRING value = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class PreferenceUpdate {
-        +TYPE_STRING user_id
-        +TYPE_STRING key
-        +TYPE_STRING value
-    }
-```
-
----
-
-### UpdateUserRequest
-
-<a name="updateuserrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.UpdateUserRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_id` | TYPE_STRING | optional | - |
-| 2 | `user` | [`User`](#user) | optional | - |
-| 3 | `update_mask` | [`FieldMask`](#fieldmask) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message UpdateUserRequest {
-  optional TYPE_STRING user_id = 1;
-  optional User user = 2;
-  optional FieldMask update_mask = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UpdateUserRequest {
-        +TYPE_STRING user_id
-        +User user
-        +FieldMask update_mask
-    }
-    UpdateUserRequest --> User
-    UpdateUserRequest --> FieldMask
-```
-
----
-
 ### UpdateUserResponse
 
 <a name="updateuserresponse"></a>
@@ -764,6 +554,55 @@ classDiagram
         +User user
     }
     UpdateUserResponse --> User
+```
+
+---
+
+### ListUsersRequest
+
+<a name="listusersrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.ListUsersRequest` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | - |
+| 2 | `role` | [`UserRole`](#userrole) | optional | - |
+| 3 | `status` | [`UserStatus`](#userstatus) | optional | - |
+| 4 | `sort_by` | TYPE_STRING | optional | - |
+| 5 | `sort_order` | TYPE_STRING | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message ListUsersRequest {
+  optional PaginationRequest pagination = 1;
+  optional UserRole role = 2;
+  optional UserStatus status = 3;
+  optional TYPE_STRING sort_by = 4;
+  optional TYPE_STRING sort_order = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class ListUsersRequest {
+        +PaginationRequest pagination
+        +UserRole role
+        +UserStatus status
+        +TYPE_STRING sort_by
+        +TYPE_STRING sort_order
+    }
+    ListUsersRequest --> PaginationRequest
+    ListUsersRequest --> UserRole
+    ListUsersRequest --> UserStatus
 ```
 
 ---
@@ -806,140 +645,6 @@ classDiagram
     }
     SearchUsersRequest --> SearchFilters
     SearchUsersRequest --> PaginationRequest
-```
-
----
-
-### StreamUserUpdatesRequest
-
-<a name="streamuserupdatesrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.StreamUserUpdatesRequest` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_ids` | TYPE_STRING | repeated | - |
-| 2 | `event_types` | [`UpdateEventType`](#updateeventtype) | repeated | - |
-
-#### Proto Definition
-
-```protobuf
-message StreamUserUpdatesRequest {
-  repeated TYPE_STRING user_ids = 1;
-  repeated UpdateEventType event_types = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class StreamUserUpdatesRequest {
-        +TYPE_STRING[] user_ids
-        +UpdateEventType[] event_types
-    }
-    StreamUserUpdatesRequest "1" --> "*" UpdateEventType
-```
-
----
-
-### UserUpdateEvent
-
-<a name="userupdateevent"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.UserUpdateEvent` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `event_type` | [`UpdateEventType`](#updateeventtype) | optional | - |
-| 2 | `user` | [`User`](#user) | optional | - |
-| 3 | `event_time` | [`Timestamp`](#timestamp) | optional | - |
-| 4 | `changed_fields` | TYPE_STRING | repeated | - |
-
-#### Proto Definition
-
-```protobuf
-message UserUpdateEvent {
-  optional UpdateEventType event_type = 1;
-  optional User user = 2;
-  optional Timestamp event_time = 3;
-  repeated TYPE_STRING changed_fields = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UserUpdateEvent {
-        +UpdateEventType event_type
-        +User user
-        +Timestamp event_time
-        +TYPE_STRING[] changed_fields
-    }
-    UserUpdateEvent --> UpdateEventType
-    UserUpdateEvent --> User
-    UserUpdateEvent --> Timestamp
-```
-
----
-
-### UserSyncResponse
-
-<a name="usersyncresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.UserSyncResponse` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `ack` | [`SyncAck`](#syncack) | oneof `response` | - |
-| 2 | `update` | [`UserDataUpdate`](#userdataupdate) | oneof `response` | - |
-| 3 | `pong` | [`Pong`](#pong) | oneof `response` | - |
-| 4 | `error` | [`Error`](#error) | oneof `response` | - |
-
-#### Proto Definition
-
-```protobuf
-message UserSyncResponse {
-
-  oneof response {
-    SyncAck ack = 1;
-    UserDataUpdate update = 2;
-    Pong pong = 3;
-    Error error = 4;
-  }
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UserSyncResponse {
-        +SyncAck ack
-        +UserDataUpdate update
-        +Pong pong
-        +Error error
-    }
-    UserSyncResponse --> SyncAck
-    UserSyncResponse --> UserDataUpdate
-    UserSyncResponse --> Pong
-    UserSyncResponse --> Error
 ```
 
 ---
@@ -1036,40 +741,6 @@ classDiagram
 
 ---
 
-### GetUserRequest
-
-<a name="getuserrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.GetUserRequest` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_id` | TYPE_STRING | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message GetUserRequest {
-  optional TYPE_STRING user_id = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetUserRequest {
-        +TYPE_STRING user_id
-    }
-```
-
----
-
 ### DeleteUserRequest
 
 <a name="deleteuserrequest"></a>
@@ -1106,55 +777,6 @@ classDiagram
         +TYPE_BOOL hard_delete
         +TYPE_STRING reason
     }
-```
-
----
-
-### ListUsersRequest
-
-<a name="listusersrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.ListUsersRequest` |
-| **Field Count** | 5 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | - |
-| 2 | `role` | [`UserRole`](#userrole) | optional | - |
-| 3 | `status` | [`UserStatus`](#userstatus) | optional | - |
-| 4 | `sort_by` | TYPE_STRING | optional | - |
-| 5 | `sort_order` | TYPE_STRING | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message ListUsersRequest {
-  optional PaginationRequest pagination = 1;
-  optional UserRole role = 2;
-  optional UserStatus status = 3;
-  optional TYPE_STRING sort_by = 4;
-  optional TYPE_STRING sort_order = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class ListUsersRequest {
-        +PaginationRequest pagination
-        +UserRole role
-        +UserStatus status
-        +TYPE_STRING sort_by
-        +TYPE_STRING sort_order
-    }
-    ListUsersRequest --> PaginationRequest
-    ListUsersRequest --> UserRole
-    ListUsersRequest --> UserStatus
 ```
 
 ---
@@ -1198,6 +820,187 @@ classDiagram
 
 ---
 
+### BatchGetUsersResponse
+
+<a name="batchgetusersresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.BatchGetUsersResponse` |
+| **Field Count** | 2 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `users` | [`UsersEntry`](#usersentry) | repeated | - |
+| 2 | `not_found` | TYPE_STRING | repeated | - |
+
+#### Proto Definition
+
+```protobuf
+message BatchGetUsersResponse {
+  repeated UsersEntry users = 1;
+  repeated TYPE_STRING not_found = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class BatchGetUsersResponse {
+        +UsersEntry[] users
+        +TYPE_STRING[] not_found
+    }
+    BatchGetUsersResponse "1" --> "*" UsersEntry
+```
+
+---
+
+### UserUpdateEvent
+
+<a name="userupdateevent"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.UserUpdateEvent` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `event_type` | [`UpdateEventType`](#updateeventtype) | optional | - |
+| 2 | `user` | [`User`](#user) | optional | - |
+| 3 | `event_time` | [`Timestamp`](#timestamp) | optional | - |
+| 4 | `changed_fields` | TYPE_STRING | repeated | - |
+
+#### Proto Definition
+
+```protobuf
+message UserUpdateEvent {
+  optional UpdateEventType event_type = 1;
+  optional User user = 2;
+  optional Timestamp event_time = 3;
+  repeated TYPE_STRING changed_fields = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UserUpdateEvent {
+        +UpdateEventType event_type
+        +User user
+        +Timestamp event_time
+        +TYPE_STRING[] changed_fields
+    }
+    UserUpdateEvent --> UpdateEventType
+    UserUpdateEvent --> User
+    UserUpdateEvent --> Timestamp
+```
+
+---
+
+### UserSyncRequest
+
+<a name="usersyncrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.UserSyncRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `initial` | [`InitialSyncRequest`](#initialsyncrequest) | oneof `request` | - |
+| 2 | `update` | [`UserDataUpdate`](#userdataupdate) | oneof `request` | - |
+| 3 | `ping` | [`Ping`](#ping) | oneof `request` | - |
+
+#### Proto Definition
+
+```protobuf
+message UserSyncRequest {
+
+  oneof request {
+    InitialSyncRequest initial = 1;
+    UserDataUpdate update = 2;
+    Ping ping = 3;
+  }
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UserSyncRequest {
+        +InitialSyncRequest initial
+        +UserDataUpdate update
+        +Ping ping
+    }
+    UserSyncRequest --> InitialSyncRequest
+    UserSyncRequest --> UserDataUpdate
+    UserSyncRequest --> Ping
+```
+
+---
+
+### UserSyncResponse
+
+<a name="usersyncresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.UserSyncResponse` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `ack` | [`SyncAck`](#syncack) | oneof `response` | - |
+| 2 | `update` | [`UserDataUpdate`](#userdataupdate) | oneof `response` | - |
+| 3 | `pong` | [`Pong`](#pong) | oneof `response` | - |
+| 4 | `error` | [`Error`](#error) | oneof `response` | - |
+
+#### Proto Definition
+
+```protobuf
+message UserSyncResponse {
+
+  oneof response {
+    SyncAck ack = 1;
+    UserDataUpdate update = 2;
+    Pong pong = 3;
+    Error error = 4;
+  }
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UserSyncResponse {
+        +SyncAck ack
+        +UserDataUpdate update
+        +Pong pong
+        +Error error
+    }
+    UserSyncResponse --> SyncAck
+    UserSyncResponse --> UserDataUpdate
+    UserSyncResponse --> Pong
+    UserSyncResponse --> Error
+```
+
+---
+
 ### BatchGetUsersRequest
 
 <a name="batchgetusersrequest"></a>
@@ -1228,6 +1031,44 @@ classDiagram
     class BatchGetUsersRequest {
         +TYPE_STRING[] user_ids
     }
+```
+
+---
+
+### StreamUserUpdatesRequest
+
+<a name="streamuserupdatesrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.StreamUserUpdatesRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_ids` | TYPE_STRING | repeated | - |
+| 2 | `event_types` | [`UpdateEventType`](#updateeventtype) | repeated | - |
+
+#### Proto Definition
+
+```protobuf
+message StreamUserUpdatesRequest {
+  repeated TYPE_STRING user_ids = 1;
+  repeated UpdateEventType event_types = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class StreamUserUpdatesRequest {
+        +TYPE_STRING[] user_ids
+        +UpdateEventType[] event_types
+    }
+    StreamUserUpdatesRequest "1" --> "*" UpdateEventType
 ```
 
 ---
@@ -1301,6 +1142,165 @@ classDiagram
         +User user
     }
     GetUserResponse --> User
+```
+
+---
+
+### UpdateUserRequest
+
+<a name="updateuserrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.UpdateUserRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | TYPE_STRING | optional | - |
+| 2 | `user` | [`User`](#user) | optional | - |
+| 3 | `update_mask` | [`FieldMask`](#fieldmask) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message UpdateUserRequest {
+  optional TYPE_STRING user_id = 1;
+  optional User user = 2;
+  optional FieldMask update_mask = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UpdateUserRequest {
+        +TYPE_STRING user_id
+        +User user
+        +FieldMask update_mask
+    }
+    UpdateUserRequest --> User
+    UpdateUserRequest --> FieldMask
+```
+
+---
+
+### SearchUsersResponse
+
+<a name="searchusersresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.SearchUsersResponse` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `users` | [`User`](#user) | repeated | - |
+| 2 | `metadata` | [`SearchMetadata`](#searchmetadata) | optional | - |
+| 3 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message SearchUsersResponse {
+  repeated User users = 1;
+  optional SearchMetadata metadata = 2;
+  optional PaginationResponse pagination = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class SearchUsersResponse {
+        +User[] users
+        +SearchMetadata metadata
+        +PaginationResponse pagination
+    }
+    SearchUsersResponse "1" --> "*" User
+    SearchUsersResponse --> SearchMetadata
+    SearchUsersResponse --> PaginationResponse
+```
+
+---
+
+### PreferenceUpdate
+
+<a name="preferenceupdate"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.PreferenceUpdate` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | TYPE_STRING | optional | - |
+| 2 | `key` | TYPE_STRING | optional | - |
+| 3 | `value` | TYPE_STRING | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message PreferenceUpdate {
+  optional TYPE_STRING user_id = 1;
+  optional TYPE_STRING key = 2;
+  optional TYPE_STRING value = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class PreferenceUpdate {
+        +TYPE_STRING user_id
+        +TYPE_STRING key
+        +TYPE_STRING value
+    }
+```
+
+---
+
+### GetUserRequest
+
+<a name="getuserrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.GetUserRequest` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | TYPE_STRING | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message GetUserRequest {
+  optional TYPE_STRING user_id = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetUserRequest {
+        +TYPE_STRING user_id
+    }
 ```
 
 ---

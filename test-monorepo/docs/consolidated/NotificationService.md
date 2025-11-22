@@ -25,22 +25,22 @@
   - [GetPreferences](#getpreferences)
   - [UpdatePreferences](#updatepreferences)
 - [Messages](#messages)
-  - [UpdatePreferencesRequest](#updatepreferencesrequest)
   - [BulkSendResult](#bulksendresult)
-  - [GetNotificationResponse](#getnotificationresponse)
+  - [ListNotificationsResponse](#listnotificationsresponse)
+  - [MarkAsReadRequest](#markasreadrequest)
   - [StreamNotificationsRequest](#streamnotificationsrequest)
+  - [NotificationEvent](#notificationevent)
+  - [SendNotificationRequest](#sendnotificationrequest)
+  - [GetNotificationResponse](#getnotificationresponse)
   - [GetPreferencesResponse](#getpreferencesresponse)
   - [UpdatePreferencesResponse](#updatepreferencesresponse)
-  - [ListNotificationsRequest](#listnotificationsrequest)
-  - [MarkAsReadRequest](#markasreadrequest)
-  - [SendNotificationRequest](#sendnotificationrequest)
-  - [GetPreferencesRequest](#getpreferencesrequest)
   - [SendNotificationResponse](#sendnotificationresponse)
   - [SendBulkRequest](#sendbulkrequest)
   - [GetNotificationRequest](#getnotificationrequest)
-  - [ListNotificationsResponse](#listnotificationsresponse)
+  - [ListNotificationsRequest](#listnotificationsrequest)
   - [DeleteNotificationRequest](#deletenotificationrequest)
-  - [NotificationEvent](#notificationevent)
+  - [GetPreferencesRequest](#getpreferencesrequest)
+  - [UpdatePreferencesRequest](#updatepreferencesrequest)
 - [Enumerations](#enumerations)
 - [Error Codes](#error-codes)
 - [Examples](#examples)
@@ -476,44 +476,6 @@ sequenceDiagram
 
 This service defines **16 message types**:
 
-### UpdatePreferencesRequest
-
-<a name="updatepreferencesrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.UpdatePreferencesRequest` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_id` | TYPE_STRING | optional | - |
-| 2 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message UpdatePreferencesRequest {
-  optional TYPE_STRING user_id = 1;
-  optional NotificationPreferences preferences = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UpdatePreferencesRequest {
-        +TYPE_STRING user_id
-        +NotificationPreferences preferences
-    }
-    UpdatePreferencesRequest --> NotificationPreferences
-```
-
----
-
 ### BulkSendResult
 
 <a name="bulksendresult"></a>
@@ -559,26 +521,30 @@ classDiagram
 
 ---
 
-### GetNotificationResponse
+### ListNotificationsResponse
 
-<a name="getnotificationresponse"></a>
+<a name="listnotificationsresponse"></a>
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.GetNotificationResponse` |
-| **Field Count** | 1 |
+| **Full Name** | `notifications.v1.ListNotificationsResponse` |
+| **Field Count** | 3 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `notification` | [`Notification`](#notification) | optional | - |
+| 1 | `notifications` | [`Notification`](#notification) | repeated | - |
+| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | - |
+| 3 | `unread_count` | TYPE_INT64 | optional | - |
 
 #### Proto Definition
 
 ```protobuf
-message GetNotificationResponse {
-  optional Notification notification = 1;
+message ListNotificationsResponse {
+  repeated Notification notifications = 1;
+  optional PaginationResponse pagination = 2;
+  optional TYPE_INT64 unread_count = 3;
 }
 ```
 
@@ -586,10 +552,53 @@ message GetNotificationResponse {
 
 ```mermaid
 classDiagram
-    class GetNotificationResponse {
-        +Notification notification
+    class ListNotificationsResponse {
+        +Notification[] notifications
+        +PaginationResponse pagination
+        +TYPE_INT64 unread_count
     }
-    GetNotificationResponse --> Notification
+    ListNotificationsResponse "1" --> "*" Notification
+    ListNotificationsResponse --> PaginationResponse
+```
+
+---
+
+### MarkAsReadRequest
+
+<a name="markasreadrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.MarkAsReadRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `notification_ids` | TYPE_STRING | repeated | - |
+| 2 | `user_id` | TYPE_STRING | optional | - |
+| 3 | `all` | TYPE_BOOL | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message MarkAsReadRequest {
+  repeated TYPE_STRING notification_ids = 1;
+  optional TYPE_STRING user_id = 2;
+  optional TYPE_BOOL all = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class MarkAsReadRequest {
+        +TYPE_STRING[] notification_ids
+        +TYPE_STRING user_id
+        +TYPE_BOOL all
+    }
 ```
 
 ---
@@ -636,162 +645,30 @@ classDiagram
 
 ---
 
-### GetPreferencesResponse
+### NotificationEvent
 
-<a name="getpreferencesresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.GetPreferencesResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message GetPreferencesResponse {
-  optional NotificationPreferences preferences = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetPreferencesResponse {
-        +NotificationPreferences preferences
-    }
-    GetPreferencesResponse --> NotificationPreferences
-```
-
----
-
-### UpdatePreferencesResponse
-
-<a name="updatepreferencesresponse"></a>
+<a name="notificationevent"></a>
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.UpdatePreferencesResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message UpdatePreferencesResponse {
-  optional NotificationPreferences preferences = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UpdatePreferencesResponse {
-        +NotificationPreferences preferences
-    }
-    UpdatePreferencesResponse --> NotificationPreferences
-```
-
----
-
-### ListNotificationsRequest
-
-<a name="listnotificationsrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.ListNotificationsRequest` |
-| **Field Count** | 8 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_id` | TYPE_STRING | optional | - |
-| 2 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | - |
-| 3 | `read` | TYPE_BOOL | oneof `_read` | - |
-| 4 | `types` | [`NotificationType`](#notificationtype) | repeated | - |
-| 5 | `channels` | [`Channel`](#channel) | repeated | - |
-| 6 | `categories` | TYPE_STRING | repeated | - |
-| 7 | `tags` | TYPE_STRING | repeated | - |
-| 8 | `date_range` | [`DateRangeFilter`](#daterangefilter) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message ListNotificationsRequest {
-  optional TYPE_STRING user_id = 1;
-  optional PaginationRequest pagination = 2;
-  repeated NotificationType types = 4;
-  repeated Channel channels = 5;
-  repeated TYPE_STRING categories = 6;
-  repeated TYPE_STRING tags = 7;
-  optional DateRangeFilter date_range = 8;
-
-  oneof _read {
-    TYPE_BOOL read = 3;
-  }
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class ListNotificationsRequest {
-        +TYPE_STRING user_id
-        +PaginationRequest pagination
-        +TYPE_BOOL read
-        +NotificationType[] types
-        +Channel[] channels
-        +TYPE_STRING[] categories
-        +TYPE_STRING[] tags
-        +DateRangeFilter date_range
-    }
-    ListNotificationsRequest --> PaginationRequest
-    ListNotificationsRequest "1" --> "*" NotificationType
-    ListNotificationsRequest "1" --> "*" Channel
-    ListNotificationsRequest --> DateRangeFilter
-```
-
----
-
-### MarkAsReadRequest
-
-<a name="markasreadrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.MarkAsReadRequest` |
+| **Full Name** | `notifications.v1.NotificationEvent` |
 | **Field Count** | 3 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `notification_ids` | TYPE_STRING | repeated | - |
-| 2 | `user_id` | TYPE_STRING | optional | - |
-| 3 | `all` | TYPE_BOOL | optional | - |
+| 1 | `event_type` | [`EventType`](#eventtype) | optional | - |
+| 2 | `notification` | [`Notification`](#notification) | optional | - |
+| 3 | `event_time` | [`Timestamp`](#timestamp) | optional | - |
 
 #### Proto Definition
 
 ```protobuf
-message MarkAsReadRequest {
-  repeated TYPE_STRING notification_ids = 1;
-  optional TYPE_STRING user_id = 2;
-  optional TYPE_BOOL all = 3;
+message NotificationEvent {
+  optional EventType event_type = 1;
+  optional Notification notification = 2;
+  optional Timestamp event_time = 3;
 }
 ```
 
@@ -799,11 +676,14 @@ message MarkAsReadRequest {
 
 ```mermaid
 classDiagram
-    class MarkAsReadRequest {
-        +TYPE_STRING[] notification_ids
-        +TYPE_STRING user_id
-        +TYPE_BOOL all
+    class NotificationEvent {
+        +EventType event_type
+        +Notification notification
+        +Timestamp event_time
     }
+    NotificationEvent --> EventType
+    NotificationEvent --> Notification
+    NotificationEvent --> Timestamp
 ```
 
 ---
@@ -890,26 +770,26 @@ classDiagram
 
 ---
 
-### GetPreferencesRequest
+### GetNotificationResponse
 
-<a name="getpreferencesrequest"></a>
+<a name="getnotificationresponse"></a>
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.GetPreferencesRequest` |
+| **Full Name** | `notifications.v1.GetNotificationResponse` |
 | **Field Count** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `user_id` | TYPE_STRING | optional | - |
+| 1 | `notification` | [`Notification`](#notification) | optional | - |
 
 #### Proto Definition
 
 ```protobuf
-message GetPreferencesRequest {
-  optional TYPE_STRING user_id = 1;
+message GetNotificationResponse {
+  optional Notification notification = 1;
 }
 ```
 
@@ -917,9 +797,80 @@ message GetPreferencesRequest {
 
 ```mermaid
 classDiagram
-    class GetPreferencesRequest {
-        +TYPE_STRING user_id
+    class GetNotificationResponse {
+        +Notification notification
     }
+    GetNotificationResponse --> Notification
+```
+
+---
+
+### GetPreferencesResponse
+
+<a name="getpreferencesresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.GetPreferencesResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message GetPreferencesResponse {
+  optional NotificationPreferences preferences = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetPreferencesResponse {
+        +NotificationPreferences preferences
+    }
+    GetPreferencesResponse --> NotificationPreferences
+```
+
+---
+
+### UpdatePreferencesResponse
+
+<a name="updatepreferencesresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.UpdatePreferencesResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message UpdatePreferencesResponse {
+  optional NotificationPreferences preferences = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UpdatePreferencesResponse {
+        +NotificationPreferences preferences
+    }
+    UpdatePreferencesResponse --> NotificationPreferences
 ```
 
 ---
@@ -1043,30 +994,43 @@ classDiagram
 
 ---
 
-### ListNotificationsResponse
+### ListNotificationsRequest
 
-<a name="listnotificationsresponse"></a>
+<a name="listnotificationsrequest"></a>
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.ListNotificationsResponse` |
-| **Field Count** | 3 |
+| **Full Name** | `notifications.v1.ListNotificationsRequest` |
+| **Field Count** | 8 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `notifications` | [`Notification`](#notification) | repeated | - |
-| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | - |
-| 3 | `unread_count` | TYPE_INT64 | optional | - |
+| 1 | `user_id` | TYPE_STRING | optional | - |
+| 2 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | - |
+| 3 | `read` | TYPE_BOOL | oneof `_read` | - |
+| 4 | `types` | [`NotificationType`](#notificationtype) | repeated | - |
+| 5 | `channels` | [`Channel`](#channel) | repeated | - |
+| 6 | `categories` | TYPE_STRING | repeated | - |
+| 7 | `tags` | TYPE_STRING | repeated | - |
+| 8 | `date_range` | [`DateRangeFilter`](#daterangefilter) | optional | - |
 
 #### Proto Definition
 
 ```protobuf
-message ListNotificationsResponse {
-  repeated Notification notifications = 1;
-  optional PaginationResponse pagination = 2;
-  optional TYPE_INT64 unread_count = 3;
+message ListNotificationsRequest {
+  optional TYPE_STRING user_id = 1;
+  optional PaginationRequest pagination = 2;
+  repeated NotificationType types = 4;
+  repeated Channel channels = 5;
+  repeated TYPE_STRING categories = 6;
+  repeated TYPE_STRING tags = 7;
+  optional DateRangeFilter date_range = 8;
+
+  oneof _read {
+    TYPE_BOOL read = 3;
+  }
 }
 ```
 
@@ -1074,13 +1038,20 @@ message ListNotificationsResponse {
 
 ```mermaid
 classDiagram
-    class ListNotificationsResponse {
-        +Notification[] notifications
-        +PaginationResponse pagination
-        +TYPE_INT64 unread_count
+    class ListNotificationsRequest {
+        +TYPE_STRING user_id
+        +PaginationRequest pagination
+        +TYPE_BOOL read
+        +NotificationType[] types
+        +Channel[] channels
+        +TYPE_STRING[] categories
+        +TYPE_STRING[] tags
+        +DateRangeFilter date_range
     }
-    ListNotificationsResponse "1" --> "*" Notification
-    ListNotificationsResponse --> PaginationResponse
+    ListNotificationsRequest --> PaginationRequest
+    ListNotificationsRequest "1" --> "*" NotificationType
+    ListNotificationsRequest "1" --> "*" Channel
+    ListNotificationsRequest --> DateRangeFilter
 ```
 
 ---
@@ -1122,30 +1093,26 @@ classDiagram
 
 ---
 
-### NotificationEvent
+### GetPreferencesRequest
 
-<a name="notificationevent"></a>
+<a name="getpreferencesrequest"></a>
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.NotificationEvent` |
-| **Field Count** | 3 |
+| **Full Name** | `notifications.v1.GetPreferencesRequest` |
+| **Field Count** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `event_type` | [`EventType`](#eventtype) | optional | - |
-| 2 | `notification` | [`Notification`](#notification) | optional | - |
-| 3 | `event_time` | [`Timestamp`](#timestamp) | optional | - |
+| 1 | `user_id` | TYPE_STRING | optional | - |
 
 #### Proto Definition
 
 ```protobuf
-message NotificationEvent {
-  optional EventType event_type = 1;
-  optional Notification notification = 2;
-  optional Timestamp event_time = 3;
+message GetPreferencesRequest {
+  optional TYPE_STRING user_id = 1;
 }
 ```
 
@@ -1153,14 +1120,47 @@ message NotificationEvent {
 
 ```mermaid
 classDiagram
-    class NotificationEvent {
-        +EventType event_type
-        +Notification notification
-        +Timestamp event_time
+    class GetPreferencesRequest {
+        +TYPE_STRING user_id
     }
-    NotificationEvent --> EventType
-    NotificationEvent --> Notification
-    NotificationEvent --> Timestamp
+```
+
+---
+
+### UpdatePreferencesRequest
+
+<a name="updatepreferencesrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.UpdatePreferencesRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | TYPE_STRING | optional | - |
+| 2 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message UpdatePreferencesRequest {
+  optional TYPE_STRING user_id = 1;
+  optional NotificationPreferences preferences = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UpdatePreferencesRequest {
+        +TYPE_STRING user_id
+        +NotificationPreferences preferences
+    }
+    UpdatePreferencesRequest --> NotificationPreferences
 ```
 
 ---
@@ -1170,40 +1170,6 @@ classDiagram
 <a name="enumerations"></a>
 
 This service defines **7 enumeration types**:
-
-### NotificationType
-
-<a name="notificationtype"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `NOTIFICATION_TYPE_UNSPECIFIED` | 0 | - |
-| `NOTIFICATION_TYPE_SYSTEM` | 1 | - |
-| `NOTIFICATION_TYPE_ALERT` | 2 | - |
-| `NOTIFICATION_TYPE_WARNING` | 3 | - |
-| `NOTIFICATION_TYPE_INFO` | 4 | - |
-| `NOTIFICATION_TYPE_SUCCESS` | 5 | - |
-| `NOTIFICATION_TYPE_MARKETING` | 6 | - |
-| `NOTIFICATION_TYPE_TRANSACTIONAL` | 7 | - |
-| `NOTIFICATION_TYPE_SOCIAL` | 8 | - |
-
-#### Proto Definition
-
-```protobuf
-enum NotificationType {
-  NOTIFICATION_TYPE_UNSPECIFIED = 0;
-  NOTIFICATION_TYPE_SYSTEM = 1;
-  NOTIFICATION_TYPE_ALERT = 2;
-  NOTIFICATION_TYPE_WARNING = 3;
-  NOTIFICATION_TYPE_INFO = 4;
-  NOTIFICATION_TYPE_SUCCESS = 5;
-  NOTIFICATION_TYPE_MARKETING = 6;
-  NOTIFICATION_TYPE_TRANSACTIONAL = 7;
-  NOTIFICATION_TYPE_SOCIAL = 8;
-}
-```
-
----
 
 ### DeliveryStatus
 
@@ -1376,6 +1342,40 @@ enum Channel {
   CHANNEL_WEBHOOK = 5;
   CHANNEL_SLACK = 6;
   CHANNEL_TEAMS = 7;
+}
+```
+
+---
+
+### NotificationType
+
+<a name="notificationtype"></a>
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `NOTIFICATION_TYPE_UNSPECIFIED` | 0 | - |
+| `NOTIFICATION_TYPE_SYSTEM` | 1 | - |
+| `NOTIFICATION_TYPE_ALERT` | 2 | - |
+| `NOTIFICATION_TYPE_WARNING` | 3 | - |
+| `NOTIFICATION_TYPE_INFO` | 4 | - |
+| `NOTIFICATION_TYPE_SUCCESS` | 5 | - |
+| `NOTIFICATION_TYPE_MARKETING` | 6 | - |
+| `NOTIFICATION_TYPE_TRANSACTIONAL` | 7 | - |
+| `NOTIFICATION_TYPE_SOCIAL` | 8 | - |
+
+#### Proto Definition
+
+```protobuf
+enum NotificationType {
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+  NOTIFICATION_TYPE_SYSTEM = 1;
+  NOTIFICATION_TYPE_ALERT = 2;
+  NOTIFICATION_TYPE_WARNING = 3;
+  NOTIFICATION_TYPE_INFO = 4;
+  NOTIFICATION_TYPE_SUCCESS = 5;
+  NOTIFICATION_TYPE_MARKETING = 6;
+  NOTIFICATION_TYPE_TRANSACTIONAL = 7;
+  NOTIFICATION_TYPE_SOCIAL = 8;
 }
 ```
 

@@ -24,21 +24,21 @@
   - [CreateDashboard](#createdashboard)
   - [GetDashboard](#getdashboard)
 - [Messages](#messages)
-  - [QueryRequest](#queryrequest)
-  - [QueryResponse](#queryresponse)
+  - [BatchTrackResponse](#batchtrackresponse)
   - [GetMetricsRequest](#getmetricsrequest)
-  - [StreamMetricsRequest](#streammetricsrequest)
-  - [GetDashboardResponse](#getdashboardresponse)
-  - [TrackEventRequest](#trackeventrequest)
+  - [TrackEventResponse](#trackeventresponse)
+  - [MetricUpdate](#metricupdate)
   - [CreateDashboardRequest](#createdashboardrequest)
   - [CreateDashboardResponse](#createdashboardresponse)
-  - [TrackEventResponse](#trackeventresponse)
-  - [BatchTrackResponse](#batchtrackresponse)
-  - [GetMetricsResponse](#getmetricsresponse)
+  - [TrackEventRequest](#trackeventrequest)
   - [GetReportRequest](#getreportrequest)
-  - [GetReportResponse](#getreportresponse)
-  - [MetricUpdate](#metricupdate)
+  - [StreamMetricsRequest](#streammetricsrequest)
   - [GetDashboardRequest](#getdashboardrequest)
+  - [GetMetricsResponse](#getmetricsresponse)
+  - [GetReportResponse](#getreportresponse)
+  - [QueryRequest](#queryrequest)
+  - [QueryResponse](#queryresponse)
+  - [GetDashboardResponse](#getdashboardresponse)
 - [Enumerations](#enumerations)
 - [Error Codes](#error-codes)
 - [Examples](#examples)
@@ -432,6 +432,462 @@ sequenceDiagram
 
 This service defines **15 message types**:
 
+### BatchTrackResponse
+
+<a name="batchtrackresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.BatchTrackResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `events_tracked` | TYPE_INT32 | optional | - |
+| 2 | `failed_count` | TYPE_INT32 | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message BatchTrackResponse {
+  optional TYPE_INT32 events_tracked = 1;
+  optional TYPE_INT32 failed_count = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class BatchTrackResponse {
+        +TYPE_INT32 events_tracked
+        +TYPE_INT32 failed_count
+    }
+```
+
+---
+
+### GetMetricsRequest
+
+<a name="getmetricsrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.GetMetricsRequest` |
+| **Field Count** | 4 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `metric_names` | TYPE_STRING | repeated | - |
+| 2 | `time_range` | [`TimeRange`](#timerange) | optional | - |
+| 3 | `filters` | [`FiltersEntry`](#filtersentry) | repeated | - |
+| 4 | `group_by` | TYPE_STRING | repeated | - |
+
+#### Proto Definition
+
+```protobuf
+message GetMetricsRequest {
+  repeated TYPE_STRING metric_names = 1;
+  optional TimeRange time_range = 2;
+  repeated FiltersEntry filters = 3;
+  repeated TYPE_STRING group_by = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetMetricsRequest {
+        +TYPE_STRING[] metric_names
+        +TimeRange time_range
+        +FiltersEntry[] filters
+        +TYPE_STRING[] group_by
+    }
+    GetMetricsRequest --> TimeRange
+    GetMetricsRequest "1" --> "*" FiltersEntry
+```
+
+---
+
+### TrackEventResponse
+
+<a name="trackeventresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.TrackEventResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `event_id` | TYPE_STRING | optional | - |
+| 2 | `success` | TYPE_BOOL | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message TrackEventResponse {
+  optional TYPE_STRING event_id = 1;
+  optional TYPE_BOOL success = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class TrackEventResponse {
+        +TYPE_STRING event_id
+        +TYPE_BOOL success
+    }
+```
+
+---
+
+### MetricUpdate
+
+<a name="metricupdate"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.MetricUpdate` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `metric` | [`Metric`](#metric) | optional | - |
+| 2 | `timestamp` | [`Timestamp`](#timestamp) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message MetricUpdate {
+  optional Metric metric = 1;
+  optional Timestamp timestamp = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class MetricUpdate {
+        +Metric metric
+        +Timestamp timestamp
+    }
+    MetricUpdate --> Metric
+    MetricUpdate --> Timestamp
+```
+
+---
+
+### CreateDashboardRequest
+
+<a name="createdashboardrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.CreateDashboardRequest` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `dashboard` | [`Dashboard`](#dashboard) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message CreateDashboardRequest {
+  optional Dashboard dashboard = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CreateDashboardRequest {
+        +Dashboard dashboard
+    }
+    CreateDashboardRequest --> Dashboard
+```
+
+---
+
+### CreateDashboardResponse
+
+<a name="createdashboardresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.CreateDashboardResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `dashboard` | [`Dashboard`](#dashboard) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message CreateDashboardResponse {
+  optional Dashboard dashboard = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CreateDashboardResponse {
+        +Dashboard dashboard
+    }
+    CreateDashboardResponse --> Dashboard
+```
+
+---
+
+### TrackEventRequest
+
+<a name="trackeventrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.TrackEventRequest` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `event` | [`Event`](#event) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message TrackEventRequest {
+  optional Event event = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class TrackEventRequest {
+        +Event event
+    }
+    TrackEventRequest --> Event
+```
+
+---
+
+### GetReportRequest
+
+<a name="getreportrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.GetReportRequest` |
+| **Field Count** | 5 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `type` | [`ReportType`](#reporttype) | optional | - |
+| 2 | `time_range` | [`TimeRange`](#timerange) | optional | - |
+| 3 | `filters` | [`FiltersEntry`](#filtersentry) | repeated | - |
+| 4 | `metrics` | TYPE_STRING | repeated | - |
+| 5 | `dimensions` | TYPE_STRING | repeated | - |
+
+#### Proto Definition
+
+```protobuf
+message GetReportRequest {
+  optional ReportType type = 1;
+  optional TimeRange time_range = 2;
+  repeated FiltersEntry filters = 3;
+  repeated TYPE_STRING metrics = 4;
+  repeated TYPE_STRING dimensions = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetReportRequest {
+        +ReportType type
+        +TimeRange time_range
+        +FiltersEntry[] filters
+        +TYPE_STRING[] metrics
+        +TYPE_STRING[] dimensions
+    }
+    GetReportRequest --> ReportType
+    GetReportRequest --> TimeRange
+    GetReportRequest "1" --> "*" FiltersEntry
+```
+
+---
+
+### StreamMetricsRequest
+
+<a name="streammetricsrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.StreamMetricsRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `metric_names` | TYPE_STRING | repeated | - |
+| 2 | `interval` | [`Duration`](#duration) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message StreamMetricsRequest {
+  repeated TYPE_STRING metric_names = 1;
+  optional Duration interval = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class StreamMetricsRequest {
+        +TYPE_STRING[] metric_names
+        +Duration interval
+    }
+    StreamMetricsRequest --> Duration
+```
+
+---
+
+### GetDashboardRequest
+
+<a name="getdashboardrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.GetDashboardRequest` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `dashboard_id` | TYPE_STRING | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message GetDashboardRequest {
+  optional TYPE_STRING dashboard_id = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetDashboardRequest {
+        +TYPE_STRING dashboard_id
+    }
+```
+
+---
+
+### GetMetricsResponse
+
+<a name="getmetricsresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.GetMetricsResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `metrics` | [`MetricSeries`](#metricseries) | repeated | - |
+
+#### Proto Definition
+
+```protobuf
+message GetMetricsResponse {
+  repeated MetricSeries metrics = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetMetricsResponse {
+        +MetricSeries[] metrics
+    }
+    GetMetricsResponse "1" --> "*" MetricSeries
+```
+
+---
+
+### GetReportResponse
+
+<a name="getreportresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.GetReportResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `report` | [`Report`](#report) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message GetReportResponse {
+  optional Report report = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetReportResponse {
+        +Report report
+    }
+    GetReportResponse --> Report
+```
+
+---
+
 ### QueryRequest
 
 <a name="queryrequest"></a>
@@ -516,90 +972,6 @@ classDiagram
 
 ---
 
-### GetMetricsRequest
-
-<a name="getmetricsrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.GetMetricsRequest` |
-| **Field Count** | 4 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `metric_names` | TYPE_STRING | repeated | - |
-| 2 | `time_range` | [`TimeRange`](#timerange) | optional | - |
-| 3 | `filters` | [`FiltersEntry`](#filtersentry) | repeated | - |
-| 4 | `group_by` | TYPE_STRING | repeated | - |
-
-#### Proto Definition
-
-```protobuf
-message GetMetricsRequest {
-  repeated TYPE_STRING metric_names = 1;
-  optional TimeRange time_range = 2;
-  repeated FiltersEntry filters = 3;
-  repeated TYPE_STRING group_by = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetMetricsRequest {
-        +TYPE_STRING[] metric_names
-        +TimeRange time_range
-        +FiltersEntry[] filters
-        +TYPE_STRING[] group_by
-    }
-    GetMetricsRequest --> TimeRange
-    GetMetricsRequest "1" --> "*" FiltersEntry
-```
-
----
-
-### StreamMetricsRequest
-
-<a name="streammetricsrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.StreamMetricsRequest` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `metric_names` | TYPE_STRING | repeated | - |
-| 2 | `interval` | [`Duration`](#duration) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message StreamMetricsRequest {
-  repeated TYPE_STRING metric_names = 1;
-  optional Duration interval = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class StreamMetricsRequest {
-        +TYPE_STRING[] metric_names
-        +Duration interval
-    }
-    StreamMetricsRequest --> Duration
-```
-
----
-
 ### GetDashboardResponse
 
 <a name="getdashboardresponse"></a>
@@ -640,439 +1012,71 @@ classDiagram
 
 ---
 
-### TrackEventRequest
-
-<a name="trackeventrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.TrackEventRequest` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `event` | [`Event`](#event) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message TrackEventRequest {
-  optional Event event = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class TrackEventRequest {
-        +Event event
-    }
-    TrackEventRequest --> Event
-```
-
----
-
-### CreateDashboardRequest
-
-<a name="createdashboardrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.CreateDashboardRequest` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `dashboard` | [`Dashboard`](#dashboard) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message CreateDashboardRequest {
-  optional Dashboard dashboard = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class CreateDashboardRequest {
-        +Dashboard dashboard
-    }
-    CreateDashboardRequest --> Dashboard
-```
-
----
-
-### CreateDashboardResponse
-
-<a name="createdashboardresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.CreateDashboardResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `dashboard` | [`Dashboard`](#dashboard) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message CreateDashboardResponse {
-  optional Dashboard dashboard = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class CreateDashboardResponse {
-        +Dashboard dashboard
-    }
-    CreateDashboardResponse --> Dashboard
-```
-
----
-
-### TrackEventResponse
-
-<a name="trackeventresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.TrackEventResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `event_id` | TYPE_STRING | optional | - |
-| 2 | `success` | TYPE_BOOL | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message TrackEventResponse {
-  optional TYPE_STRING event_id = 1;
-  optional TYPE_BOOL success = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class TrackEventResponse {
-        +TYPE_STRING event_id
-        +TYPE_BOOL success
-    }
-```
-
----
-
-### BatchTrackResponse
-
-<a name="batchtrackresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.BatchTrackResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `events_tracked` | TYPE_INT32 | optional | - |
-| 2 | `failed_count` | TYPE_INT32 | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message BatchTrackResponse {
-  optional TYPE_INT32 events_tracked = 1;
-  optional TYPE_INT32 failed_count = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class BatchTrackResponse {
-        +TYPE_INT32 events_tracked
-        +TYPE_INT32 failed_count
-    }
-```
-
----
-
-### GetMetricsResponse
-
-<a name="getmetricsresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.GetMetricsResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `metrics` | [`MetricSeries`](#metricseries) | repeated | - |
-
-#### Proto Definition
-
-```protobuf
-message GetMetricsResponse {
-  repeated MetricSeries metrics = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetMetricsResponse {
-        +MetricSeries[] metrics
-    }
-    GetMetricsResponse "1" --> "*" MetricSeries
-```
-
----
-
-### GetReportRequest
-
-<a name="getreportrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.GetReportRequest` |
-| **Field Count** | 5 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `type` | [`ReportType`](#reporttype) | optional | - |
-| 2 | `time_range` | [`TimeRange`](#timerange) | optional | - |
-| 3 | `filters` | [`FiltersEntry`](#filtersentry) | repeated | - |
-| 4 | `metrics` | TYPE_STRING | repeated | - |
-| 5 | `dimensions` | TYPE_STRING | repeated | - |
-
-#### Proto Definition
-
-```protobuf
-message GetReportRequest {
-  optional ReportType type = 1;
-  optional TimeRange time_range = 2;
-  repeated FiltersEntry filters = 3;
-  repeated TYPE_STRING metrics = 4;
-  repeated TYPE_STRING dimensions = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetReportRequest {
-        +ReportType type
-        +TimeRange time_range
-        +FiltersEntry[] filters
-        +TYPE_STRING[] metrics
-        +TYPE_STRING[] dimensions
-    }
-    GetReportRequest --> ReportType
-    GetReportRequest --> TimeRange
-    GetReportRequest "1" --> "*" FiltersEntry
-```
-
----
-
-### GetReportResponse
-
-<a name="getreportresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.GetReportResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `report` | [`Report`](#report) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message GetReportResponse {
-  optional Report report = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetReportResponse {
-        +Report report
-    }
-    GetReportResponse --> Report
-```
-
----
-
-### MetricUpdate
-
-<a name="metricupdate"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.MetricUpdate` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `metric` | [`Metric`](#metric) | optional | - |
-| 2 | `timestamp` | [`Timestamp`](#timestamp) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message MetricUpdate {
-  optional Metric metric = 1;
-  optional Timestamp timestamp = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class MetricUpdate {
-        +Metric metric
-        +Timestamp timestamp
-    }
-    MetricUpdate --> Metric
-    MetricUpdate --> Timestamp
-```
-
----
-
-### GetDashboardRequest
-
-<a name="getdashboardrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.GetDashboardRequest` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `dashboard_id` | TYPE_STRING | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message GetDashboardRequest {
-  optional TYPE_STRING dashboard_id = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetDashboardRequest {
-        +TYPE_STRING dashboard_id
-    }
-```
-
----
-
 ## 🔢 Enumerations
 
 <a name="enumerations"></a>
 
 This service defines **10 enumeration types**:
 
-### ChartType
+### EventType
 
-<a name="charttype"></a>
+<a name="eventtype"></a>
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `CHART_TYPE_UNSPECIFIED` | 0 | - |
-| `CHART_TYPE_LINE` | 1 | - |
-| `CHART_TYPE_BAR` | 2 | - |
-| `CHART_TYPE_PIE` | 3 | - |
-| `CHART_TYPE_AREA` | 4 | - |
-| `CHART_TYPE_SCATTER` | 5 | - |
-| `CHART_TYPE_HEATMAP` | 6 | - |
-| `CHART_TYPE_FUNNEL` | 7 | - |
+| `EVENT_TYPE_UNSPECIFIED` | 0 | - |
+| `EVENT_TYPE_PAGE_VIEW` | 1 | - |
+| `EVENT_TYPE_CLICK` | 2 | - |
+| `EVENT_TYPE_CONVERSION` | 3 | - |
+| `EVENT_TYPE_PURCHASE` | 4 | - |
+| `EVENT_TYPE_SIGNUP` | 5 | - |
+| `EVENT_TYPE_LOGIN` | 6 | - |
+| `EVENT_TYPE_LOGOUT` | 7 | - |
+| `EVENT_TYPE_SEARCH` | 8 | - |
+| `EVENT_TYPE_SHARE` | 9 | - |
+| `EVENT_TYPE_CUSTOM` | 100 | - |
 
 #### Proto Definition
 
 ```protobuf
-enum ChartType {
-  CHART_TYPE_UNSPECIFIED = 0;
-  CHART_TYPE_LINE = 1;
-  CHART_TYPE_BAR = 2;
-  CHART_TYPE_PIE = 3;
-  CHART_TYPE_AREA = 4;
-  CHART_TYPE_SCATTER = 5;
-  CHART_TYPE_HEATMAP = 6;
-  CHART_TYPE_FUNNEL = 7;
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_PAGE_VIEW = 1;
+  EVENT_TYPE_CLICK = 2;
+  EVENT_TYPE_CONVERSION = 3;
+  EVENT_TYPE_PURCHASE = 4;
+  EVENT_TYPE_SIGNUP = 5;
+  EVENT_TYPE_LOGIN = 6;
+  EVENT_TYPE_LOGOUT = 7;
+  EVENT_TYPE_SEARCH = 8;
+  EVENT_TYPE_SHARE = 9;
+  EVENT_TYPE_CUSTOM = 100;
 }
 ```
 
 ---
 
-### DataType
+### MetricType
 
-<a name="datatype"></a>
+<a name="metrictype"></a>
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `DATA_TYPE_UNSPECIFIED` | 0 | - |
-| `DATA_TYPE_STRING` | 1 | - |
-| `DATA_TYPE_NUMBER` | 2 | - |
-| `DATA_TYPE_BOOLEAN` | 3 | - |
-| `DATA_TYPE_TIMESTAMP` | 4 | - |
-| `DATA_TYPE_DURATION` | 5 | - |
+| `METRIC_TYPE_UNSPECIFIED` | 0 | - |
+| `METRIC_TYPE_COUNTER` | 1 | - |
+| `METRIC_TYPE_GAUGE` | 2 | - |
+| `METRIC_TYPE_HISTOGRAM` | 3 | - |
+| `METRIC_TYPE_SUMMARY` | 4 | - |
 
 #### Proto Definition
 
 ```protobuf
-enum DataType {
-  DATA_TYPE_UNSPECIFIED = 0;
-  DATA_TYPE_STRING = 1;
-  DATA_TYPE_NUMBER = 2;
-  DATA_TYPE_BOOLEAN = 3;
-  DATA_TYPE_TIMESTAMP = 4;
-  DATA_TYPE_DURATION = 5;
+enum MetricType {
+  METRIC_TYPE_UNSPECIFIED = 0;
+  METRIC_TYPE_COUNTER = 1;
+  METRIC_TYPE_GAUGE = 2;
+  METRIC_TYPE_HISTOGRAM = 3;
+  METRIC_TYPE_SUMMARY = 4;
 }
 ```
 
@@ -1133,6 +1137,34 @@ enum TimeGranularity {
   TIME_GRANULARITY_WEEK = 4;
   TIME_GRANULARITY_MONTH = 5;
   TIME_GRANULARITY_YEAR = 6;
+}
+```
+
+---
+
+### DeviceType
+
+<a name="devicetype"></a>
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `DEVICE_TYPE_UNSPECIFIED` | 0 | - |
+| `DEVICE_TYPE_DESKTOP` | 1 | - |
+| `DEVICE_TYPE_MOBILE` | 2 | - |
+| `DEVICE_TYPE_TABLET` | 3 | - |
+| `DEVICE_TYPE_TV` | 4 | - |
+| `DEVICE_TYPE_WEARABLE` | 5 | - |
+
+#### Proto Definition
+
+```protobuf
+enum DeviceType {
+  DEVICE_TYPE_UNSPECIFIED = 0;
+  DEVICE_TYPE_DESKTOP = 1;
+  DEVICE_TYPE_MOBILE = 2;
+  DEVICE_TYPE_TABLET = 3;
+  DEVICE_TYPE_TV = 4;
+  DEVICE_TYPE_WEARABLE = 5;
 }
 ```
 
@@ -1200,98 +1232,6 @@ enum WidgetType {
 
 ---
 
-### EventType
-
-<a name="eventtype"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `EVENT_TYPE_UNSPECIFIED` | 0 | - |
-| `EVENT_TYPE_PAGE_VIEW` | 1 | - |
-| `EVENT_TYPE_CLICK` | 2 | - |
-| `EVENT_TYPE_CONVERSION` | 3 | - |
-| `EVENT_TYPE_PURCHASE` | 4 | - |
-| `EVENT_TYPE_SIGNUP` | 5 | - |
-| `EVENT_TYPE_LOGIN` | 6 | - |
-| `EVENT_TYPE_LOGOUT` | 7 | - |
-| `EVENT_TYPE_SEARCH` | 8 | - |
-| `EVENT_TYPE_SHARE` | 9 | - |
-| `EVENT_TYPE_CUSTOM` | 100 | - |
-
-#### Proto Definition
-
-```protobuf
-enum EventType {
-  EVENT_TYPE_UNSPECIFIED = 0;
-  EVENT_TYPE_PAGE_VIEW = 1;
-  EVENT_TYPE_CLICK = 2;
-  EVENT_TYPE_CONVERSION = 3;
-  EVENT_TYPE_PURCHASE = 4;
-  EVENT_TYPE_SIGNUP = 5;
-  EVENT_TYPE_LOGIN = 6;
-  EVENT_TYPE_LOGOUT = 7;
-  EVENT_TYPE_SEARCH = 8;
-  EVENT_TYPE_SHARE = 9;
-  EVENT_TYPE_CUSTOM = 100;
-}
-```
-
----
-
-### MetricType
-
-<a name="metrictype"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `METRIC_TYPE_UNSPECIFIED` | 0 | - |
-| `METRIC_TYPE_COUNTER` | 1 | - |
-| `METRIC_TYPE_GAUGE` | 2 | - |
-| `METRIC_TYPE_HISTOGRAM` | 3 | - |
-| `METRIC_TYPE_SUMMARY` | 4 | - |
-
-#### Proto Definition
-
-```protobuf
-enum MetricType {
-  METRIC_TYPE_UNSPECIFIED = 0;
-  METRIC_TYPE_COUNTER = 1;
-  METRIC_TYPE_GAUGE = 2;
-  METRIC_TYPE_HISTOGRAM = 3;
-  METRIC_TYPE_SUMMARY = 4;
-}
-```
-
----
-
-### DeviceType
-
-<a name="devicetype"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `DEVICE_TYPE_UNSPECIFIED` | 0 | - |
-| `DEVICE_TYPE_DESKTOP` | 1 | - |
-| `DEVICE_TYPE_MOBILE` | 2 | - |
-| `DEVICE_TYPE_TABLET` | 3 | - |
-| `DEVICE_TYPE_TV` | 4 | - |
-| `DEVICE_TYPE_WEARABLE` | 5 | - |
-
-#### Proto Definition
-
-```protobuf
-enum DeviceType {
-  DEVICE_TYPE_UNSPECIFIED = 0;
-  DEVICE_TYPE_DESKTOP = 1;
-  DEVICE_TYPE_MOBILE = 2;
-  DEVICE_TYPE_TABLET = 3;
-  DEVICE_TYPE_TV = 4;
-  DEVICE_TYPE_WEARABLE = 5;
-}
-```
-
----
-
 ### Trend
 
 <a name="trend"></a>
@@ -1311,6 +1251,66 @@ enum Trend {
   TREND_UP = 1;
   TREND_DOWN = 2;
   TREND_STABLE = 3;
+}
+```
+
+---
+
+### ChartType
+
+<a name="charttype"></a>
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `CHART_TYPE_UNSPECIFIED` | 0 | - |
+| `CHART_TYPE_LINE` | 1 | - |
+| `CHART_TYPE_BAR` | 2 | - |
+| `CHART_TYPE_PIE` | 3 | - |
+| `CHART_TYPE_AREA` | 4 | - |
+| `CHART_TYPE_SCATTER` | 5 | - |
+| `CHART_TYPE_HEATMAP` | 6 | - |
+| `CHART_TYPE_FUNNEL` | 7 | - |
+
+#### Proto Definition
+
+```protobuf
+enum ChartType {
+  CHART_TYPE_UNSPECIFIED = 0;
+  CHART_TYPE_LINE = 1;
+  CHART_TYPE_BAR = 2;
+  CHART_TYPE_PIE = 3;
+  CHART_TYPE_AREA = 4;
+  CHART_TYPE_SCATTER = 5;
+  CHART_TYPE_HEATMAP = 6;
+  CHART_TYPE_FUNNEL = 7;
+}
+```
+
+---
+
+### DataType
+
+<a name="datatype"></a>
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `DATA_TYPE_UNSPECIFIED` | 0 | - |
+| `DATA_TYPE_STRING` | 1 | - |
+| `DATA_TYPE_NUMBER` | 2 | - |
+| `DATA_TYPE_BOOLEAN` | 3 | - |
+| `DATA_TYPE_TIMESTAMP` | 4 | - |
+| `DATA_TYPE_DURATION` | 5 | - |
+
+#### Proto Definition
+
+```protobuf
+enum DataType {
+  DATA_TYPE_UNSPECIFIED = 0;
+  DATA_TYPE_STRING = 1;
+  DATA_TYPE_NUMBER = 2;
+  DATA_TYPE_BOOLEAN = 3;
+  DATA_TYPE_TIMESTAMP = 4;
+  DATA_TYPE_DURATION = 5;
 }
 ```
 

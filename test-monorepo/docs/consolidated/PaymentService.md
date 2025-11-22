@@ -23,20 +23,20 @@
   - [ProcessBatch](#processbatch)
   - [SubscribeToPaymentEvents](#subscribetopaymentevents)
 - [Messages](#messages)
-  - [CreatePaymentResponse](#createpaymentresponse)
-  - [CancelPaymentRequest](#cancelpaymentrequest)
-  - [CancelPaymentResponse](#cancelpaymentresponse)
-  - [RefundPaymentRequest](#refundpaymentrequest)
-  - [ListPaymentsRequest](#listpaymentsrequest)
   - [ListPaymentsResponse](#listpaymentsresponse)
+  - [BatchProcessResult](#batchprocessresult)
   - [SubscribeRequest](#subscriberequest)
+  - [CreatePaymentResponse](#createpaymentresponse)
+  - [GetPaymentRequest](#getpaymentrequest)
+  - [CancelPaymentResponse](#cancelpaymentresponse)
+  - [ListPaymentsRequest](#listpaymentsrequest)
+  - [ProcessBatchRequest](#processbatchrequest)
   - [PaymentEvent](#paymentevent)
   - [CreatePaymentRequest](#createpaymentrequest)
-  - [GetPaymentRequest](#getpaymentrequest)
   - [GetPaymentResponse](#getpaymentresponse)
+  - [CancelPaymentRequest](#cancelpaymentrequest)
+  - [RefundPaymentRequest](#refundpaymentrequest)
   - [RefundPaymentResponse](#refundpaymentresponse)
-  - [ProcessBatchRequest](#processbatchrequest)
-  - [BatchProcessResult](#batchprocessresult)
 - [Enumerations](#enumerations)
 - [Error Codes](#error-codes)
 - [Examples](#examples)
@@ -390,6 +390,135 @@ sequenceDiagram
 
 This service defines **14 message types**:
 
+### ListPaymentsResponse
+
+<a name="listpaymentsresponse"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.ListPaymentsResponse` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `payments` | [`Payment`](#payment) | repeated | - |
+| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | - |
+| 3 | `summary` | [`PaymentSummary`](#paymentsummary) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message ListPaymentsResponse {
+  repeated Payment payments = 1;
+  optional PaginationResponse pagination = 2;
+  optional PaymentSummary summary = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class ListPaymentsResponse {
+        +Payment[] payments
+        +PaginationResponse pagination
+        +PaymentSummary summary
+    }
+    ListPaymentsResponse "1" --> "*" Payment
+    ListPaymentsResponse --> PaginationResponse
+    ListPaymentsResponse --> PaymentSummary
+```
+
+---
+
+### BatchProcessResult
+
+<a name="batchprocessresult"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.BatchProcessResult` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `index` | TYPE_INT32 | optional | - |
+| 2 | `success` | TYPE_BOOL | optional | - |
+| 3 | `payment` | [`Payment`](#payment) | optional | - |
+| 4 | `error` | [`Error`](#error) | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message BatchProcessResult {
+  optional TYPE_INT32 index = 1;
+  optional TYPE_BOOL success = 2;
+  optional Payment payment = 3;
+  optional Error error = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class BatchProcessResult {
+        +TYPE_INT32 index
+        +TYPE_BOOL success
+        +Payment payment
+        +Error error
+    }
+    BatchProcessResult --> Payment
+    BatchProcessResult --> Error
+```
+
+---
+
+### SubscribeRequest
+
+<a name="subscriberequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.SubscribeRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `payment_ids` | TYPE_STRING | repeated | - |
+| 2 | `user_ids` | TYPE_STRING | repeated | - |
+| 3 | `event_types` | [`EventType`](#eventtype) | repeated | - |
+
+#### Proto Definition
+
+```protobuf
+message SubscribeRequest {
+  repeated TYPE_STRING payment_ids = 1;
+  repeated TYPE_STRING user_ids = 2;
+  repeated EventType event_types = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class SubscribeRequest {
+        +TYPE_STRING[] payment_ids
+        +TYPE_STRING[] user_ids
+        +EventType[] event_types
+    }
+    SubscribeRequest "1" --> "*" EventType
+```
+
+---
+
 ### CreatePaymentResponse
 
 <a name="createpaymentresponse"></a>
@@ -432,28 +561,26 @@ classDiagram
 
 ---
 
-### CancelPaymentRequest
+### GetPaymentRequest
 
-<a name="cancelpaymentrequest"></a>
+<a name="getpaymentrequest"></a>
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `payments.v1.CancelPaymentRequest` |
-| **Field Count** | 2 |
+| **Full Name** | `payments.v1.GetPaymentRequest` |
+| **Field Count** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
 | 1 | `payment_id` | TYPE_STRING | optional | - |
-| 2 | `reason` | TYPE_STRING | optional | - |
 
 #### Proto Definition
 
 ```protobuf
-message CancelPaymentRequest {
+message GetPaymentRequest {
   optional TYPE_STRING payment_id = 1;
-  optional TYPE_STRING reason = 2;
 }
 ```
 
@@ -461,9 +588,8 @@ message CancelPaymentRequest {
 
 ```mermaid
 classDiagram
-    class CancelPaymentRequest {
+    class GetPaymentRequest {
         +TYPE_STRING payment_id
-        +TYPE_STRING reason
     }
 ```
 
@@ -500,52 +626,6 @@ classDiagram
         +Payment payment
     }
     CancelPaymentResponse --> Payment
-```
-
----
-
-### RefundPaymentRequest
-
-<a name="refundpaymentrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.RefundPaymentRequest` |
-| **Field Count** | 4 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `payment_id` | TYPE_STRING | optional | - |
-| 2 | `amount` | [`Money`](#money) | optional | - |
-| 3 | `reason` | TYPE_STRING | optional | - |
-| 4 | `metadata` | [`MetadataEntry`](#metadataentry) | repeated | - |
-
-#### Proto Definition
-
-```protobuf
-message RefundPaymentRequest {
-  optional TYPE_STRING payment_id = 1;
-  optional Money amount = 2;
-  optional TYPE_STRING reason = 3;
-  repeated MetadataEntry metadata = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class RefundPaymentRequest {
-        +TYPE_STRING payment_id
-        +Money amount
-        +TYPE_STRING reason
-        +MetadataEntry[] metadata
-    }
-    RefundPaymentRequest --> Money
-    RefundPaymentRequest "1" --> "*" MetadataEntry
 ```
 
 ---
@@ -604,30 +684,30 @@ classDiagram
 
 ---
 
-### ListPaymentsResponse
+### ProcessBatchRequest
 
-<a name="listpaymentsresponse"></a>
+<a name="processbatchrequest"></a>
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `payments.v1.ListPaymentsResponse` |
+| **Full Name** | `payments.v1.ProcessBatchRequest` |
 | **Field Count** | 3 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `payments` | [`Payment`](#payment) | repeated | - |
-| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | - |
-| 3 | `summary` | [`PaymentSummary`](#paymentsummary) | optional | - |
+| 1 | `payments` | [`CreatePaymentRequest`](#createpaymentrequest) | repeated | - |
+| 2 | `batch_id` | TYPE_STRING | optional | - |
+| 3 | `continue_on_error` | TYPE_BOOL | optional | - |
 
 #### Proto Definition
 
 ```protobuf
-message ListPaymentsResponse {
-  repeated Payment payments = 1;
-  optional PaginationResponse pagination = 2;
-  optional PaymentSummary summary = 3;
+message ProcessBatchRequest {
+  repeated CreatePaymentRequest payments = 1;
+  optional TYPE_STRING batch_id = 2;
+  optional TYPE_BOOL continue_on_error = 3;
 }
 ```
 
@@ -635,55 +715,12 @@ message ListPaymentsResponse {
 
 ```mermaid
 classDiagram
-    class ListPaymentsResponse {
-        +Payment[] payments
-        +PaginationResponse pagination
-        +PaymentSummary summary
+    class ProcessBatchRequest {
+        +CreatePaymentRequest[] payments
+        +TYPE_STRING batch_id
+        +TYPE_BOOL continue_on_error
     }
-    ListPaymentsResponse "1" --> "*" Payment
-    ListPaymentsResponse --> PaginationResponse
-    ListPaymentsResponse --> PaymentSummary
-```
-
----
-
-### SubscribeRequest
-
-<a name="subscriberequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.SubscribeRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `payment_ids` | TYPE_STRING | repeated | - |
-| 2 | `user_ids` | TYPE_STRING | repeated | - |
-| 3 | `event_types` | [`EventType`](#eventtype) | repeated | - |
-
-#### Proto Definition
-
-```protobuf
-message SubscribeRequest {
-  repeated TYPE_STRING payment_ids = 1;
-  repeated TYPE_STRING user_ids = 2;
-  repeated EventType event_types = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class SubscribeRequest {
-        +TYPE_STRING[] payment_ids
-        +TYPE_STRING[] user_ids
-        +EventType[] event_types
-    }
-    SubscribeRequest "1" --> "*" EventType
+    ProcessBatchRequest "1" --> "*" CreatePaymentRequest
 ```
 
 ---
@@ -815,40 +852,6 @@ classDiagram
 
 ---
 
-### GetPaymentRequest
-
-<a name="getpaymentrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.GetPaymentRequest` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `payment_id` | TYPE_STRING | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message GetPaymentRequest {
-  optional TYPE_STRING payment_id = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetPaymentRequest {
-        +TYPE_STRING payment_id
-    }
-```
-
----
-
 ### GetPaymentResponse
 
 <a name="getpaymentresponse"></a>
@@ -880,6 +883,89 @@ classDiagram
         +Payment payment
     }
     GetPaymentResponse --> Payment
+```
+
+---
+
+### CancelPaymentRequest
+
+<a name="cancelpaymentrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.CancelPaymentRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `payment_id` | TYPE_STRING | optional | - |
+| 2 | `reason` | TYPE_STRING | optional | - |
+
+#### Proto Definition
+
+```protobuf
+message CancelPaymentRequest {
+  optional TYPE_STRING payment_id = 1;
+  optional TYPE_STRING reason = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CancelPaymentRequest {
+        +TYPE_STRING payment_id
+        +TYPE_STRING reason
+    }
+```
+
+---
+
+### RefundPaymentRequest
+
+<a name="refundpaymentrequest"></a>
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.RefundPaymentRequest` |
+| **Field Count** | 4 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `payment_id` | TYPE_STRING | optional | - |
+| 2 | `amount` | [`Money`](#money) | optional | - |
+| 3 | `reason` | TYPE_STRING | optional | - |
+| 4 | `metadata` | [`MetadataEntry`](#metadataentry) | repeated | - |
+
+#### Proto Definition
+
+```protobuf
+message RefundPaymentRequest {
+  optional TYPE_STRING payment_id = 1;
+  optional Money amount = 2;
+  optional TYPE_STRING reason = 3;
+  repeated MetadataEntry metadata = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class RefundPaymentRequest {
+        +TYPE_STRING payment_id
+        +Money amount
+        +TYPE_STRING reason
+        +MetadataEntry[] metadata
+    }
+    RefundPaymentRequest --> Money
+    RefundPaymentRequest "1" --> "*" MetadataEntry
 ```
 
 ---
@@ -923,173 +1009,39 @@ classDiagram
 
 ---
 
-### ProcessBatchRequest
-
-<a name="processbatchrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.ProcessBatchRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `payments` | [`CreatePaymentRequest`](#createpaymentrequest) | repeated | - |
-| 2 | `batch_id` | TYPE_STRING | optional | - |
-| 3 | `continue_on_error` | TYPE_BOOL | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message ProcessBatchRequest {
-  repeated CreatePaymentRequest payments = 1;
-  optional TYPE_STRING batch_id = 2;
-  optional TYPE_BOOL continue_on_error = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class ProcessBatchRequest {
-        +CreatePaymentRequest[] payments
-        +TYPE_STRING batch_id
-        +TYPE_BOOL continue_on_error
-    }
-    ProcessBatchRequest "1" --> "*" CreatePaymentRequest
-```
-
----
-
-### BatchProcessResult
-
-<a name="batchprocessresult"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.BatchProcessResult` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `index` | TYPE_INT32 | optional | - |
-| 2 | `success` | TYPE_BOOL | optional | - |
-| 3 | `payment` | [`Payment`](#payment) | optional | - |
-| 4 | `error` | [`Error`](#error) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message BatchProcessResult {
-  optional TYPE_INT32 index = 1;
-  optional TYPE_BOOL success = 2;
-  optional Payment payment = 3;
-  optional Error error = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class BatchProcessResult {
-        +TYPE_INT32 index
-        +TYPE_BOOL success
-        +Payment payment
-        +Error error
-    }
-    BatchProcessResult --> Payment
-    BatchProcessResult --> Error
-```
-
----
-
 ## 🔢 Enumerations
 
 <a name="enumerations"></a>
 
 This service defines **12 enumeration types**:
 
-### FraudCheckOutcome
+### CardBrand
 
-<a name="fraudcheckoutcome"></a>
+<a name="cardbrand"></a>
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `FRAUD_CHECK_OUTCOME_UNSPECIFIED` | 0 | - |
-| `FRAUD_CHECK_OUTCOME_PASS` | 1 | - |
-| `FRAUD_CHECK_OUTCOME_REVIEW` | 2 | - |
-| `FRAUD_CHECK_OUTCOME_DECLINE` | 3 | - |
+| `CARD_BRAND_UNSPECIFIED` | 0 | - |
+| `CARD_BRAND_VISA` | 1 | - |
+| `CARD_BRAND_MASTERCARD` | 2 | - |
+| `CARD_BRAND_AMEX` | 3 | - |
+| `CARD_BRAND_DISCOVER` | 4 | - |
+| `CARD_BRAND_JCB` | 5 | - |
+| `CARD_BRAND_DINERS` | 6 | - |
+| `CARD_BRAND_UNIONPAY` | 7 | - |
 
 #### Proto Definition
 
 ```protobuf
-enum FraudCheckOutcome {
-  FRAUD_CHECK_OUTCOME_UNSPECIFIED = 0;
-  FRAUD_CHECK_OUTCOME_PASS = 1;
-  FRAUD_CHECK_OUTCOME_REVIEW = 2;
-  FRAUD_CHECK_OUTCOME_DECLINE = 3;
-}
-```
-
----
-
-### ActionType
-
-<a name="actiontype"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `ACTION_TYPE_UNSPECIFIED` | 0 | - |
-| `ACTION_TYPE_NONE` | 1 | - |
-| `ACTION_TYPE_REDIRECT` | 2 | - |
-| `ACTION_TYPE_VERIFY` | 3 | - |
-| `ACTION_TYPE_AUTHORIZE` | 4 | - |
-
-#### Proto Definition
-
-```protobuf
-enum ActionType {
-  ACTION_TYPE_UNSPECIFIED = 0;
-  ACTION_TYPE_NONE = 1;
-  ACTION_TYPE_REDIRECT = 2;
-  ACTION_TYPE_VERIFY = 3;
-  ACTION_TYPE_AUTHORIZE = 4;
-}
-```
-
----
-
-### EventType
-
-<a name="eventtype"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `EVENT_TYPE_UNSPECIFIED` | 0 | - |
-| `EVENT_TYPE_PAYMENT_CREATED` | 1 | - |
-| `EVENT_TYPE_PAYMENT_UPDATED` | 2 | - |
-| `EVENT_TYPE_PAYMENT_COMPLETED` | 3 | - |
-| `EVENT_TYPE_PAYMENT_FAILED` | 4 | - |
-| `EVENT_TYPE_PAYMENT_REFUNDED` | 5 | - |
-| `EVENT_TYPE_PAYMENT_DISPUTED` | 6 | - |
-
-#### Proto Definition
-
-```protobuf
-enum EventType {
-  EVENT_TYPE_UNSPECIFIED = 0;
-  EVENT_TYPE_PAYMENT_CREATED = 1;
-  EVENT_TYPE_PAYMENT_UPDATED = 2;
-  EVENT_TYPE_PAYMENT_COMPLETED = 3;
-  EVENT_TYPE_PAYMENT_FAILED = 4;
-  EVENT_TYPE_PAYMENT_REFUNDED = 5;
-  EVENT_TYPE_PAYMENT_DISPUTED = 6;
+enum CardBrand {
+  CARD_BRAND_UNSPECIFIED = 0;
+  CARD_BRAND_VISA = 1;
+  CARD_BRAND_MASTERCARD = 2;
+  CARD_BRAND_AMEX = 3;
+  CARD_BRAND_DISCOVER = 4;
+  CARD_BRAND_JCB = 5;
+  CARD_BRAND_DINERS = 6;
+  CARD_BRAND_UNIONPAY = 7;
 }
 ```
 
@@ -1123,62 +1075,6 @@ enum CryptoType {
 
 ---
 
-### RefundStatus
-
-<a name="refundstatus"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `REFUND_STATUS_UNSPECIFIED` | 0 | - |
-| `REFUND_STATUS_PENDING` | 1 | - |
-| `REFUND_STATUS_PROCESSING` | 2 | - |
-| `REFUND_STATUS_COMPLETED` | 3 | - |
-| `REFUND_STATUS_FAILED` | 4 | - |
-| `REFUND_STATUS_CANCELLED` | 5 | - |
-
-#### Proto Definition
-
-```protobuf
-enum RefundStatus {
-  REFUND_STATUS_UNSPECIFIED = 0;
-  REFUND_STATUS_PENDING = 1;
-  REFUND_STATUS_PROCESSING = 2;
-  REFUND_STATUS_COMPLETED = 3;
-  REFUND_STATUS_FAILED = 4;
-  REFUND_STATUS_CANCELLED = 5;
-}
-```
-
----
-
-### FeeType
-
-<a name="feetype"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `FEE_TYPE_UNSPECIFIED` | 0 | - |
-| `FEE_TYPE_PROCESSING` | 1 | - |
-| `FEE_TYPE_TRANSACTION` | 2 | - |
-| `FEE_TYPE_CURRENCY_CONVERSION` | 3 | - |
-| `FEE_TYPE_CROSS_BORDER` | 4 | - |
-| `FEE_TYPE_SERVICE` | 5 | - |
-
-#### Proto Definition
-
-```protobuf
-enum FeeType {
-  FEE_TYPE_UNSPECIFIED = 0;
-  FEE_TYPE_PROCESSING = 1;
-  FEE_TYPE_TRANSACTION = 2;
-  FEE_TYPE_CURRENCY_CONVERSION = 3;
-  FEE_TYPE_CROSS_BORDER = 4;
-  FEE_TYPE_SERVICE = 5;
-}
-```
-
----
-
 ### SettlementStatus
 
 <a name="settlementstatus"></a>
@@ -1200,6 +1096,32 @@ enum SettlementStatus {
   SETTLEMENT_STATUS_IN_TRANSIT = 2;
   SETTLEMENT_STATUS_SETTLED = 3;
   SETTLEMENT_STATUS_FAILED = 4;
+}
+```
+
+---
+
+### ActionType
+
+<a name="actiontype"></a>
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `ACTION_TYPE_UNSPECIFIED` | 0 | - |
+| `ACTION_TYPE_NONE` | 1 | - |
+| `ACTION_TYPE_REDIRECT` | 2 | - |
+| `ACTION_TYPE_VERIFY` | 3 | - |
+| `ACTION_TYPE_AUTHORIZE` | 4 | - |
+
+#### Proto Definition
+
+```protobuf
+enum ActionType {
+  ACTION_TYPE_UNSPECIFIED = 0;
+  ACTION_TYPE_NONE = 1;
+  ACTION_TYPE_REDIRECT = 2;
+  ACTION_TYPE_VERIFY = 3;
+  ACTION_TYPE_AUTHORIZE = 4;
 }
 ```
 
@@ -1279,6 +1201,142 @@ enum PaymentStatus {
 
 ---
 
+### WalletProvider
+
+<a name="walletprovider"></a>
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `WALLET_PROVIDER_UNSPECIFIED` | 0 | - |
+| `WALLET_PROVIDER_PAYPAL` | 1 | - |
+| `WALLET_PROVIDER_APPLE_PAY` | 2 | - |
+| `WALLET_PROVIDER_GOOGLE_PAY` | 3 | - |
+| `WALLET_PROVIDER_VENMO` | 4 | - |
+
+#### Proto Definition
+
+```protobuf
+enum WalletProvider {
+  WALLET_PROVIDER_UNSPECIFIED = 0;
+  WALLET_PROVIDER_PAYPAL = 1;
+  WALLET_PROVIDER_APPLE_PAY = 2;
+  WALLET_PROVIDER_GOOGLE_PAY = 3;
+  WALLET_PROVIDER_VENMO = 4;
+}
+```
+
+---
+
+### RefundStatus
+
+<a name="refundstatus"></a>
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `REFUND_STATUS_UNSPECIFIED` | 0 | - |
+| `REFUND_STATUS_PENDING` | 1 | - |
+| `REFUND_STATUS_PROCESSING` | 2 | - |
+| `REFUND_STATUS_COMPLETED` | 3 | - |
+| `REFUND_STATUS_FAILED` | 4 | - |
+| `REFUND_STATUS_CANCELLED` | 5 | - |
+
+#### Proto Definition
+
+```protobuf
+enum RefundStatus {
+  REFUND_STATUS_UNSPECIFIED = 0;
+  REFUND_STATUS_PENDING = 1;
+  REFUND_STATUS_PROCESSING = 2;
+  REFUND_STATUS_COMPLETED = 3;
+  REFUND_STATUS_FAILED = 4;
+  REFUND_STATUS_CANCELLED = 5;
+}
+```
+
+---
+
+### FraudCheckOutcome
+
+<a name="fraudcheckoutcome"></a>
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `FRAUD_CHECK_OUTCOME_UNSPECIFIED` | 0 | - |
+| `FRAUD_CHECK_OUTCOME_PASS` | 1 | - |
+| `FRAUD_CHECK_OUTCOME_REVIEW` | 2 | - |
+| `FRAUD_CHECK_OUTCOME_DECLINE` | 3 | - |
+
+#### Proto Definition
+
+```protobuf
+enum FraudCheckOutcome {
+  FRAUD_CHECK_OUTCOME_UNSPECIFIED = 0;
+  FRAUD_CHECK_OUTCOME_PASS = 1;
+  FRAUD_CHECK_OUTCOME_REVIEW = 2;
+  FRAUD_CHECK_OUTCOME_DECLINE = 3;
+}
+```
+
+---
+
+### FeeType
+
+<a name="feetype"></a>
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `FEE_TYPE_UNSPECIFIED` | 0 | - |
+| `FEE_TYPE_PROCESSING` | 1 | - |
+| `FEE_TYPE_TRANSACTION` | 2 | - |
+| `FEE_TYPE_CURRENCY_CONVERSION` | 3 | - |
+| `FEE_TYPE_CROSS_BORDER` | 4 | - |
+| `FEE_TYPE_SERVICE` | 5 | - |
+
+#### Proto Definition
+
+```protobuf
+enum FeeType {
+  FEE_TYPE_UNSPECIFIED = 0;
+  FEE_TYPE_PROCESSING = 1;
+  FEE_TYPE_TRANSACTION = 2;
+  FEE_TYPE_CURRENCY_CONVERSION = 3;
+  FEE_TYPE_CROSS_BORDER = 4;
+  FEE_TYPE_SERVICE = 5;
+}
+```
+
+---
+
+### EventType
+
+<a name="eventtype"></a>
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `EVENT_TYPE_UNSPECIFIED` | 0 | - |
+| `EVENT_TYPE_PAYMENT_CREATED` | 1 | - |
+| `EVENT_TYPE_PAYMENT_UPDATED` | 2 | - |
+| `EVENT_TYPE_PAYMENT_COMPLETED` | 3 | - |
+| `EVENT_TYPE_PAYMENT_FAILED` | 4 | - |
+| `EVENT_TYPE_PAYMENT_REFUNDED` | 5 | - |
+| `EVENT_TYPE_PAYMENT_DISPUTED` | 6 | - |
+
+#### Proto Definition
+
+```protobuf
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_PAYMENT_CREATED = 1;
+  EVENT_TYPE_PAYMENT_UPDATED = 2;
+  EVENT_TYPE_PAYMENT_COMPLETED = 3;
+  EVENT_TYPE_PAYMENT_FAILED = 4;
+  EVENT_TYPE_PAYMENT_REFUNDED = 5;
+  EVENT_TYPE_PAYMENT_DISPUTED = 6;
+}
+```
+
+---
+
 ### TransactionType
 
 <a name="transactiontype"></a>
@@ -1302,64 +1360,6 @@ enum TransactionType {
   TRANSACTION_TYPE_CHARGEBACK = 3;
   TRANSACTION_TYPE_PAYOUT = 4;
   TRANSACTION_TYPE_ADJUSTMENT = 5;
-}
-```
-
----
-
-### CardBrand
-
-<a name="cardbrand"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `CARD_BRAND_UNSPECIFIED` | 0 | - |
-| `CARD_BRAND_VISA` | 1 | - |
-| `CARD_BRAND_MASTERCARD` | 2 | - |
-| `CARD_BRAND_AMEX` | 3 | - |
-| `CARD_BRAND_DISCOVER` | 4 | - |
-| `CARD_BRAND_JCB` | 5 | - |
-| `CARD_BRAND_DINERS` | 6 | - |
-| `CARD_BRAND_UNIONPAY` | 7 | - |
-
-#### Proto Definition
-
-```protobuf
-enum CardBrand {
-  CARD_BRAND_UNSPECIFIED = 0;
-  CARD_BRAND_VISA = 1;
-  CARD_BRAND_MASTERCARD = 2;
-  CARD_BRAND_AMEX = 3;
-  CARD_BRAND_DISCOVER = 4;
-  CARD_BRAND_JCB = 5;
-  CARD_BRAND_DINERS = 6;
-  CARD_BRAND_UNIONPAY = 7;
-}
-```
-
----
-
-### WalletProvider
-
-<a name="walletprovider"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `WALLET_PROVIDER_UNSPECIFIED` | 0 | - |
-| `WALLET_PROVIDER_PAYPAL` | 1 | - |
-| `WALLET_PROVIDER_APPLE_PAY` | 2 | - |
-| `WALLET_PROVIDER_GOOGLE_PAY` | 3 | - |
-| `WALLET_PROVIDER_VENMO` | 4 | - |
-
-#### Proto Definition
-
-```protobuf
-enum WalletProvider {
-  WALLET_PROVIDER_UNSPECIFIED = 0;
-  WALLET_PROVIDER_PAYPAL = 1;
-  WALLET_PROVIDER_APPLE_PAY = 2;
-  WALLET_PROVIDER_GOOGLE_PAY = 3;
-  WALLET_PROVIDER_VENMO = 4;
 }
 ```
 
