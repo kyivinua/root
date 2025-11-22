@@ -55,3 +55,4 @@ vendor/
 /api-docs/
 *.bin
 .DS_Store
+tools/protodocs/cmd/consolidated-docgen/consolidated-docgen
