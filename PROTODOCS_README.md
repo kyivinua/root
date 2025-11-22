@@ -412,6 +412,116 @@ notifications:
 | Breaking Changes | Обнаружены breaking changes | Красный |
 | Release Notes | Публикация release notes | Синий |
 
+## Mermaid Architecture Diagrams
+
+Система автоматически генерирует Mermaid диаграммы для визуализации архитектуры, компонентов и структуры данных.
+
+### Возможности
+
+- **Pipeline Architecture**: Flowchart всех стадий pipeline с decision points
+- **Enricher Orchestration**: Детальная схема LLM enrichment с safety guards
+- **Component Interaction**: Граф зависимостей всех модулей и внешних сервисов
+- **Proto → Doc Transformation**: Визуализация преобразования .proto в документацию
+- **Deployment Architecture**: Схема runtime deployment с конфигурациями
+- **Data Model ER**: Entity-Relationship диаграмма структуры ApiDocModel
+- **Service Map**: Граф связей между сервисами и сообщениями
+- **Message Hierarchy**: Дерево зависимостей message types
+
+### Конфигурация
+
+```yaml
+# configs/proto-docs.config.yaml
+diagrams:
+  enabled: true
+  output_dir: "./api-docs/diagrams"
+
+  # Включить/выключить отдельные типы диаграмм
+  enable_pipeline: true           # Pipeline architecture flowchart
+  enable_enricher: true           # Enricher orchestration flowchart
+  enable_component: true          # Component interaction graph
+  enable_transform: true          # Proto → Doc transformation flowchart
+  enable_deploy: true             # Deployment architecture graph
+  enable_data_model: true         # Data model ER diagram
+  enable_service_map: true        # Service relationship map
+  enable_message_hierarchy: false # Message hierarchy (может быть очень большой)
+
+  # Настройки генерации
+  generate_index: true            # Генерировать README.md index
+  theme: "default"                # Mermaid тема: default, forest, dark, neutral
+  max_services_per_diagram: 20    # Лимит сервисов в service map
+  max_messages_per_diagram: 30    # Лимит сообщений в message hierarchy
+```
+
+### Использование
+
+```bash
+# Генерация диаграмм вместе с pipeline
+make proto-docs
+
+# Диаграммы будут созданы в api-docs/diagrams/
+ls -la api-docs/diagrams/
+# pipeline-architecture.md
+# enricher-orchestration.md
+# component-interaction.md
+# proto-transform.md
+# deployment-architecture.md
+# data-model-structure.md
+# service-map.md
+# README.md  # Индекс всех диаграмм
+```
+
+### Типы диаграмм
+
+| Диаграмма | Тип Mermaid | Описание | Динамическая |
+|-----------|-------------|----------|--------------|
+| Pipeline Architecture | flowchart LR | Полный pipeline со всеми стадиями | Нет |
+| Enricher Orchestration | flowchart TD | Процесс LLM enrichment с safety guards | Нет |
+| Component Interaction | graph TB | Зависимости между модулями | Нет |
+| Proto → Doc Transform | flowchart LR | Преобразование .proto в ApiDocModel | Нет |
+| Deployment Architecture | graph LR | Runtime deployment и интеграции | Нет |
+| Data Model ER | erDiagram | Структура ApiDocModel | Да |
+| Service Map | graph TB | Связи сервисов и сообщений | Да |
+| Message Hierarchy | graph TD | Дерево зависимостей messages | Да |
+
+**Статические диаграммы** генерируются один раз на основе архитектуры системы.
+
+**Динамические диаграммы** создаются из ApiDocModel и отражают реальную структуру ваших .proto файлов.
+
+### Интеграция в документацию
+
+```markdown
+# В вашем mkdocs.yml или docusaurus.config.js
+
+# Mermaid diagrams автоматически рендерятся браузером:
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+# Или используйте markdown plugin:
+# mkdocs.yml
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+```
+
+### Пример диаграммы Pipeline
+
+```mermaid
+flowchart LR
+    Start([Start Pipeline]) --> Discovery[🔍 Discovery Stage]
+    Discovery --> Lint[✓ Lint Stage]
+    Lint --> Breaking[⚠️ Breaking Check]
+    Breaking --> Build[🔨 Descriptor Build]
+    Build --> LoadContext[📥 Load ProtoContext]
+    LoadContext --> BuildModel[🏗️ Build Doc Model]
+    BuildModel --> EnrichDecision{Enrichment Enabled?}
+    EnrichDecision -->|Yes| Enrich[🤖 LLM Enrichment]
+    EnrichDecision -->|No| GenDocs[📝 Generate Docs]
+    Enrich --> GenDocs
+    GenDocs --> End([✅ Complete])
+```
+
 ## Runtime Service
 
 Пример HTTP сервиса, использующего ProtoContext для runtime операций.

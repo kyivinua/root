@@ -48,6 +48,26 @@ openapi:
   output_dir: "./api-docs/openapi"
   visibility_filter: ["PUBLIC"]
 
+diagrams:
+  enabled: true
+  output_dir: "./api-docs/diagrams"
+
+  # Enable/disable specific diagram types
+  enable_pipeline: true           # Pipeline architecture flowchart
+  enable_enricher: true           # Enricher orchestration flowchart
+  enable_component: true          # Component interaction graph
+  enable_transform: true          # Proto → Doc transformation flowchart
+  enable_deploy: true             # Deployment architecture graph
+  enable_data_model: true         # Data model ER diagram
+  enable_service_map: true        # Service relationship map
+  enable_message_hierarchy: false # Message hierarchy (can be very large)
+
+  # Generation settings
+  generate_index: true            # Generate README.md index
+  theme: "default"                # Mermaid theme: default, forest, dark, neutral
+  max_services_per_diagram: 20    # Limit services in service map
+  max_messages_per_diagram: 30    # Limit messages in message hierarchy
+
 site:
   generator: "mkdocs"
   config_path: "./docs-site/mkdocs.yml"

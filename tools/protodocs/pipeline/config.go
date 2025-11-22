@@ -20,6 +20,7 @@ type PipelineConfig struct {
 	Descriptors DescriptorsConfig `yaml:"descriptors"`
 	Docs        DocsConfig        `yaml:"docs"`
 	OpenAPI     OpenAPIConfig     `yaml:"openapi"`
+	Diagrams    DiagramsConfig    `yaml:"diagrams"`
 	Site        SiteConfig        `yaml:"site"`
 }
 
@@ -95,6 +96,24 @@ type SlackConfig struct {
 	ReleaseNotesFromRef    string `yaml:"release_notes_from_ref"`
 }
 
+// DiagramsConfig holds diagram generation configuration.
+type DiagramsConfig struct {
+	Enabled                bool   `yaml:"enabled"`
+	OutputDir              string `yaml:"output_dir"`
+	EnablePipeline         bool   `yaml:"enable_pipeline"`
+	EnableEnricher         bool   `yaml:"enable_enricher"`
+	EnableComponent        bool   `yaml:"enable_component"`
+	EnableTransform        bool   `yaml:"enable_transform"`
+	EnableDeploy           bool   `yaml:"enable_deploy"`
+	EnableDataModel        bool   `yaml:"enable_data_model"`
+	EnableServiceMap       bool   `yaml:"enable_service_map"`
+	EnableMessageHierarchy bool   `yaml:"enable_message_hierarchy"`
+	GenerateIndex          bool   `yaml:"generate_index"`
+	Theme                  string `yaml:"theme"` // default, forest, dark, neutral
+	MaxServicesPerDiagram  int    `yaml:"max_services_per_diagram"`
+	MaxMessagesPerDiagram  int    `yaml:"max_messages_per_diagram"`
+}
+
 // LoadConfig loads pipeline configuration from a YAML file.
 func LoadConfig(path string) (*PipelineConfig, error) {
 	data, err := os.ReadFile(path)
@@ -128,6 +147,18 @@ func LoadConfig(path string) (*PipelineConfig, error) {
 	}
 	if cfg.Site.OutputDir == "" {
 		cfg.Site.OutputDir = "./api-docs/site"
+	}
+	if cfg.Diagrams.OutputDir == "" {
+		cfg.Diagrams.OutputDir = "./api-docs/diagrams"
+	}
+	if cfg.Diagrams.Theme == "" {
+		cfg.Diagrams.Theme = "default"
+	}
+	if cfg.Diagrams.MaxServicesPerDiagram == 0 {
+		cfg.Diagrams.MaxServicesPerDiagram = 20
+	}
+	if cfg.Diagrams.MaxMessagesPerDiagram == 0 {
+		cfg.Diagrams.MaxMessagesPerDiagram = 30
 	}
 
 	return &cfg, nil
@@ -180,6 +211,22 @@ func DefaultConfig() *PipelineConfig {
 			Plugin:           "openapiv3",
 			OutputDir:        "./api-docs/openapi",
 			VisibilityFilter: []string{"PUBLIC"},
+		},
+		Diagrams: DiagramsConfig{
+			Enabled:                true,
+			OutputDir:              "./api-docs/diagrams",
+			EnablePipeline:         true,
+			EnableEnricher:         true,
+			EnableComponent:        true,
+			EnableTransform:        true,
+			EnableDeploy:           true,
+			EnableDataModel:        true,
+			EnableServiceMap:       true,
+			EnableMessageHierarchy: false,
+			GenerateIndex:          true,
+			Theme:                  "default",
+			MaxServicesPerDiagram:  20,
+			MaxMessagesPerDiagram:  30,
 		},
 		Site: SiteConfig{
 			Generator:  "mkdocs",

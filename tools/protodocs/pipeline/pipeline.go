@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/kyivinua/docgen-tool/tools/protoctx"
+	"github.com/kyivinua/root/tools/protodocs/diagrams"
 )
 
 // Pipeline orchestrates the documentation generation pipeline.
@@ -100,6 +101,13 @@ func (p *Pipeline) RunAll() error {
 		// Notify enrichment completion
 		if p.notificationManager != nil {
 			p.notificationManager.NotifyEnrichmentComplete(p.config.Enrichment.ManifestPath)
+		}
+	}
+
+	// Stage 4.7: Diagram Generation (optional)
+	if p.config.Diagrams.Enabled {
+		if err := p.runDiagramGeneration(model); err != nil {
+			return fmt.Errorf("diagram generation: %w", err)
 		}
 	}
 
@@ -294,6 +302,183 @@ func (p *Pipeline) runEnrichment(model *ApiDocModel) (*ApiDocModel, error) {
 
 	p.logger.Println("Enrichment completed successfully")
 	return enrichedModel, nil
+}
+
+// runDiagramGeneration executes the diagram generation stage.
+func (p *Pipeline) runDiagramGeneration(model *ApiDocModel) error {
+	p.logger.Println("Stage 4.7: Diagram Generation")
+
+	// Convert pipeline DiagramsConfig to diagrams.DiagramConfig
+	diagramConfig := &diagrams.DiagramConfig{
+		OutputDir:              p.config.Diagrams.OutputDir,
+		EnablePipeline:         p.config.Diagrams.EnablePipeline,
+		EnableEnricher:         p.config.Diagrams.EnableEnricher,
+		EnableComponent:        p.config.Diagrams.EnableComponent,
+		EnableTransform:        p.config.Diagrams.EnableTransform,
+		EnableDeploy:           p.config.Diagrams.EnableDeploy,
+		EnableDataModel:        p.config.Diagrams.EnableDataModel,
+		EnableServiceMap:       p.config.Diagrams.EnableServiceMap,
+		EnableMessageHierarchy: p.config.Diagrams.EnableMessageHierarchy,
+		GenerateIndex:          p.config.Diagrams.GenerateIndex,
+		IncludeTimestamp:       true,
+		Theme:                  p.config.Diagrams.Theme,
+		MaxServicesPerDiagram:  p.config.Diagrams.MaxServicesPerDiagram,
+		MaxMessagesPerDiagram:  p.config.Diagrams.MaxMessagesPerDiagram,
+		IncludePrivateTypes:    false,
+	}
+
+	// Create diagram generator
+	generator := diagrams.NewDiagramGenerator(diagramConfig)
+
+	// Convert ApiDocModel to diagrams.ApiDocModel
+	diagramModel := convertTodiagramsModel(model)
+
+	// Generate all diagrams
+	results, err := generator.GenerateAll(diagramModel)
+	if err != nil {
+		p.logger.Printf("Warning: Diagram generation encountered errors: %v\n", err)
+	}
+
+	// Count successful diagrams
+	successCount := 0
+	for _, result := range results {
+		if result.Error == nil {
+			successCount++
+		}
+	}
+
+	p.logger.Printf("Diagram generation complete: %d/%d diagrams generated successfully\n",
+		successCount, len(results))
+
+	return nil
+}
+
+// convertTodiagramsModel converts pipeline.ApiDocModel to diagrams.ApiDocModel
+func convertTodiagramsModel(model *ApiDocModel) *diagrams.ApiDocModel {
+	if model == nil {
+		return nil
+	}
+
+	dm := &diagrams.ApiDocModel{
+		GeneratedAt:  model.GeneratedAt,
+		SourceCommit: model.SourceCommit,
+		Statistics:   model.Statistics,
+		Tools:        model.Tools,
+		Modules:      make([]diagrams.DocModule, len(model.Modules)),
+	}
+
+	for i, module := range model.Modules {
+		dm.Modules[i] = diagrams.DocModule{
+			Name:        module.Name,
+			Package:     module.Package,
+			Description: module.Description,
+			FilePath:    module.FilePath,
+			Services:    convertServices(module.Services),
+			Messages:    convertMessages(module.Messages),
+			Enums:       convertEnums(module.Enums),
+		}
+	}
+
+	return dm
+}
+
+func convertServices(services []DocService) []diagrams.DocService {
+	result := make([]diagrams.DocService, len(services))
+	for i, svc := range services {
+		result[i] = diagrams.DocService{
+			Name:        svc.Name,
+			FullName:    svc.FullName,
+			Description: svc.Description,
+			Methods:     convertMethods(svc.Methods),
+			Visibility:  svc.Visibility,
+		}
+	}
+	return result
+}
+
+func convertMethods(methods []DocMethod) []diagrams.DocMethod {
+	result := make([]diagrams.DocMethod, len(methods))
+	for i, method := range methods {
+		result[i] = diagrams.DocMethod{
+			Name:            method.Name,
+			FullName:        method.FullName,
+			Description:     method.Description,
+			InputType:       method.InputType,
+			OutputType:      method.OutputType,
+			ClientStreaming: method.ClientStreaming,
+			ServerStreaming: method.ServerStreaming,
+			HTTPMethods:     convertHTTPMethods(method.HTTPMethods),
+			Visibility:      method.Visibility,
+		}
+	}
+	return result
+}
+
+func convertHTTPMethods(httpMethods []HTTPMethodInfo) []diagrams.HTTPMethodInfo {
+	result := make([]diagrams.HTTPMethodInfo, len(httpMethods))
+	for i, hm := range httpMethods {
+		result[i] = diagrams.HTTPMethodInfo{
+			Method: hm.Method,
+			Path:   hm.Path,
+		}
+	}
+	return result
+}
+
+func convertMessages(messages []DocMessage) []diagrams.DocMessage {
+	result := make([]diagrams.DocMessage, len(messages))
+	for i, msg := range messages {
+		result[i] = diagrams.DocMessage{
+			Name:        msg.Name,
+			FullName:    msg.FullName,
+			Description: msg.Description,
+			Fields:      convertFields(msg.Fields),
+			Visibility:  msg.Visibility,
+		}
+	}
+	return result
+}
+
+func convertFields(fields []DocField) []diagrams.DocField {
+	result := make([]diagrams.DocField, len(fields))
+	for i, field := range fields {
+		result[i] = diagrams.DocField{
+			Name:        field.Name,
+			Number:      field.Number,
+			Type:        field.Type,
+			TypeName:    field.TypeName,
+			Label:       field.Label,
+			Description: field.Description,
+			OneofGroup:  field.OneofGroup,
+		}
+	}
+	return result
+}
+
+func convertEnums(enums []DocEnum) []diagrams.DocEnum {
+	result := make([]diagrams.DocEnum, len(enums))
+	for i, enum := range enums {
+		result[i] = diagrams.DocEnum{
+			Name:        enum.Name,
+			FullName:    enum.FullName,
+			Description: enum.Description,
+			Values:      convertEnumValues(enum.Values),
+			Visibility:  enum.Visibility,
+		}
+	}
+	return result
+}
+
+func convertEnumValues(values []DocEnumValue) []diagrams.DocEnumValue {
+	result := make([]diagrams.DocEnumValue, len(values))
+	for i, val := range values {
+		result[i] = diagrams.DocEnumValue{
+			Name:        val.Name,
+			Number:      val.Number,
+			Description: val.Description,
+		}
+	}
+	return result
 }
 
 // runDocsGeneration executes the docs generation stage.
