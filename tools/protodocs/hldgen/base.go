@@ -15,6 +15,9 @@ type Agent interface {
 
 	// Weight returns the agent's weight in consensus calculation
 	Weight() float64
+
+	// SetLLMClient sets the LLM client for the agent
+	SetLLMClient(client LLMClient)
 }
 
 // BaseAgent provides common functionality for all agents
@@ -24,6 +27,7 @@ type BaseAgent struct {
 	model       string
 	temperature float64
 	maxTokens   int
+	llmClient   LLMClient
 }
 
 // Role returns the agent's role
@@ -34,4 +38,14 @@ func (b *BaseAgent) Role() AgentRole {
 // Weight returns the agent's weight
 func (b *BaseAgent) Weight() float64 {
 	return b.weight
+}
+
+// SetLLMClient sets the LLM client for the agent
+func (b *BaseAgent) SetLLMClient(client LLMClient) {
+	b.llmClient = client
+}
+
+// GetLLMClient returns the LLM client
+func (b *BaseAgent) GetLLMClient() LLMClient {
+	return b.llmClient
 }

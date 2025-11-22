@@ -52,18 +52,25 @@ func NewOrchestrator(cfg Config, logger zerolog.Logger) (*Orchestrator, error) {
 	for _, agentCfg := range cfg.Intelligence.MultiAgent.Agents {
 		role := AgentRole(agentCfg.Role)
 
+		var agent Agent
 		switch role {
 		case RoleArchitect:
-			agentMap[role] = NewArchitectAgent(agentCfg)
+			agent = NewArchitectAgent(agentCfg)
 		case RolePM:
-			agentMap[role] = NewSimpleAgent(role, agentCfg)
+			agent = NewSimpleAgent(role, agentCfg)
 		case RoleSecurity:
-			agentMap[role] = NewSimpleAgent(role, agentCfg)
+			agent = NewSimpleAgent(role, agentCfg)
 		case RoleSRE:
-			agentMap[role] = NewSimpleAgent(role, agentCfg)
+			agent = NewSimpleAgent(role, agentCfg)
 		case RoleQA:
-			agentMap[role] = NewSimpleAgent(role, agentCfg)
+			agent = NewSimpleAgent(role, agentCfg)
+		default:
+			continue
 		}
+
+		// Set LLM client for each agent
+		agent.SetLLMClient(llmRouter.selectProvider())
+		agentMap[role] = agent
 	}
 
 	// Find critic config
@@ -77,6 +84,7 @@ func NewOrchestrator(cfg Config, logger zerolog.Logger) (*Orchestrator, error) {
 
 	// Initialize critic
 	critic := NewCriticAgent(criticCfg, cfg.Intelligence.ConsensusThreshold)
+	critic.SetLLMClient(llmRouter.selectProvider())
 
 	// Initialize merger
 	merger := NewResponseMerger("priority_merge")
