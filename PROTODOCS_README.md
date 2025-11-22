@@ -4,10 +4,11 @@
 
 ## Обзор
 
-Система состоит из двух основных компонентов:
+Система состоит из трех основных компонентов:
 
 1. **ProtoContext** (`tools/protoctx`) - Go библиотека для runtime работы с Protobuf дескрипторами
 2. **ProtoDocsPipeline** (`tools/protodocs`) - Пайплайн автоматической генерации документации
+3. **Enrichment Module** (`tools/protodocs/enricher`) - LLM-based обогащение документации с RAG, safety guards и audit trail
 
 ## Архитектура
 
@@ -98,9 +99,10 @@ if report.HasBreaking() {
 3. **Breaking Check** - проверка обратной совместимости
 4. **Descriptor Build** - сборка image.bin (FileDescriptorSet)
 5. **Doc Model Build** - построение ApiDocModel из дескрипторов
-6. **Docs Generation** - генерация Markdown/HTML
-7. **OpenAPI Generation** - генерация OpenAPI спецификаций
-8. **Site Assembly** - сборка статического сайта
+6. **Enrichment** (опционально) - LLM-based обогащение документации
+7. **Docs Generation** - генерация Markdown/HTML
+8. **OpenAPI Generation** - генерация OpenAPI спецификаций
+9. **Site Assembly** - сборка статического сайта
 
 ### Использование через CLI
 
@@ -119,6 +121,191 @@ make proto-build
 
 # Проверка breaking changes
 make proto-breaking
+```
+
+## Enrichment Module
+
+Enterprise-grade LLM-based documentation enrichment with RAG, hallucination detection, and full audit trail.
+
+### Возможности
+
+- **Multi-Provider LLM Support**: Anthropic Claude, OpenAI, Ollama через gollm
+- **RAG Integration**: Weaviate vector store + langchaingo для контекстной генерации
+- **Semantic Entropy**: Обнаружение галлюцинаций через von Neumann entropy
+- **LLM-as-Judge**: Верификация достоверности через второй LLM вызов
+- **Safety Guards**: PII/PCI-DSS проверки, regex-based фильтры
+- **Advanced Prompting**: XML tags + Chain-of-Thought для Claude
+- **Adaptive RAG**: Умное использование RAG на основе сложности задачи
+- **Tenant Isolation**: Policy engine с поддержкой мультиарендности
+- **Full Audit Trail**: Полный трейс каждого enrichment с токенами, стоимостью, временем
+- **Metrics & Monitoring**: Prometheus метрики для production deployment
+- **Caching**: Ristretto cache для снижения затрат
+- **Enrichment Manifest**: Отчет о результатах для site assembly
+
+### Архитектура
+
+```
+┌────────────────┐
+│  ApiDocModel   │
+└────────┬───────┘
+         │
+         ▼
+┌────────────────────────────────────────┐
+│         Enricher Orchestrator          │
+│  ┌──────────┐  ┌──────────┐           │
+│  │ Policy   │  │  Safety  │           │
+│  │ Engine   │  │  Guard   │           │
+│  └──────────┘  └──────────┘           │
+│         │                              │
+│         ▼                              │
+│  ┌──────────────────────┐             │
+│  │   Smart Strategy     │             │
+│  │  (Adaptive RAG)      │             │
+│  └──────────────────────┘             │
+│         │                              │
+│         ▼                              │
+│  ┌─────────────┐  ┌─────────────┐    │
+│  │ RAG Retriev │  │ LLM Client  │    │
+│  │ (Weaviate)  │  │  (gollm)    │    │
+│  └─────────────┘  └─────────────┘    │
+│         │              │               │
+│         └──────┬───────┘               │
+│                ▼                        │
+│  ┌──────────────────────┐             │
+│  │  Template Engine     │             │
+│  │  (XML/CoT)           │             │
+│  └──────────────────────┘             │
+└────────────────────────────────────────┘
+         │
+         ▼
+┌────────────────────────────────────────┐
+│   Enriched ApiDocModel + Manifest      │
+└────────────────────────────────────────┘
+```
+
+### Использование
+
+```bash
+# Базовая конфигурация
+export LLM_API_KEY="your-anthropic-key"
+export WEAVIATE_API_KEY="your-weaviate-key"  # если используется
+
+# Запуск enrichment standalone
+make run-enricher
+
+# Или через pipeline (включить в configs/proto-docs.config.yaml)
+enrichment:
+  enabled: true
+  config_path: "configs/enricher.config.yaml"
+
+make proto-docs
+```
+
+### Конфигурация
+
+`configs/enricher.config.yaml`:
+
+```yaml
+provider: anthropic
+model: claude-3-5-sonnet-20241022
+temperature: 0.0
+max_tokens: 4096
+
+rag:
+  enabled: true
+  vector_store: weaviate
+  use_adaptive: true  # Адаптивное использование RAG
+
+safety:
+  enabled: true
+  use_semantic_entropy: true  # von Neumann entropy
+  use_llm_judge: true         # LLM-as-judge validation
+  pii_checks: true
+  pci_dss_checks: true
+
+cache:
+  enabled: true
+  ttl: 24h
+
+metrics:
+  enabled: true
+  type: prometheus
+```
+
+### Enrichment Flow
+
+1. **Policy Check**: Проверка tenant policy (allow/deny/approval required)
+2. **Cache Lookup**: Проверка кэша для избежания повторных вызовов
+3. **Smart Strategy**: Решение использовать RAG или base LLM
+4. **RAG Retrieval** (если нужно): Извлечение top-K релевантных документов
+5. **Prompt Rendering**: XML/CoT template с context
+6. **LLM Generation**: Вызов LLM с temperature=0.0
+7. **Safety Validation**:
+   - PII/PCI regex checks
+   - Semantic entropy calculation
+   - LLM-as-judge faithfulness check
+8. **Apply & Cache**: Сохранение enriched docs + кэширование
+9. **Audit Trail**: Запись полного trace с метриками
+
+### Safety Guards
+
+#### PII Detection
+- Email addresses
+- Phone numbers
+- SSN patterns
+- IP addresses
+
+#### PCI-DSS Detection
+- Credit card patterns
+- CVV/CVC codes
+
+#### Semantic Entropy
+```
+entropy = -Σ p(word) * log2(p(word))
+normalized_entropy = entropy / log2(unique_words)
+```
+
+#### LLM-as-Judge
+```
+VERDICT: [FAITHFUL|UNFAITHFUL]
+CONFIDENCE: [0.0-1.0]
+REASONING: [explanation]
+```
+
+### Enrichment Manifest
+
+После enrichment генерируется manifest:
+
+```json
+{
+  "version": "1.0",
+  "model_used": "claude-3-5-sonnet-20241022",
+  "provider_used": "anthropic",
+  "start_time": "2025-01-20T10:00:00Z",
+  "duration": "5m30s",
+  "statistics": {
+    "total_targets": 150,
+    "enriched_targets": 148,
+    "failed_targets": 2,
+    "cache_hits": 45,
+    "total_tokens_used": 125000,
+    "success_rate": 0.9867,
+    "cache_hit_rate": 0.30
+  }
+}
+```
+
+### Makefile Targets
+
+```bash
+# Сборка enricher binary
+make build-enricher
+
+# Запуск enrichment
+make run-enricher
+
+# Тесты enricher
+make test-enricher
 ```
 
 ## Runtime Service

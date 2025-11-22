@@ -12,8 +12,9 @@ type PipelineConfig struct {
 	ProtoRoot string `yaml:"proto_root"`
 	UseBuf    bool   `yaml:"use_buf"`
 
-	Lint     LintConfig     `yaml:"lint"`
-	Breaking BreakingConfig `yaml:"breaking"`
+	Lint       LintConfig       `yaml:"lint"`
+	Breaking   BreakingConfig   `yaml:"breaking"`
+	Enrichment EnrichmentConfig `yaml:"enrichment"`
 
 	Descriptors DescriptorsConfig `yaml:"descriptors"`
 	Docs        DocsConfig        `yaml:"docs"`
@@ -58,6 +59,15 @@ type SiteConfig struct {
 	Generator  string `yaml:"generator"`   // "mkdocs" or "docusaurus"
 	ConfigPath string `yaml:"config_path"` // path to mkdocs.yml
 	OutputDir  string `yaml:"output_dir"`
+}
+
+// EnrichmentConfig holds enrichment configuration.
+type EnrichmentConfig struct {
+	Enabled        bool   `yaml:"enabled"`
+	ConfigPath     string `yaml:"config_path"`      // path to enricher.config.yaml
+	ManifestPath   string `yaml:"manifest_path"`    // path to output manifest
+	Tenant         string `yaml:"tenant"`           // tenant ID for policy
+	OutputModelPath string `yaml:"output_model_path"` // path to enriched model
 }
 
 // LoadConfig loads pipeline configuration from a YAML file.
@@ -111,6 +121,13 @@ func DefaultConfig() *PipelineConfig {
 			Enable: true,
 			Target: ".git#branch=main",
 		},
+		Enrichment: EnrichmentConfig{
+			Enabled:         false,
+			ConfigPath:      "configs/enricher.config.yaml",
+			ManifestPath:    "api-docs/enrichment-manifest.json",
+			Tenant:          "default",
+			OutputModelPath: "api-docs/model/api-doc-model-enriched.json",
+		},
 		Descriptors: DescriptorsConfig{
 			OutputPath: "api-docs/descriptors/image.bin",
 		},
@@ -127,7 +144,7 @@ func DefaultConfig() *PipelineConfig {
 		},
 		Site: SiteConfig{
 			Generator:  "mkdocs",
-			ConfigPath: "./docs-site/mkdocs.yml",
+			ConfigPath:  "./docs-site/mkdocs.yml",
 			OutputDir:  "./api-docs/site",
 		},
 	}

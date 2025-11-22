@@ -75,6 +75,15 @@ func (p *Pipeline) RunAll() error {
 		return fmt.Errorf("doc model build: %w", err)
 	}
 
+	// Stage 4.5: Enrichment (optional)
+	if p.config.Enrichment.Enabled {
+		enrichedModel, err := p.runEnrichment(model)
+		if err != nil {
+			return fmt.Errorf("enrichment: %w", err)
+		}
+		model = enrichedModel
+	}
+
 	// Stage 5: Docs Generation
 	if err := p.runDocsGeneration(); err != nil {
 		return fmt.Errorf("docs generation: %w", err)
@@ -217,6 +226,43 @@ func (p *Pipeline) runDocModelBuild(descPath string) (*ApiDocModel, error) {
 		model.Statistics["total_messages"])
 
 	return model, nil
+}
+
+// runEnrichment executes the enrichment stage using protodocs-enricher.
+func (p *Pipeline) runEnrichment(model *ApiDocModel) (*ApiDocModel, error) {
+	p.logger.Println("Stage 4.5: Enrichment")
+
+	// Build command to run protodocs-enricher
+	modelPath := "api-docs/model/api-doc-model.json"
+
+	cmd := exec.Command(
+		"go", "run", "./cmd/protodocs-enricher",
+		"--config", p.config.Enrichment.ConfigPath,
+		"--input", modelPath,
+		"--output", p.config.Enrichment.OutputModelPath,
+		"--manifest", p.config.Enrichment.ManifestPath,
+		"--tenant", p.config.Enrichment.Tenant,
+	)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		p.logger.Printf("Warning: Enrichment failed: %v\n", err)
+		p.logger.Println("Continuing with non-enriched model...")
+		return model, nil // Non-fatal: continue with original model
+	}
+
+	// Load enriched model
+	enrichedModel, err := LoadApiDocModel(p.config.Enrichment.OutputModelPath)
+	if err != nil {
+		p.logger.Printf("Warning: Failed to load enriched model: %v\n", err)
+		p.logger.Println("Continuing with non-enriched model...")
+		return model, nil // Non-fatal
+	}
+
+	p.logger.Println("Enrichment completed successfully")
+	return enrichedModel, nil
 }
 
 // runDocsGeneration executes the docs generation stage.

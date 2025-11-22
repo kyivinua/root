@@ -9,6 +9,13 @@ breaking:
   enable: true
   target: ".git#branch=main"
 
+enrichment:
+  enabled: false  # Set to true to enable LLM enrichment
+  config_path: "configs/enricher.config.yaml"
+  manifest_path: "api-docs/enrichment-manifest.json"
+  tenant: "default"
+  output_model_path: "api-docs/model/api-doc-model-enriched.json"
+
 descriptors:
   output_path: "api-docs/descriptors/image.bin"
 

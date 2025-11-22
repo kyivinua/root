@@ -1,0 +1,77 @@
+# Enrichment Module Configuration
+# LLM-based documentation enrichment for Protocol Buffer APIs
+
+# LLM Provider Configuration
+provider: anthropic
+model: claude-3-5-sonnet-20241022
+temperature: 0.0  # Deterministic output
+max_tokens: 4096
+top_p: 1.0
+# api_key: ""  # Set via LLM_API_KEY environment variable
+# base_url: ""  # Optional custom endpoint
+timeout_secs: 60
+
+# RAG Configuration
+rag:
+  enabled: true
+  vector_store: weaviate
+  embed_model: text-embedding-3-small
+  top_k: 5
+  min_score: 0.7
+  use_adaptive: true
+  weaviate:
+    host: localhost:8080
+    scheme: http
+    class_name: ProtoDocumentation
+    # api_key: ""  # Set via WEAVIATE_API_KEY environment variable
+
+# Safety Configuration
+safety:
+  enabled: true
+  use_semantic_entropy: true
+  use_llm_judge: true
+  judge_model: claude-3-haiku-20240307
+  entropy_threshold: 0.5
+  confidence_threshold: 0.7
+  pii_checks: true
+  pci_dss_checks: true
+
+# Cache Configuration
+cache:
+  enabled: true
+  type: ristretto
+  max_size: 104857600  # 100MB
+  ttl: 24h
+  num_counters: 1000000
+
+# Metrics Configuration
+metrics:
+  enabled: true
+  type: prometheus
+  prometheus_port: 9090
+  namespace: protodocs
+  subsystem: enricher
+
+# Policy Configuration
+policy:
+  enabled: false
+  type: static
+  config_path: configs/tenant-policies.json
+  default_tenant: default
+
+# Concurrency Configuration
+concurrency:
+  max_concurrent: 10
+  rate_limit_qps: 10
+
+# Template Configuration
+templates:
+  # template_dir: templates/enrichment
+  default_format: xml
+  use_cot: true
+
+# Trace Configuration
+trace:
+  enabled: true
+  type: file
+  output_path: api-docs/enrichment-traces.json

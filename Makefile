@@ -1,4 +1,4 @@
-.PHONY: help build install test test-coverage test-race lint fmt clean run release proto-lint proto-breaking proto-build proto-docs proto-ci build-proto-docs build-runtime run-runtime test-protoctx test-pipeline
+.PHONY: help build install test test-coverage test-race lint fmt clean run release proto-lint proto-breaking proto-build proto-docs proto-ci build-proto-docs build-runtime build-enricher run-runtime run-enricher test-protoctx test-pipeline test-enricher
 
 # Variables
 BINARY_NAME=docgen
@@ -8,6 +8,7 @@ GO_FILES=$(shell find . -name '*.go' -type f -not -path './vendor/*')
 MAIN_PATH=./cmd/docgen
 PROTO_DOCS_BIN=$(BUILD_DIR)/proto-docs
 RUNTIME_BIN=$(BUILD_DIR)/runtime
+ENRICHER_BIN=$(BUILD_DIR)/protodocs-enricher
 
 # Colors for output
 COLOR_RESET=\033[0m
@@ -143,5 +144,26 @@ test-pipeline: ## Run Pipeline tests
 	@echo '$(COLOR_BOLD)Running Pipeline tests...$(COLOR_RESET)'
 	@go test -v ./tools/protodocs/pipeline
 	@echo '$(COLOR_GREEN)✓ Pipeline tests complete$(COLOR_RESET)'
+
+build-enricher: ## Build protodocs-enricher CLI
+	@echo '$(COLOR_BOLD)Building protodocs-enricher...$(COLOR_RESET)'
+	@mkdir -p $(BUILD_DIR)
+	@go build -o $(ENRICHER_BIN) ./cmd/protodocs-enricher
+	@echo '$(COLOR_GREEN)✓ protodocs-enricher built: $(ENRICHER_BIN)$(COLOR_RESET)'
+
+run-enricher: build-enricher ## Run the enricher (requires model and config)
+	@echo '$(COLOR_BOLD)Running enrichment...$(COLOR_RESET)'
+	@$(ENRICHER_BIN) \
+		--config configs/enricher.config.yaml \
+		--input api-docs/model/api-doc-model.json \
+		--output api-docs/model/api-doc-model-enriched.json \
+		--manifest api-docs/enrichment-manifest.json \
+		--tenant default
+
+test-enricher: ## Run Enricher tests
+	@echo '$(COLOR_BOLD)Running Enricher tests...$(COLOR_RESET)'
+	@go test -v ./tools/protodocs/enricher
+	@go test -v ./tools/protodocs/enricher/adapters
+	@echo '$(COLOR_GREEN)✓ Enricher tests complete$(COLOR_RESET)'
 
 .DEFAULT_GOAL := help
