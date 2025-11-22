@@ -68,6 +68,12 @@ diagrams:
   max_services_per_diagram: 20    # Limit services in service map
   max_messages_per_diagram: 30    # Limit messages in message hierarchy
 
+hld:
+  enabled: false  # Set to true to enable HLD generation
+  config_path: "configs/hld_generator.yaml"
+  input_model_path: "api-docs/model/api-doc-model-enriched.json"
+  output_dir: "./api-docs/hld"
+
 site:
   generator: "mkdocs"
   config_path: "./docs-site/mkdocs.yml"

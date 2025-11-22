@@ -3,9 +3,12 @@ module github.com/kyivinua/docgen-tool
 go 1.24.7
 
 require (
+	github.com/google/uuid v1.6.0
+	github.com/kyivinua/root v0.0.0-00010101000000-000000000000
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.9.0
+	golang.org/x/sync v0.18.0
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -19,3 +22,5 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 )
+
+replace github.com/kyivinua/root => ./

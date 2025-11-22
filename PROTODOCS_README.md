@@ -522,6 +522,180 @@ flowchart LR
     GenDocs --> End([✅ Complete])
 ```
 
+## HLD Generator (High-Level Design)
+
+Автоматическая генерация High-Level Design документации архитектурного уровня с использованием мультиагентной AI-системы.
+
+### Возможности
+
+- **Multi-Agent Reasoning**: Специализированные агенты для различных аспектов архитектуры
+  - **Architect Agent**: Компонентная архитектура, data flows, bounded contexts
+  - **Product Manager Agent**: Бизнес-контекст, value proposition, метрики
+  - **Security Agent**: Безопасность, compliance (GDPR, PCI-DSS, SOC2), mTLS
+  - **SRE Agent**: SLO, observability, resilience patterns
+  - **QA Agent**: Функциональные требования, test strategy
+  - **Critic Agent**: Оценка качества и генерация критики
+- **Iterative Refinement**: До 3 раундов улучшения с consensus-based validation
+- **Качество**: Консенсус ≥ 0.88 гарантирует высокое качество документации
+- **Hallucination Mitigation**: RAG + LLM-as-Judge + Semantic Entropy
+- **Структурированный вывод**: Markdown, JSON с полным audit trail
+
+### Архитектура
+
+```
+┌──────────────────────────────────────────────────┐
+│              Orchestrator                        │
+│  ┌────────────────────────────────────────────┐ │
+│  │  Refinement Loop (Max 3 rounds)           │ │
+│  │  ┌──────────────────────────────────────┐ │ │
+│  │  │  Round 1: Parallel Agent Think       │ │ │
+│  │  │  ┌────┐ ┌────┐ ┌────┐ ┌────┐ ┌────┐│ │ │
+│  │  │  │Arch│ │ PM │ │Sec │ │SRE │ │ QA ││ │ │
+│  │  │  └────┘ └────┘ └────┘ └────┘ └────┘│ │ │
+│  │  │         ↓                            │ │ │
+│  │  │  ┌──────────────┐                   │ │ │
+│  │  │  │ Critic Agent │                   │ │ │
+│  │  │  │  Evaluation  │                   │ │ │
+│  │  │  └──────────────┘                   │ │ │
+│  │  │         ↓                            │ │ │
+│  │  │  Consensus ≥ 0.88? → Finalize       │ │ │
+│  │  │         ↓ No                         │ │ │
+│  │  │  Round 2: Refine with Criticism     │ │ │
+│  │  └──────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────┘
+```
+
+### Конфигурация
+
+```yaml
+# configs/proto-docs.config.yaml
+hld:
+  enabled: true
+  config_path: "configs/hld_generator.yaml"
+  input_model_path: "api-docs/model/api-doc-model-enriched.json"
+  output_dir: "./api-docs/hld"
+
+# configs/hld_generator.yaml
+intelligence:
+  multi_agent:
+    enabled: true
+    agents:
+      - role: "architect"
+        model: "claude-3-5-sonnet-20241022"
+        weight: 0.30
+      - role: "security"
+        model: "claude-3-5-sonnet-20241022"
+        weight: 0.25
+      # ... PM, SRE, QA, Critic
+  consensus_threshold: 0.88
+
+refinement:
+  max_rounds: 3
+  consensus_threshold: 0.88
+  min_improvement_per_round: 0.05
+  critical_issue_override: true
+```
+
+### Использование
+
+```bash
+# Генерация HLD standalone
+go run ./cmd/protodocs-hld \
+  --config configs/hld_generator.yaml \
+  --input api-docs/model/api-doc-model-enriched.json \
+  --output api-docs/hld/
+
+# Или через Makefile
+make hld-generate
+```
+
+### Refinement Loop
+
+Система итеративно улучшает документацию через критические циклы:
+
+**Round 1**: Параллельная генерация черновиков всеми агентами
+- Architect → Architecture + Component Diagram
+- PM → Business Context + Value Proposition
+- Security → Security Design + Compliance
+- SRE → Observability + SLO
+- QA → Requirements + Test Strategy
+
+**Critic Agent**: Оценка качества (0.0-1.0)
+- Выявление ошибок и пропусков
+- Генерация структурированной критики
+- Проверка критических проблем (security gaps, missing components)
+
+**Consensus Check**: Взвешенное голосование
+- Architect: 30%
+- Security: 25%
+- SRE: 20%
+- PM: 15%
+- QA: 10%
+
+**Round 2-3**: Refinement с учётом критики
+- Агенты получают критику и предыдущий черновик
+- Генерируют улучшенные версии
+- Консенсус ≥ 0.88 → Финализация
+
+### Критические проблемы
+
+Critic Agent проверяет:
+- **Security Gaps**: Отсутствие mTLS, auth/authz, compliance
+- **Missing Components**: Нет SLO, observability, diagrams
+- **Incorrect Flows**: Ошибки в data flows и архитектуре
+- **Hallucinations**: Несоответствие источникам
+
+При обнаружении критических проблем (severity: critical) принудительно запускается refinement.
+
+### Пример вывода
+
+```markdown
+# High-Level Design: User Management API
+
+**Generated**: 2025-04-05T10:23:11Z | **Quality**: 0.96 | **Rounds**: 2
+
+## Business Context
+
+Core authentication and user management service. Serves 15M DAU, 300k RPS peak.
+
+**Value Proposition**:
+- Single sign-on for all products
+- Self-service profile management
+- Enterprise-ready (GDPR, SOC2)
+
+## Architecture
+
+### Component Diagram
+
+```mermaid
+graph TB
+    Client[Web/Mobile] --> Gateway[API Gateway]
+    Gateway --> AuthService[Auth Service]
+    Gateway --> ProfileService[Profile Service]
+    AuthService --> Redis[Redis Cluster]
+    ProfileService --> PostgreSQL[PostgreSQL]
+```
+
+## Security & Compliance
+
+- **Authentication**: OAuth2 + JWT
+- **Authorization**: RBAC via Policy Engine
+- **Transport**: mTLS for all services
+- **Compliance**: GDPR, PCI-DSS, SOC2
+
+## Observability
+
+**SLO**:
+- Availability: 99.99%
+- Latency p95: < 120ms
+- Error Rate: < 0.1%
+
+**Stack**:
+- Tracing: OpenTelemetry → Jaeger
+- Metrics: Prometheus + Grafana
+- Logging: Structured JSON → Loki
+
 ## Runtime Service
 
 Пример HTTP сервиса, использующего ProtoContext для runtime операций.
