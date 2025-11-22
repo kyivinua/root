@@ -8,6 +8,8 @@
 | **Proto File** | `payments/payments.proto` |
 | **Generated** | 0001-01-01T00:00:00Z |
 
+PaymentService handles payment processing
+
 ---
 
 ## 📑 Table of Contents
@@ -23,20 +25,42 @@
   - [ProcessBatch](#processbatch)
   - [SubscribeToPaymentEvents](#subscribetopaymentevents)
 - [Messages](#messages)
-  - [ListPaymentsResponse](#listpaymentsresponse)
-  - [BatchProcessResult](#batchprocessresult)
-  - [SubscribeRequest](#subscriberequest)
-  - [CreatePaymentResponse](#createpaymentresponse)
-  - [GetPaymentRequest](#getpaymentrequest)
-  - [CancelPaymentResponse](#cancelpaymentresponse)
-  - [ListPaymentsRequest](#listpaymentsrequest)
-  - [ProcessBatchRequest](#processbatchrequest)
-  - [PaymentEvent](#paymentevent)
   - [CreatePaymentRequest](#createpaymentrequest)
+  - [CreatePaymentResponse](#createpaymentresponse)
+  - [DateRangeFilter](#daterangefilter)
+  - [AmountRangeFilter](#amountrangefilter)
+  - [ListPaymentsRequest](#listpaymentsrequest)
+  - [NextAction](#nextaction)
+  - [FraudCheckResult](#fraudcheckresult)
   - [GetPaymentResponse](#getpaymentresponse)
-  - [CancelPaymentRequest](#cancelpaymentrequest)
+  - [CancelPaymentResponse](#cancelpaymentresponse)
+  - [PayerInfo](#payerinfo)
   - [RefundPaymentRequest](#refundpaymentrequest)
   - [RefundPaymentResponse](#refundpaymentresponse)
+  - [BatchProcessResult](#batchprocessresult)
+  - [BankAccountSource](#bankaccountsource)
+  - [Payment](#payment)
+  - [RiskSignal](#risksignal)
+  - [CancelPaymentRequest](#cancelpaymentrequest)
+  - [ListPaymentsResponse](#listpaymentsresponse)
+  - [CryptoSource](#cryptosource)
+  - [WalletPaymentDetails](#walletpaymentdetails)
+  - [Fee](#fee)
+  - [ThreeDSecure](#threedsecure)
+  - [SubscribeRequest](#subscriberequest)
+  - [BankTransferDetails](#banktransferdetails)
+  - [PaymentEvent](#paymentevent)
+  - [CardSource](#cardsource)
+  - [CardPaymentDetails](#cardpaymentdetails)
+  - [CryptoPaymentDetails](#cryptopaymentdetails)
+  - [CaptureDetails](#capturedetails)
+  - [SettlementDetails](#settlementdetails)
+  - [PaymentSummary](#paymentsummary)
+  - [GetPaymentRequest](#getpaymentrequest)
+  - [ProcessBatchRequest](#processbatchrequest)
+  - [WalletSource](#walletsource)
+  - [RefundDetails](#refunddetails)
+  - [PayeeInfo](#payeeinfo)
 - [Enumerations](#enumerations)
 - [Error Codes](#error-codes)
 - [Examples](#examples)
@@ -52,7 +76,7 @@
 | Metric | Count |
 |--------|-------|
 | **RPC Methods** | 7 |
-| **Message Types** | 14 |
+| **Message Types** | 36 |
 | **Enumerations** | 12 |
 | **Streaming RPCs** | 2 |
 
@@ -60,11 +84,11 @@
 
 This service provides the following capabilities:
 
-- [`CreatePayment`](#createpayment): 
-- [`GetPayment`](#getpayment): 
-- [`CancelPayment`](#cancelpayment): 
-- [`RefundPayment`](#refundpayment): 
-- [`ListPayments`](#listpayments): 
+- [`CreatePayment`](#createpayment): CreatePayment initiates a new payment
+- [`GetPayment`](#getpayment): GetPayment retrieves payment details
+- [`CancelPayment`](#cancelpayment): CancelPayment cancels a pending payment
+- [`RefundPayment`](#refundpayment): RefundPayment processes a refund
+- [`ListPayments`](#listpayments): ListPayments lists payments with filters
 - ... and 2 more methods
 
 ---
@@ -137,6 +161,8 @@ This service defines **7 RPC methods**:
 
 <a name="createpayment"></a>
 
+CreatePayment initiates a new payment
+
 #### Method Signature
 
 ```protobuf
@@ -171,6 +197,8 @@ sequenceDiagram
 ### GetPayment
 
 <a name="getpayment"></a>
+
+GetPayment retrieves payment details
 
 #### Method Signature
 
@@ -207,6 +235,8 @@ sequenceDiagram
 
 <a name="cancelpayment"></a>
 
+CancelPayment cancels a pending payment
+
 #### Method Signature
 
 ```protobuf
@@ -241,6 +271,8 @@ sequenceDiagram
 ### RefundPayment
 
 <a name="refundpayment"></a>
+
+RefundPayment processes a refund
 
 #### Method Signature
 
@@ -277,6 +309,8 @@ sequenceDiagram
 
 <a name="listpayments"></a>
 
+ListPayments lists payments with filters
+
 #### Method Signature
 
 ```protobuf
@@ -311,6 +345,8 @@ sequenceDiagram
 ### ProcessBatch
 
 <a name="processbatch"></a>
+
+ProcessBatch processes multiple payments
 
 #### Method Signature
 
@@ -350,6 +386,8 @@ sequenceDiagram
 
 <a name="subscribetopaymentevents"></a>
 
+SubscribeToPaymentEvents streams payment events
+
 #### Method Signature
 
 ```protobuf
@@ -388,394 +426,13 @@ sequenceDiagram
 
 <a name="messages"></a>
 
-This service defines **14 message types**:
-
-### ListPaymentsResponse
-
-<a name="listpaymentsresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.ListPaymentsResponse` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `payments` | [`Payment`](#payment) | repeated | - |
-| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | - |
-| 3 | `summary` | [`PaymentSummary`](#paymentsummary) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message ListPaymentsResponse {
-  repeated Payment payments = 1;
-  optional PaginationResponse pagination = 2;
-  optional PaymentSummary summary = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class ListPaymentsResponse {
-        +Payment[] payments
-        +PaginationResponse pagination
-        +PaymentSummary summary
-    }
-    ListPaymentsResponse "1" --> "*" Payment
-    ListPaymentsResponse --> PaginationResponse
-    ListPaymentsResponse --> PaymentSummary
-```
-
----
-
-### BatchProcessResult
-
-<a name="batchprocessresult"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.BatchProcessResult` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `index` | TYPE_INT32 | optional | - |
-| 2 | `success` | TYPE_BOOL | optional | - |
-| 3 | `payment` | [`Payment`](#payment) | optional | - |
-| 4 | `error` | [`Error`](#error) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message BatchProcessResult {
-  optional TYPE_INT32 index = 1;
-  optional TYPE_BOOL success = 2;
-  optional Payment payment = 3;
-  optional Error error = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class BatchProcessResult {
-        +TYPE_INT32 index
-        +TYPE_BOOL success
-        +Payment payment
-        +Error error
-    }
-    BatchProcessResult --> Payment
-    BatchProcessResult --> Error
-```
-
----
-
-### SubscribeRequest
-
-<a name="subscriberequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.SubscribeRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `payment_ids` | TYPE_STRING | repeated | - |
-| 2 | `user_ids` | TYPE_STRING | repeated | - |
-| 3 | `event_types` | [`EventType`](#eventtype) | repeated | - |
-
-#### Proto Definition
-
-```protobuf
-message SubscribeRequest {
-  repeated TYPE_STRING payment_ids = 1;
-  repeated TYPE_STRING user_ids = 2;
-  repeated EventType event_types = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class SubscribeRequest {
-        +TYPE_STRING[] payment_ids
-        +TYPE_STRING[] user_ids
-        +EventType[] event_types
-    }
-    SubscribeRequest "1" --> "*" EventType
-```
-
----
-
-### CreatePaymentResponse
-
-<a name="createpaymentresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.CreatePaymentResponse` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `payment` | [`Payment`](#payment) | optional | - |
-| 2 | `client_secret` | TYPE_STRING | optional | - |
-| 3 | `next_action` | [`NextAction`](#nextaction) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message CreatePaymentResponse {
-  optional Payment payment = 1;
-  optional TYPE_STRING client_secret = 2;
-  optional NextAction next_action = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class CreatePaymentResponse {
-        +Payment payment
-        +TYPE_STRING client_secret
-        +NextAction next_action
-    }
-    CreatePaymentResponse --> Payment
-    CreatePaymentResponse --> NextAction
-```
-
----
-
-### GetPaymentRequest
-
-<a name="getpaymentrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.GetPaymentRequest` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `payment_id` | TYPE_STRING | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message GetPaymentRequest {
-  optional TYPE_STRING payment_id = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetPaymentRequest {
-        +TYPE_STRING payment_id
-    }
-```
-
----
-
-### CancelPaymentResponse
-
-<a name="cancelpaymentresponse"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.CancelPaymentResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `payment` | [`Payment`](#payment) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message CancelPaymentResponse {
-  optional Payment payment = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class CancelPaymentResponse {
-        +Payment payment
-    }
-    CancelPaymentResponse --> Payment
-```
-
----
-
-### ListPaymentsRequest
-
-<a name="listpaymentsrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.ListPaymentsRequest` |
-| **Field Count** | 6 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | - |
-| 2 | `statuses` | [`PaymentStatus`](#paymentstatus) | repeated | - |
-| 3 | `methods` | [`PaymentMethod`](#paymentmethod) | repeated | - |
-| 4 | `user_id` | TYPE_STRING | optional | - |
-| 5 | `date_range` | [`DateRangeFilter`](#daterangefilter) | optional | - |
-| 6 | `amount_range` | [`AmountRangeFilter`](#amountrangefilter) | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message ListPaymentsRequest {
-  optional PaginationRequest pagination = 1;
-  repeated PaymentStatus statuses = 2;
-  repeated PaymentMethod methods = 3;
-  optional TYPE_STRING user_id = 4;
-  optional DateRangeFilter date_range = 5;
-  optional AmountRangeFilter amount_range = 6;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class ListPaymentsRequest {
-        +PaginationRequest pagination
-        +PaymentStatus[] statuses
-        +PaymentMethod[] methods
-        +TYPE_STRING user_id
-        +DateRangeFilter date_range
-        +AmountRangeFilter amount_range
-    }
-    ListPaymentsRequest --> PaginationRequest
-    ListPaymentsRequest "1" --> "*" PaymentStatus
-    ListPaymentsRequest "1" --> "*" PaymentMethod
-    ListPaymentsRequest --> DateRangeFilter
-    ListPaymentsRequest --> AmountRangeFilter
-```
-
----
-
-### ProcessBatchRequest
-
-<a name="processbatchrequest"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.ProcessBatchRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `payments` | [`CreatePaymentRequest`](#createpaymentrequest) | repeated | - |
-| 2 | `batch_id` | TYPE_STRING | optional | - |
-| 3 | `continue_on_error` | TYPE_BOOL | optional | - |
-
-#### Proto Definition
-
-```protobuf
-message ProcessBatchRequest {
-  repeated CreatePaymentRequest payments = 1;
-  optional TYPE_STRING batch_id = 2;
-  optional TYPE_BOOL continue_on_error = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class ProcessBatchRequest {
-        +CreatePaymentRequest[] payments
-        +TYPE_STRING batch_id
-        +TYPE_BOOL continue_on_error
-    }
-    ProcessBatchRequest "1" --> "*" CreatePaymentRequest
-```
-
----
-
-### PaymentEvent
-
-<a name="paymentevent"></a>
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `payments.v1.PaymentEvent` |
-| **Field Count** | 4 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `event_type` | [`EventType`](#eventtype) | optional | - |
-| 2 | `payment` | [`Payment`](#payment) | optional | - |
-| 3 | `event_time` | [`Timestamp`](#timestamp) | optional | - |
-| 4 | `metadata` | [`MetadataEntry`](#metadataentry) | repeated | - |
-
-#### Proto Definition
-
-```protobuf
-message PaymentEvent {
-  optional EventType event_type = 1;
-  optional Payment payment = 2;
-  optional Timestamp event_time = 3;
-  repeated MetadataEntry metadata = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class PaymentEvent {
-        +EventType event_type
-        +Payment payment
-        +Timestamp event_time
-        +MetadataEntry[] metadata
-    }
-    PaymentEvent --> EventType
-    PaymentEvent --> Payment
-    PaymentEvent --> Timestamp
-    PaymentEvent "1" --> "*" MetadataEntry
-```
-
----
+This service defines **36 message types**:
 
 ### CreatePaymentRequest
 
 <a name="createpaymentrequest"></a>
+
+CreatePaymentRequest initiates a payment
 
 | Attribute | Value |
 |-----------|-------|
@@ -787,31 +444,39 @@ classDiagram
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `amount` | [`Money`](#money) | optional | - |
-| 2 | `method` | [`PaymentMethod`](#paymentmethod) | optional | - |
-| 3 | `payer` | [`PayerInfo`](#payerinfo) | optional | - |
+| 1 | `amount` | [`Money`](#money) | optional | Amount to charge |
+| 2 | `method` | [`PaymentMethod`](#paymentmethod) | optional | Payment method |
+| 3 | `payer` | [`PayerInfo`](#payerinfo) | optional | Payer information |
 | 4 | `card_source` | [`CardSource`](#cardsource) | oneof `source` | - |
 | 5 | `bank_source` | [`BankAccountSource`](#bankaccountsource) | oneof `source` | - |
 | 6 | `wallet_source` | [`WalletSource`](#walletsource) | oneof `source` | - |
 | 7 | `crypto_source` | [`CryptoSource`](#cryptosource) | oneof `source` | - |
-| 8 | `order_id` | TYPE_STRING | optional | - |
-| 9 | `description` | TYPE_STRING | optional | - |
-| 10 | `auto_capture` | TYPE_BOOL | optional | - |
-| 11 | `idempotency_key` | TYPE_STRING | optional | - |
-| 12 | `metadata` | [`MetadataEntry`](#metadataentry) | repeated | - |
+| 8 | `order_id` | string | optional | Order ID |
+| 9 | `description` | string | optional | Description |
+| 10 | `auto_capture` | bool | optional | Capture immediately |
+| 11 | `idempotency_key` | string | optional | Idempotency key |
+| 12 | `metadata` | map<string, string> |  | Custom metadata |
 
 #### Proto Definition
 
 ```protobuf
 message CreatePaymentRequest {
+  // Amount to charge
   optional Money amount = 1;
+  // Payment method
   optional PaymentMethod method = 2;
+  // Payer information
   optional PayerInfo payer = 3;
-  optional TYPE_STRING order_id = 8;
-  optional TYPE_STRING description = 9;
-  optional TYPE_BOOL auto_capture = 10;
-  optional TYPE_STRING idempotency_key = 11;
-  repeated MetadataEntry metadata = 12;
+  // Order ID
+  optional string order_id = 8;
+  // Description
+  optional string description = 9;
+  // Capture immediately
+  optional bool auto_capture = 10;
+  // Idempotency key
+  optional string idempotency_key = 11;
+  // Custom metadata
+   map<string, string> metadata = 12;
 
   oneof source {
     CardSource card_source = 4;
@@ -834,11 +499,11 @@ classDiagram
         +BankAccountSource bank_source
         +WalletSource wallet_source
         +CryptoSource crypto_source
-        +TYPE_STRING order_id
-        +TYPE_STRING description
-        +TYPE_BOOL auto_capture
-        +TYPE_STRING idempotency_key
-        +MetadataEntry[] metadata
+        +string order_id
+        +string description
+        +bool auto_capture
+        +string idempotency_key
+        +map<string, string> metadata
     }
     CreatePaymentRequest --> Money
     CreatePaymentRequest --> PaymentMethod
@@ -847,7 +512,308 @@ classDiagram
     CreatePaymentRequest --> BankAccountSource
     CreatePaymentRequest --> WalletSource
     CreatePaymentRequest --> CryptoSource
-    CreatePaymentRequest "1" --> "*" MetadataEntry
+```
+
+---
+
+### CreatePaymentResponse
+
+<a name="createpaymentresponse"></a>
+
+CreatePaymentResponse returns created payment
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.CreatePaymentResponse` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `payment` | [`Payment`](#payment) | optional | Created payment |
+| 2 | `client_secret` | string | optional | Client secret for confirmation |
+| 3 | `next_action` | [`NextAction`](#nextaction) | optional | Next action required |
+
+#### Proto Definition
+
+```protobuf
+message CreatePaymentResponse {
+  // Created payment
+  optional Payment payment = 1;
+  // Client secret for confirmation
+  optional string client_secret = 2;
+  // Next action required
+  optional NextAction next_action = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CreatePaymentResponse {
+        +Payment payment
+        +string client_secret
+        +NextAction next_action
+    }
+    CreatePaymentResponse --> Payment
+    CreatePaymentResponse --> NextAction
+```
+
+---
+
+### DateRangeFilter
+
+<a name="daterangefilter"></a>
+
+DateRangeFilter filters by date range
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.DateRangeFilter` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `start` | [`Timestamp`](#timestamp) | optional | Start date |
+| 2 | `end` | [`Timestamp`](#timestamp) | optional | End date |
+| 3 | `field` | string | optional | Field to filter |
+
+#### Proto Definition
+
+```protobuf
+message DateRangeFilter {
+  // Start date
+  optional Timestamp start = 1;
+  // End date
+  optional Timestamp end = 2;
+  // Field to filter
+  optional string field = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class DateRangeFilter {
+        +Timestamp start
+        +Timestamp end
+        +string field
+    }
+    DateRangeFilter --> Timestamp
+    DateRangeFilter --> Timestamp
+```
+
+---
+
+### AmountRangeFilter
+
+<a name="amountrangefilter"></a>
+
+AmountRangeFilter filters by amount
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.AmountRangeFilter` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `min` | [`Money`](#money) | optional | Minimum amount |
+| 2 | `max` | [`Money`](#money) | optional | Maximum amount |
+
+#### Proto Definition
+
+```protobuf
+message AmountRangeFilter {
+  // Minimum amount
+  optional Money min = 1;
+  // Maximum amount
+  optional Money max = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class AmountRangeFilter {
+        +Money min
+        +Money max
+    }
+    AmountRangeFilter --> Money
+    AmountRangeFilter --> Money
+```
+
+---
+
+### ListPaymentsRequest
+
+<a name="listpaymentsrequest"></a>
+
+ListPaymentsRequest lists payments
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.ListPaymentsRequest` |
+| **Field Count** | 6 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination |
+| 2 | `statuses` | [`PaymentStatus`](#paymentstatus) | repeated | Filter by status |
+| 3 | `methods` | [`PaymentMethod`](#paymentmethod) | repeated | Filter by method |
+| 4 | `user_id` | string | optional | Filter by user |
+| 5 | `date_range` | [`DateRangeFilter`](#daterangefilter) | optional | Date range |
+| 6 | `amount_range` | [`AmountRangeFilter`](#amountrangefilter) | optional | Amount range |
+
+#### Proto Definition
+
+```protobuf
+message ListPaymentsRequest {
+  // Pagination
+  optional PaginationRequest pagination = 1;
+  // Filter by status
+  repeated PaymentStatus statuses = 2;
+  // Filter by method
+  repeated PaymentMethod methods = 3;
+  // Filter by user
+  optional string user_id = 4;
+  // Date range
+  optional DateRangeFilter date_range = 5;
+  // Amount range
+  optional AmountRangeFilter amount_range = 6;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class ListPaymentsRequest {
+        +PaginationRequest pagination
+        +PaymentStatus[] statuses
+        +PaymentMethod[] methods
+        +string user_id
+        +DateRangeFilter date_range
+        +AmountRangeFilter amount_range
+    }
+    ListPaymentsRequest --> PaginationRequest
+    ListPaymentsRequest "1" --> "*" PaymentStatus
+    ListPaymentsRequest "1" --> "*" PaymentMethod
+    ListPaymentsRequest --> DateRangeFilter
+    ListPaymentsRequest --> AmountRangeFilter
+```
+
+---
+
+### NextAction
+
+<a name="nextaction"></a>
+
+NextAction represents required next steps
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.NextAction` |
+| **Field Count** | 3 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `type` | [`ActionType`](#actiontype) | optional | Action type |
+| 2 | `redirect_url` | string | optional | Redirect URL for 3DS |
+| 3 | `data` | map<string, string> |  | Additional data |
+
+#### Proto Definition
+
+```protobuf
+message NextAction {
+  // Action type
+  optional ActionType type = 1;
+  // Redirect URL for 3DS
+  optional string redirect_url = 2;
+  // Additional data
+   map<string, string> data = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class NextAction {
+        +ActionType type
+        +string redirect_url
+        +map<string, string> data
+    }
+    NextAction --> ActionType
+```
+
+---
+
+### FraudCheckResult
+
+<a name="fraudcheckresult"></a>
+
+FraudCheckResult contains fraud detection results
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.FraudCheckResult` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `outcome` | [`FraudCheckOutcome`](#fraudcheckoutcome) | optional | Overall result |
+| 2 | `signals` | [`RiskSignal`](#risksignal) | repeated | Risk signals |
+| 3 | `risk_score` | int32 | optional | Risk score (0-100) |
+| 4 | `checked_at` | [`Timestamp`](#timestamp) | optional | Checked at |
+| 5 | `provider` | string | optional | Provider |
+
+#### Proto Definition
+
+```protobuf
+message FraudCheckResult {
+  // Overall result
+  optional FraudCheckOutcome outcome = 1;
+  // Risk signals
+  repeated RiskSignal signals = 2;
+  // Risk score (0-100)
+  optional int32 risk_score = 3;
+  // Checked at
+  optional Timestamp checked_at = 4;
+  // Provider
+  optional string provider = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class FraudCheckResult {
+        +FraudCheckOutcome outcome
+        +RiskSignal[] signals
+        +int32 risk_score
+        +Timestamp checked_at
+        +string provider
+    }
+    FraudCheckResult --> FraudCheckOutcome
+    FraudCheckResult "1" --> "*" RiskSignal
+    FraudCheckResult --> Timestamp
 ```
 
 ---
@@ -855,6 +821,8 @@ classDiagram
 ### GetPaymentResponse
 
 <a name="getpaymentresponse"></a>
+
+GetPaymentResponse returns payment details
 
 | Attribute | Value |
 |-----------|-------|
@@ -865,12 +833,13 @@ classDiagram
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `payment` | [`Payment`](#payment) | optional | - |
+| 1 | `payment` | [`Payment`](#payment) | optional | Payment |
 
 #### Proto Definition
 
 ```protobuf
 message GetPaymentResponse {
+  // Payment
   optional Payment payment = 1;
 }
 ```
@@ -887,28 +856,29 @@ classDiagram
 
 ---
 
-### CancelPaymentRequest
+### CancelPaymentResponse
 
-<a name="cancelpaymentrequest"></a>
+<a name="cancelpaymentresponse"></a>
+
+CancelPaymentResponse confirms cancellation
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `payments.v1.CancelPaymentRequest` |
-| **Field Count** | 2 |
+| **Full Name** | `payments.v1.CancelPaymentResponse` |
+| **Field Count** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `payment_id` | TYPE_STRING | optional | - |
-| 2 | `reason` | TYPE_STRING | optional | - |
+| 1 | `payment` | [`Payment`](#payment) | optional | Cancelled payment |
 
 #### Proto Definition
 
 ```protobuf
-message CancelPaymentRequest {
-  optional TYPE_STRING payment_id = 1;
-  optional TYPE_STRING reason = 2;
+message CancelPaymentResponse {
+  // Cancelled payment
+  optional Payment payment = 1;
 }
 ```
 
@@ -916,10 +886,72 @@ message CancelPaymentRequest {
 
 ```mermaid
 classDiagram
-    class CancelPaymentRequest {
-        +TYPE_STRING payment_id
-        +TYPE_STRING reason
+    class CancelPaymentResponse {
+        +Payment payment
     }
+    CancelPaymentResponse --> Payment
+```
+
+---
+
+### PayerInfo
+
+<a name="payerinfo"></a>
+
+PayerInfo contains payer information
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.PayerInfo` |
+| **Field Count** | 7 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | string | optional | User ID |
+| 2 | `email` | string | optional | Email |
+| 3 | `name` | string | optional | Name |
+| 4 | `phone` | string | optional | Phone |
+| 5 | `billing_address` | [`Address`](#address) | optional | Billing address |
+| 6 | `ip_address` | string | optional | IP address |
+| 7 | `device_fingerprint` | string | optional | Device fingerprint |
+
+#### Proto Definition
+
+```protobuf
+message PayerInfo {
+  // User ID
+  optional string user_id = 1;
+  // Email
+  optional string email = 2;
+  // Name
+  optional string name = 3;
+  // Phone
+  optional string phone = 4;
+  // Billing address
+  optional Address billing_address = 5;
+  // IP address
+  optional string ip_address = 6;
+  // Device fingerprint
+  optional string device_fingerprint = 7;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class PayerInfo {
+        +string user_id
+        +string email
+        +string name
+        +string phone
+        +Address billing_address
+        +string ip_address
+        +string device_fingerprint
+    }
+    PayerInfo --> Address
 ```
 
 ---
@@ -927,6 +959,8 @@ classDiagram
 ### RefundPaymentRequest
 
 <a name="refundpaymentrequest"></a>
+
+RefundPaymentRequest processes a refund
 
 | Attribute | Value |
 |-----------|-------|
@@ -938,19 +972,23 @@ classDiagram
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `payment_id` | TYPE_STRING | optional | - |
-| 2 | `amount` | [`Money`](#money) | optional | - |
-| 3 | `reason` | TYPE_STRING | optional | - |
-| 4 | `metadata` | [`MetadataEntry`](#metadataentry) | repeated | - |
+| 1 | `payment_id` | string | optional | Payment ID |
+| 2 | `amount` | [`Money`](#money) | optional | Refund amount (null for full refund) |
+| 3 | `reason` | string | optional | Refund reason |
+| 4 | `metadata` | map<string, string> |  | Refund metadata |
 
 #### Proto Definition
 
 ```protobuf
 message RefundPaymentRequest {
-  optional TYPE_STRING payment_id = 1;
+  // Payment ID
+  optional string payment_id = 1;
+  // Refund amount (null for full refund)
   optional Money amount = 2;
-  optional TYPE_STRING reason = 3;
-  repeated MetadataEntry metadata = 4;
+  // Refund reason
+  optional string reason = 3;
+  // Refund metadata
+   map<string, string> metadata = 4;
 }
 ```
 
@@ -959,13 +997,12 @@ message RefundPaymentRequest {
 ```mermaid
 classDiagram
     class RefundPaymentRequest {
-        +TYPE_STRING payment_id
+        +string payment_id
         +Money amount
-        +TYPE_STRING reason
-        +MetadataEntry[] metadata
+        +string reason
+        +map<string, string> metadata
     }
     RefundPaymentRequest --> Money
-    RefundPaymentRequest "1" --> "*" MetadataEntry
 ```
 
 ---
@@ -973,6 +1010,8 @@ classDiagram
 ### RefundPaymentResponse
 
 <a name="refundpaymentresponse"></a>
+
+RefundPaymentResponse confirms refund
 
 | Attribute | Value |
 |-----------|-------|
@@ -983,14 +1022,16 @@ classDiagram
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `payment` | [`Payment`](#payment) | optional | - |
-| 2 | `refund` | [`RefundDetails`](#refunddetails) | optional | - |
+| 1 | `payment` | [`Payment`](#payment) | optional | Updated payment |
+| 2 | `refund` | [`RefundDetails`](#refunddetails) | optional | Refund details |
 
 #### Proto Definition
 
 ```protobuf
 message RefundPaymentResponse {
+  // Updated payment
   optional Payment payment = 1;
+  // Refund details
   optional RefundDetails refund = 2;
 }
 ```
@@ -1009,161 +1050,1279 @@ classDiagram
 
 ---
 
+### BatchProcessResult
+
+<a name="batchprocessresult"></a>
+
+BatchProcessResult streams results
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.BatchProcessResult` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `index` | int32 | optional | Index in batch |
+| 2 | `success` | bool | optional | Success status |
+| 3 | `payment` | [`Payment`](#payment) | optional | Payment result |
+| 4 | `error` | [`Error`](#error) | optional | Error if failed |
+
+#### Proto Definition
+
+```protobuf
+message BatchProcessResult {
+  // Index in batch
+  optional int32 index = 1;
+  // Success status
+  optional bool success = 2;
+  // Payment result
+  optional Payment payment = 3;
+  // Error if failed
+  optional Error error = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class BatchProcessResult {
+        +int32 index
+        +bool success
+        +Payment payment
+        +Error error
+    }
+    BatchProcessResult --> Payment
+    BatchProcessResult --> Error
+```
+
+---
+
+### BankAccountSource
+
+<a name="bankaccountsource"></a>
+
+BankAccountSource for bank payments
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.BankAccountSource` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `token` | string | optional | Account token |
+
+#### Proto Definition
+
+```protobuf
+message BankAccountSource {
+  // Account token
+  optional string token = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class BankAccountSource {
+        +string token
+    }
+```
+
+---
+
+### Payment
+
+<a name="payment"></a>
+
+Payment represents a payment transaction
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.Payment` |
+| **Field Count** | 23 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `metadata` | [`Metadata`](#metadata) | optional | Payment metadata |
+| 2 | `amount` | [`Money`](#money) | optional | Payment amount |
+| 3 | `method` | [`PaymentMethod`](#paymentmethod) | optional | Payment method |
+| 4 | `status` | [`PaymentStatus`](#paymentstatus) | optional | Payment status |
+| 5 | `type` | [`TransactionType`](#transactiontype) | optional | Transaction type |
+| 6 | `payer` | [`PayerInfo`](#payerinfo) | optional | Payer information |
+| 7 | `payee` | [`PayeeInfo`](#payeeinfo) | optional | Payee information |
+| 8 | `card_details` | [`CardPaymentDetails`](#cardpaymentdetails) | oneof `payment_details` | - |
+| 9 | `bank_details` | [`BankTransferDetails`](#banktransferdetails) | oneof `payment_details` | - |
+| 10 | `wallet_details` | [`WalletPaymentDetails`](#walletpaymentdetails) | oneof `payment_details` | - |
+| 11 | `crypto_details` | [`CryptoPaymentDetails`](#cryptopaymentdetails) | oneof `payment_details` | - |
+| 12 | `order_id` | string | optional | Order reference |
+| 13 | `invoice_id` | string | optional | Invoice reference |
+| 14 | `description` | string | optional | Description |
+| 15 | `gateway_reference` | string | optional | Payment gateway reference |
+| 16 | `authorization_code` | string | optional | Authorization code |
+| 17 | `capture` | [`CaptureDetails`](#capturedetails) | optional | Capture details |
+| 18 | `refunds` | [`RefundDetails`](#refunddetails) | repeated | Refund details |
+| 19 | `fraud_check` | [`FraudCheckResult`](#fraudcheckresult) | optional | Fraud check results |
+| 20 | `risk_score` | int32 | optional | Risk score (0-100) |
+| 21 | `custom_metadata` | map<string, string> |  | Metadata |
+| 22 | `fees` | [`Fee`](#fee) | repeated | Processing fees |
+| 23 | `settlement` | [`SettlementDetails`](#settlementdetails) | optional | Settlement details |
+
+#### Proto Definition
+
+```protobuf
+message Payment {
+  // Payment metadata
+  optional Metadata metadata = 1;
+  // Payment amount
+  optional Money amount = 2;
+  // Payment method
+  optional PaymentMethod method = 3;
+  // Payment status
+  optional PaymentStatus status = 4;
+  // Transaction type
+  optional TransactionType type = 5;
+  // Payer information
+  optional PayerInfo payer = 6;
+  // Payee information
+  optional PayeeInfo payee = 7;
+  // Order reference
+  optional string order_id = 12;
+  // Invoice reference
+  optional string invoice_id = 13;
+  // Description
+  optional string description = 14;
+  // Payment gateway reference
+  optional string gateway_reference = 15;
+  // Authorization code
+  optional string authorization_code = 16;
+  // Capture details
+  optional CaptureDetails capture = 17;
+  // Refund details
+  repeated RefundDetails refunds = 18;
+  // Fraud check results
+  optional FraudCheckResult fraud_check = 19;
+  // Risk score (0-100)
+  optional int32 risk_score = 20;
+  // Metadata
+   map<string, string> custom_metadata = 21;
+  // Processing fees
+  repeated Fee fees = 22;
+  // Settlement details
+  optional SettlementDetails settlement = 23;
+
+  oneof payment_details {
+    CardPaymentDetails card_details = 8;
+    BankTransferDetails bank_details = 9;
+    WalletPaymentDetails wallet_details = 10;
+    CryptoPaymentDetails crypto_details = 11;
+  }
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class Payment {
+        +Metadata metadata
+        +Money amount
+        +PaymentMethod method
+        +PaymentStatus status
+        +TransactionType type
+        +PayerInfo payer
+        +PayeeInfo payee
+        +CardPaymentDetails card_details
+        +BankTransferDetails bank_details
+        +WalletPaymentDetails wallet_details
+        +CryptoPaymentDetails crypto_details
+        +string order_id
+        +string invoice_id
+        +string description
+        +string gateway_reference
+        +string authorization_code
+        +CaptureDetails capture
+        +RefundDetails[] refunds
+        +FraudCheckResult fraud_check
+        +int32 risk_score
+        +map<string, string> custom_metadata
+        +Fee[] fees
+        +SettlementDetails settlement
+    }
+    Payment --> Metadata
+    Payment --> Money
+    Payment --> PaymentMethod
+    Payment --> PaymentStatus
+    Payment --> TransactionType
+    Payment --> PayerInfo
+    Payment --> PayeeInfo
+    Payment --> CardPaymentDetails
+    Payment --> BankTransferDetails
+    Payment --> WalletPaymentDetails
+    Payment --> CryptoPaymentDetails
+    Payment --> CaptureDetails
+    Payment "1" --> "*" RefundDetails
+    Payment --> FraudCheckResult
+    Payment "1" --> "*" Fee
+    Payment --> SettlementDetails
+```
+
+---
+
+### RiskSignal
+
+<a name="risksignal"></a>
+
+RiskSignal represents a risk indicator
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.RiskSignal` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `type` | string | optional | Signal type |
+| 2 | `severity` | [`Priority`](#priority) | optional | Signal severity |
+| 3 | `description` | string | optional | Description |
+| 4 | `value` | string | optional | Signal value |
+
+#### Proto Definition
+
+```protobuf
+message RiskSignal {
+  // Signal type
+  optional string type = 1;
+  // Signal severity
+  optional Priority severity = 2;
+  // Description
+  optional string description = 3;
+  // Signal value
+  optional string value = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class RiskSignal {
+        +string type
+        +Priority severity
+        +string description
+        +string value
+    }
+    RiskSignal --> Priority
+```
+
+---
+
+### CancelPaymentRequest
+
+<a name="cancelpaymentrequest"></a>
+
+CancelPaymentRequest cancels a payment
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.CancelPaymentRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `payment_id` | string | optional | Payment ID |
+| 2 | `reason` | string | optional | Cancellation reason |
+
+#### Proto Definition
+
+```protobuf
+message CancelPaymentRequest {
+  // Payment ID
+  optional string payment_id = 1;
+  // Cancellation reason
+  optional string reason = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CancelPaymentRequest {
+        +string payment_id
+        +string reason
+    }
+```
+
+---
+
+### ListPaymentsResponse
+
+<a name="listpaymentsresponse"></a>
+
+ListPaymentsResponse returns payments
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.ListPaymentsResponse` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `payments` | [`Payment`](#payment) | repeated | Payments |
+| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination |
+| 3 | `summary` | [`PaymentSummary`](#paymentsummary) | optional | Summary statistics |
+
+#### Proto Definition
+
+```protobuf
+message ListPaymentsResponse {
+  // Payments
+  repeated Payment payments = 1;
+  // Pagination
+  optional PaginationResponse pagination = 2;
+  // Summary statistics
+  optional PaymentSummary summary = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class ListPaymentsResponse {
+        +Payment[] payments
+        +PaginationResponse pagination
+        +PaymentSummary summary
+    }
+    ListPaymentsResponse "1" --> "*" Payment
+    ListPaymentsResponse --> PaginationResponse
+    ListPaymentsResponse --> PaymentSummary
+```
+
+---
+
+### CryptoSource
+
+<a name="cryptosource"></a>
+
+CryptoSource for crypto payments
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.CryptoSource` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `crypto_type` | [`CryptoType`](#cryptotype) | optional | Crypto type |
+| 2 | `wallet_address` | string | optional | Wallet address |
+
+#### Proto Definition
+
+```protobuf
+message CryptoSource {
+  // Crypto type
+  optional CryptoType crypto_type = 1;
+  // Wallet address
+  optional string wallet_address = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CryptoSource {
+        +CryptoType crypto_type
+        +string wallet_address
+    }
+    CryptoSource --> CryptoType
+```
+
+---
+
+### WalletPaymentDetails
+
+<a name="walletpaymentdetails"></a>
+
+WalletPaymentDetails for digital wallets
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.WalletPaymentDetails` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `provider` | [`WalletProvider`](#walletprovider) | optional | Wallet provider |
+| 2 | `account_id` | string | optional | Wallet account ID |
+| 3 | `email` | string | optional | Wallet email |
+
+#### Proto Definition
+
+```protobuf
+message WalletPaymentDetails {
+  // Wallet provider
+  optional WalletProvider provider = 1;
+  // Wallet account ID
+  optional string account_id = 2;
+  // Wallet email
+  optional string email = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class WalletPaymentDetails {
+        +WalletProvider provider
+        +string account_id
+        +string email
+    }
+    WalletPaymentDetails --> WalletProvider
+```
+
+---
+
+### Fee
+
+<a name="fee"></a>
+
+Fee represents a processing fee
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.Fee` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `type` | [`FeeType`](#feetype) | optional | Fee type |
+| 2 | `amount` | [`Money`](#money) | optional | Fee amount |
+| 3 | `description` | string | optional | Description |
+
+#### Proto Definition
+
+```protobuf
+message Fee {
+  // Fee type
+  optional FeeType type = 1;
+  // Fee amount
+  optional Money amount = 2;
+  // Description
+  optional string description = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class Fee {
+        +FeeType type
+        +Money amount
+        +string description
+    }
+    Fee --> FeeType
+    Fee --> Money
+```
+
+---
+
+### ThreeDSecure
+
+<a name="threedsecure"></a>
+
+ThreeDSecure contains 3DS verification info
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.ThreeDSecure` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `verified` | bool | optional | Verification performed |
+| 2 | `version` | string | optional | Version (1 or 2) |
+| 3 | `authentication_value` | string | optional | Authentication value |
+| 4 | `transaction_id` | string | optional | Transaction ID |
+
+#### Proto Definition
+
+```protobuf
+message ThreeDSecure {
+  // Verification performed
+  optional bool verified = 1;
+  // Version (1 or 2)
+  optional string version = 2;
+  // Authentication value
+  optional string authentication_value = 3;
+  // Transaction ID
+  optional string transaction_id = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class ThreeDSecure {
+        +bool verified
+        +string version
+        +string authentication_value
+        +string transaction_id
+    }
+```
+
+---
+
+### SubscribeRequest
+
+<a name="subscriberequest"></a>
+
+SubscribeRequest subscribes to events
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.SubscribeRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `payment_ids` | string | repeated | Filter by payment IDs |
+| 2 | `user_ids` | string | repeated | Filter by user IDs |
+| 3 | `event_types` | [`EventType`](#eventtype) | repeated | Event types to receive |
+
+#### Proto Definition
+
+```protobuf
+message SubscribeRequest {
+  // Filter by payment IDs
+  repeated string payment_ids = 1;
+  // Filter by user IDs
+  repeated string user_ids = 2;
+  // Event types to receive
+  repeated EventType event_types = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class SubscribeRequest {
+        +string[] payment_ids
+        +string[] user_ids
+        +EventType[] event_types
+    }
+    SubscribeRequest "1" --> "*" EventType
+```
+
+---
+
+### BankTransferDetails
+
+<a name="banktransferdetails"></a>
+
+BankTransferDetails for bank transfers
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.BankTransferDetails` |
+| **Field Count** | 6 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `account_holder` | string | optional | Account holder name |
+| 2 | `account_number_masked` | string | optional | Account number (masked) |
+| 3 | `routing_number` | string | optional | Routing number |
+| 4 | `bank_name` | string | optional | Bank name |
+| 5 | `swift_code` | string | optional | Swift/BIC code |
+| 6 | `iban` | string | optional | IBAN |
+
+#### Proto Definition
+
+```protobuf
+message BankTransferDetails {
+  // Account holder name
+  optional string account_holder = 1;
+  // Account number (masked)
+  optional string account_number_masked = 2;
+  // Routing number
+  optional string routing_number = 3;
+  // Bank name
+  optional string bank_name = 4;
+  // Swift/BIC code
+  optional string swift_code = 5;
+  // IBAN
+  optional string iban = 6;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class BankTransferDetails {
+        +string account_holder
+        +string account_number_masked
+        +string routing_number
+        +string bank_name
+        +string swift_code
+        +string iban
+    }
+```
+
+---
+
+### PaymentEvent
+
+<a name="paymentevent"></a>
+
+PaymentEvent represents a payment event
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.PaymentEvent` |
+| **Field Count** | 4 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `event_type` | [`EventType`](#eventtype) | optional | Event type |
+| 2 | `payment` | [`Payment`](#payment) | optional | Payment |
+| 3 | `event_time` | [`Timestamp`](#timestamp) | optional | Event timestamp |
+| 4 | `metadata` | map<string, string> |  | Event metadata |
+
+#### Proto Definition
+
+```protobuf
+message PaymentEvent {
+  // Event type
+  optional EventType event_type = 1;
+  // Payment
+  optional Payment payment = 2;
+  // Event timestamp
+  optional Timestamp event_time = 3;
+  // Event metadata
+   map<string, string> metadata = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class PaymentEvent {
+        +EventType event_type
+        +Payment payment
+        +Timestamp event_time
+        +map<string, string> metadata
+    }
+    PaymentEvent --> EventType
+    PaymentEvent --> Payment
+    PaymentEvent --> Timestamp
+```
+
+---
+
+### CardSource
+
+<a name="cardsource"></a>
+
+CardSource for card payments
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.CardSource` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `token` | string | optional | Card token |
+| 2 | `save_card` | bool | optional | Save card for future use |
+
+#### Proto Definition
+
+```protobuf
+message CardSource {
+  // Card token
+  optional string token = 1;
+  // Save card for future use
+  optional bool save_card = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CardSource {
+        +string token
+        +bool save_card
+    }
+```
+
+---
+
+### CardPaymentDetails
+
+<a name="cardpaymentdetails"></a>
+
+CardPaymentDetails for card payments
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.CardPaymentDetails` |
+| **Field Count** | 7 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `last_four` | string | optional | Last 4 digits |
+| 2 | `brand` | [`CardBrand`](#cardbrand) | optional | Card brand |
+| 3 | `expiry_month` | int32 | optional | Expiry month |
+| 4 | `expiry_year` | int32 | optional | Expiry year |
+| 5 | `cardholder_name` | string | optional | Cardholder name |
+| 6 | `fingerprint` | string | optional | Card fingerprint |
+| 7 | `three_d_secure` | [`ThreeDSecure`](#threedsecure) | optional | 3DS verification |
+
+#### Proto Definition
+
+```protobuf
+message CardPaymentDetails {
+  // Last 4 digits
+  optional string last_four = 1;
+  // Card brand
+  optional CardBrand brand = 2;
+  // Expiry month
+  optional int32 expiry_month = 3;
+  // Expiry year
+  optional int32 expiry_year = 4;
+  // Cardholder name
+  optional string cardholder_name = 5;
+  // Card fingerprint
+  optional string fingerprint = 6;
+  // 3DS verification
+  optional ThreeDSecure three_d_secure = 7;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CardPaymentDetails {
+        +string last_four
+        +CardBrand brand
+        +int32 expiry_month
+        +int32 expiry_year
+        +string cardholder_name
+        +string fingerprint
+        +ThreeDSecure three_d_secure
+    }
+    CardPaymentDetails --> CardBrand
+    CardPaymentDetails --> ThreeDSecure
+```
+
+---
+
+### CryptoPaymentDetails
+
+<a name="cryptopaymentdetails"></a>
+
+CryptoPaymentDetails for cryptocurrency
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.CryptoPaymentDetails` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `crypto_type` | [`CryptoType`](#cryptotype) | optional | Cryptocurrency type |
+| 2 | `wallet_address` | string | optional | Wallet address |
+| 3 | `transaction_hash` | string | optional | Transaction hash |
+| 4 | `network` | string | optional | Network |
+| 5 | `confirmations` | int32 | optional | Confirmations |
+
+#### Proto Definition
+
+```protobuf
+message CryptoPaymentDetails {
+  // Cryptocurrency type
+  optional CryptoType crypto_type = 1;
+  // Wallet address
+  optional string wallet_address = 2;
+  // Transaction hash
+  optional string transaction_hash = 3;
+  // Network
+  optional string network = 4;
+  // Confirmations
+  optional int32 confirmations = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CryptoPaymentDetails {
+        +CryptoType crypto_type
+        +string wallet_address
+        +string transaction_hash
+        +string network
+        +int32 confirmations
+    }
+    CryptoPaymentDetails --> CryptoType
+```
+
+---
+
+### CaptureDetails
+
+<a name="capturedetails"></a>
+
+CaptureDetails contains capture information
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.CaptureDetails` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `amount` | [`Money`](#money) | optional | Captured amount |
+| 2 | `captured_at` | [`Timestamp`](#timestamp) | optional | Capture timestamp |
+| 3 | `partial` | bool | optional | Is partial capture |
+| 4 | `remaining_amount` | [`Money`](#money) | optional | Remaining amount |
+
+#### Proto Definition
+
+```protobuf
+message CaptureDetails {
+  // Captured amount
+  optional Money amount = 1;
+  // Capture timestamp
+  optional Timestamp captured_at = 2;
+  // Is partial capture
+  optional bool partial = 3;
+  // Remaining amount
+  optional Money remaining_amount = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CaptureDetails {
+        +Money amount
+        +Timestamp captured_at
+        +bool partial
+        +Money remaining_amount
+    }
+    CaptureDetails --> Money
+    CaptureDetails --> Timestamp
+    CaptureDetails --> Money
+```
+
+---
+
+### SettlementDetails
+
+<a name="settlementdetails"></a>
+
+SettlementDetails contains settlement information
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.SettlementDetails` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `status` | [`SettlementStatus`](#settlementstatus) | optional | Settlement status |
+| 2 | `expected_at` | [`Timestamp`](#timestamp) | optional | Expected settlement date |
+| 3 | `settled_at` | [`Timestamp`](#timestamp) | optional | Actual settlement date |
+| 4 | `batch_id` | string | optional | Settlement batch ID |
+| 5 | `net_amount` | [`Money`](#money) | optional | Net amount |
+
+#### Proto Definition
+
+```protobuf
+message SettlementDetails {
+  // Settlement status
+  optional SettlementStatus status = 1;
+  // Expected settlement date
+  optional Timestamp expected_at = 2;
+  // Actual settlement date
+  optional Timestamp settled_at = 3;
+  // Settlement batch ID
+  optional string batch_id = 4;
+  // Net amount
+  optional Money net_amount = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class SettlementDetails {
+        +SettlementStatus status
+        +Timestamp expected_at
+        +Timestamp settled_at
+        +string batch_id
+        +Money net_amount
+    }
+    SettlementDetails --> SettlementStatus
+    SettlementDetails --> Timestamp
+    SettlementDetails --> Timestamp
+    SettlementDetails --> Money
+```
+
+---
+
+### PaymentSummary
+
+<a name="paymentsummary"></a>
+
+PaymentSummary contains aggregate statistics
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.PaymentSummary` |
+| **Field Count** | 4 |
+| **Nested Types** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `total_count` | int64 | optional | Total count |
+| 2 | `total_amount` | [`Money`](#money) | optional | Total amount |
+| 3 | `status_counts` | map<string, int64> |  | Status breakdown |
+| 4 | `method_counts` | map<string, int64> |  | Method breakdown |
+
+#### Proto Definition
+
+```protobuf
+message PaymentSummary {
+  // Total count
+  optional int64 total_count = 1;
+  // Total amount
+  optional Money total_amount = 2;
+  // Status breakdown
+   map<string, int64> status_counts = 3;
+  // Method breakdown
+   map<string, int64> method_counts = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class PaymentSummary {
+        +int64 total_count
+        +Money total_amount
+        +map<string, int64> status_counts
+        +map<string, int64> method_counts
+    }
+    PaymentSummary --> Money
+```
+
+---
+
+### GetPaymentRequest
+
+<a name="getpaymentrequest"></a>
+
+GetPaymentRequest retrieves a payment
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.GetPaymentRequest` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `payment_id` | string | optional | Payment ID |
+
+#### Proto Definition
+
+```protobuf
+message GetPaymentRequest {
+  // Payment ID
+  optional string payment_id = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetPaymentRequest {
+        +string payment_id
+    }
+```
+
+---
+
+### ProcessBatchRequest
+
+<a name="processbatchrequest"></a>
+
+ProcessBatchRequest processes multiple payments
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.ProcessBatchRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `payments` | [`CreatePaymentRequest`](#createpaymentrequest) | repeated | Batch payments |
+| 2 | `batch_id` | string | optional | Batch ID |
+| 3 | `continue_on_error` | bool | optional | Continue on error |
+
+#### Proto Definition
+
+```protobuf
+message ProcessBatchRequest {
+  // Batch payments
+  repeated CreatePaymentRequest payments = 1;
+  // Batch ID
+  optional string batch_id = 2;
+  // Continue on error
+  optional bool continue_on_error = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class ProcessBatchRequest {
+        +CreatePaymentRequest[] payments
+        +string batch_id
+        +bool continue_on_error
+    }
+    ProcessBatchRequest "1" --> "*" CreatePaymentRequest
+```
+
+---
+
+### WalletSource
+
+<a name="walletsource"></a>
+
+WalletSource for wallet payments
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.WalletSource` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `provider` | [`WalletProvider`](#walletprovider) | optional | Wallet provider |
+| 2 | `token` | string | optional | Wallet token |
+
+#### Proto Definition
+
+```protobuf
+message WalletSource {
+  // Wallet provider
+  optional WalletProvider provider = 1;
+  // Wallet token
+  optional string token = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class WalletSource {
+        +WalletProvider provider
+        +string token
+    }
+    WalletSource --> WalletProvider
+```
+
+---
+
+### RefundDetails
+
+<a name="refunddetails"></a>
+
+RefundDetails contains refund information
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.RefundDetails` |
+| **Field Count** | 6 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `refund_id` | string | optional | Refund ID |
+| 2 | `amount` | [`Money`](#money) | optional | Refund amount |
+| 3 | `reason` | string | optional | Refund reason |
+| 4 | `status` | [`RefundStatus`](#refundstatus) | optional | Refund status |
+| 5 | `refunded_at` | [`Timestamp`](#timestamp) | optional | Refund timestamp |
+| 6 | `expected_arrival` | [`Timestamp`](#timestamp) | optional | Expected arrival |
+
+#### Proto Definition
+
+```protobuf
+message RefundDetails {
+  // Refund ID
+  optional string refund_id = 1;
+  // Refund amount
+  optional Money amount = 2;
+  // Refund reason
+  optional string reason = 3;
+  // Refund status
+  optional RefundStatus status = 4;
+  // Refund timestamp
+  optional Timestamp refunded_at = 5;
+  // Expected arrival
+  optional Timestamp expected_arrival = 6;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class RefundDetails {
+        +string refund_id
+        +Money amount
+        +string reason
+        +RefundStatus status
+        +Timestamp refunded_at
+        +Timestamp expected_arrival
+    }
+    RefundDetails --> Money
+    RefundDetails --> RefundStatus
+    RefundDetails --> Timestamp
+    RefundDetails --> Timestamp
+```
+
+---
+
+### PayeeInfo
+
+<a name="payeeinfo"></a>
+
+PayeeInfo contains payee information
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `payments.v1.PayeeInfo` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `merchant_id` | string | optional | Merchant ID |
+| 2 | `merchant_name` | string | optional | Merchant name |
+| 3 | `account_number` | string | optional | Account number |
+| 4 | `address` | [`Address`](#address) | optional | Business address |
+
+#### Proto Definition
+
+```protobuf
+message PayeeInfo {
+  // Merchant ID
+  optional string merchant_id = 1;
+  // Merchant name
+  optional string merchant_name = 2;
+  // Account number
+  optional string account_number = 3;
+  // Business address
+  optional Address address = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class PayeeInfo {
+        +string merchant_id
+        +string merchant_name
+        +string account_number
+        +Address address
+    }
+    PayeeInfo --> Address
+```
+
+---
+
 ## 🔢 Enumerations
 
 <a name="enumerations"></a>
 
 This service defines **12 enumeration types**:
 
-### CardBrand
-
-<a name="cardbrand"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `CARD_BRAND_UNSPECIFIED` | 0 | - |
-| `CARD_BRAND_VISA` | 1 | - |
-| `CARD_BRAND_MASTERCARD` | 2 | - |
-| `CARD_BRAND_AMEX` | 3 | - |
-| `CARD_BRAND_DISCOVER` | 4 | - |
-| `CARD_BRAND_JCB` | 5 | - |
-| `CARD_BRAND_DINERS` | 6 | - |
-| `CARD_BRAND_UNIONPAY` | 7 | - |
-
-#### Proto Definition
-
-```protobuf
-enum CardBrand {
-  CARD_BRAND_UNSPECIFIED = 0;
-  CARD_BRAND_VISA = 1;
-  CARD_BRAND_MASTERCARD = 2;
-  CARD_BRAND_AMEX = 3;
-  CARD_BRAND_DISCOVER = 4;
-  CARD_BRAND_JCB = 5;
-  CARD_BRAND_DINERS = 6;
-  CARD_BRAND_UNIONPAY = 7;
-}
-```
-
----
-
-### CryptoType
-
-<a name="cryptotype"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `CRYPTO_TYPE_UNSPECIFIED` | 0 | - |
-| `CRYPTO_TYPE_BITCOIN` | 1 | - |
-| `CRYPTO_TYPE_ETHEREUM` | 2 | - |
-| `CRYPTO_TYPE_LITECOIN` | 3 | - |
-| `CRYPTO_TYPE_USDC` | 4 | - |
-| `CRYPTO_TYPE_USDT` | 5 | - |
-
-#### Proto Definition
-
-```protobuf
-enum CryptoType {
-  CRYPTO_TYPE_UNSPECIFIED = 0;
-  CRYPTO_TYPE_BITCOIN = 1;
-  CRYPTO_TYPE_ETHEREUM = 2;
-  CRYPTO_TYPE_LITECOIN = 3;
-  CRYPTO_TYPE_USDC = 4;
-  CRYPTO_TYPE_USDT = 5;
-}
-```
-
----
-
-### SettlementStatus
-
-<a name="settlementstatus"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `SETTLEMENT_STATUS_UNSPECIFIED` | 0 | - |
-| `SETTLEMENT_STATUS_PENDING` | 1 | - |
-| `SETTLEMENT_STATUS_IN_TRANSIT` | 2 | - |
-| `SETTLEMENT_STATUS_SETTLED` | 3 | - |
-| `SETTLEMENT_STATUS_FAILED` | 4 | - |
-
-#### Proto Definition
-
-```protobuf
-enum SettlementStatus {
-  SETTLEMENT_STATUS_UNSPECIFIED = 0;
-  SETTLEMENT_STATUS_PENDING = 1;
-  SETTLEMENT_STATUS_IN_TRANSIT = 2;
-  SETTLEMENT_STATUS_SETTLED = 3;
-  SETTLEMENT_STATUS_FAILED = 4;
-}
-```
-
----
-
-### ActionType
-
-<a name="actiontype"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `ACTION_TYPE_UNSPECIFIED` | 0 | - |
-| `ACTION_TYPE_NONE` | 1 | - |
-| `ACTION_TYPE_REDIRECT` | 2 | - |
-| `ACTION_TYPE_VERIFY` | 3 | - |
-| `ACTION_TYPE_AUTHORIZE` | 4 | - |
-
-#### Proto Definition
-
-```protobuf
-enum ActionType {
-  ACTION_TYPE_UNSPECIFIED = 0;
-  ACTION_TYPE_NONE = 1;
-  ACTION_TYPE_REDIRECT = 2;
-  ACTION_TYPE_VERIFY = 3;
-  ACTION_TYPE_AUTHORIZE = 4;
-}
-```
-
----
-
-### PaymentMethod
-
-<a name="paymentmethod"></a>
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `PAYMENT_METHOD_UNSPECIFIED` | 0 | - |
-| `PAYMENT_METHOD_CREDIT_CARD` | 1 | - |
-| `PAYMENT_METHOD_DEBIT_CARD` | 2 | - |
-| `PAYMENT_METHOD_BANK_TRANSFER` | 3 | - |
-| `PAYMENT_METHOD_PAYPAL` | 4 | - |
-| `PAYMENT_METHOD_APPLE_PAY` | 5 | - |
-| `PAYMENT_METHOD_GOOGLE_PAY` | 6 | - |
-| `PAYMENT_METHOD_CRYPTOCURRENCY` | 7 | - |
-| `PAYMENT_METHOD_WIRE_TRANSFER` | 8 | - |
-
-#### Proto Definition
-
-```protobuf
-enum PaymentMethod {
-  PAYMENT_METHOD_UNSPECIFIED = 0;
-  PAYMENT_METHOD_CREDIT_CARD = 1;
-  PAYMENT_METHOD_DEBIT_CARD = 2;
-  PAYMENT_METHOD_BANK_TRANSFER = 3;
-  PAYMENT_METHOD_PAYPAL = 4;
-  PAYMENT_METHOD_APPLE_PAY = 5;
-  PAYMENT_METHOD_GOOGLE_PAY = 6;
-  PAYMENT_METHOD_CRYPTOCURRENCY = 7;
-  PAYMENT_METHOD_WIRE_TRANSFER = 8;
-}
-```
-
----
-
 ### PaymentStatus
 
 <a name="paymentstatus"></a>
+
+PaymentStatus represents payment lifecycle status
 
 | Value | Number | Description |
 |-------|--------|-------------|
@@ -1201,27 +2360,31 @@ enum PaymentStatus {
 
 ---
 
-### WalletProvider
+### TransactionType
 
-<a name="walletprovider"></a>
+<a name="transactiontype"></a>
+
+TransactionType represents transaction types
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `WALLET_PROVIDER_UNSPECIFIED` | 0 | - |
-| `WALLET_PROVIDER_PAYPAL` | 1 | - |
-| `WALLET_PROVIDER_APPLE_PAY` | 2 | - |
-| `WALLET_PROVIDER_GOOGLE_PAY` | 3 | - |
-| `WALLET_PROVIDER_VENMO` | 4 | - |
+| `TRANSACTION_TYPE_UNSPECIFIED` | 0 | - |
+| `TRANSACTION_TYPE_PAYMENT` | 1 | - |
+| `TRANSACTION_TYPE_REFUND` | 2 | - |
+| `TRANSACTION_TYPE_CHARGEBACK` | 3 | - |
+| `TRANSACTION_TYPE_PAYOUT` | 4 | - |
+| `TRANSACTION_TYPE_ADJUSTMENT` | 5 | - |
 
 #### Proto Definition
 
 ```protobuf
-enum WalletProvider {
-  WALLET_PROVIDER_UNSPECIFIED = 0;
-  WALLET_PROVIDER_PAYPAL = 1;
-  WALLET_PROVIDER_APPLE_PAY = 2;
-  WALLET_PROVIDER_GOOGLE_PAY = 3;
-  WALLET_PROVIDER_VENMO = 4;
+enum TransactionType {
+  TRANSACTION_TYPE_UNSPECIFIED = 0;
+  TRANSACTION_TYPE_PAYMENT = 1;
+  TRANSACTION_TYPE_REFUND = 2;
+  TRANSACTION_TYPE_CHARGEBACK = 3;
+  TRANSACTION_TYPE_PAYOUT = 4;
+  TRANSACTION_TYPE_ADJUSTMENT = 5;
 }
 ```
 
@@ -1230,6 +2393,8 @@ enum WalletProvider {
 ### RefundStatus
 
 <a name="refundstatus"></a>
+
+RefundStatus represents refund status
 
 | Value | Number | Description |
 |-------|--------|-------------|
@@ -1259,6 +2424,8 @@ enum RefundStatus {
 
 <a name="fraudcheckoutcome"></a>
 
+FraudCheckOutcome represents fraud check results
+
 | Value | Number | Description |
 |-------|--------|-------------|
 | `FRAUD_CHECK_OUTCOME_UNSPECIFIED` | 0 | - |
@@ -1282,6 +2449,8 @@ enum FraudCheckOutcome {
 ### FeeType
 
 <a name="feetype"></a>
+
+FeeType represents fee types
 
 | Value | Number | Description |
 |-------|--------|-------------|
@@ -1307,9 +2476,39 @@ enum FeeType {
 
 ---
 
+### ActionType
+
+<a name="actiontype"></a>
+
+ActionType represents action types
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `ACTION_TYPE_UNSPECIFIED` | 0 | - |
+| `ACTION_TYPE_NONE` | 1 | - |
+| `ACTION_TYPE_REDIRECT` | 2 | - |
+| `ACTION_TYPE_VERIFY` | 3 | - |
+| `ACTION_TYPE_AUTHORIZE` | 4 | - |
+
+#### Proto Definition
+
+```protobuf
+enum ActionType {
+  ACTION_TYPE_UNSPECIFIED = 0;
+  ACTION_TYPE_NONE = 1;
+  ACTION_TYPE_REDIRECT = 2;
+  ACTION_TYPE_VERIFY = 3;
+  ACTION_TYPE_AUTHORIZE = 4;
+}
+```
+
+---
+
 ### EventType
 
 <a name="eventtype"></a>
+
+EventType represents event types
 
 | Value | Number | Description |
 |-------|--------|-------------|
@@ -1337,29 +2536,157 @@ enum EventType {
 
 ---
 
-### TransactionType
+### PaymentMethod
 
-<a name="transactiontype"></a>
+<a name="paymentmethod"></a>
+
+PaymentMethod represents payment method types
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `TRANSACTION_TYPE_UNSPECIFIED` | 0 | - |
-| `TRANSACTION_TYPE_PAYMENT` | 1 | - |
-| `TRANSACTION_TYPE_REFUND` | 2 | - |
-| `TRANSACTION_TYPE_CHARGEBACK` | 3 | - |
-| `TRANSACTION_TYPE_PAYOUT` | 4 | - |
-| `TRANSACTION_TYPE_ADJUSTMENT` | 5 | - |
+| `PAYMENT_METHOD_UNSPECIFIED` | 0 | - |
+| `PAYMENT_METHOD_CREDIT_CARD` | 1 | - |
+| `PAYMENT_METHOD_DEBIT_CARD` | 2 | - |
+| `PAYMENT_METHOD_BANK_TRANSFER` | 3 | - |
+| `PAYMENT_METHOD_PAYPAL` | 4 | - |
+| `PAYMENT_METHOD_APPLE_PAY` | 5 | - |
+| `PAYMENT_METHOD_GOOGLE_PAY` | 6 | - |
+| `PAYMENT_METHOD_CRYPTOCURRENCY` | 7 | - |
+| `PAYMENT_METHOD_WIRE_TRANSFER` | 8 | - |
 
 #### Proto Definition
 
 ```protobuf
-enum TransactionType {
-  TRANSACTION_TYPE_UNSPECIFIED = 0;
-  TRANSACTION_TYPE_PAYMENT = 1;
-  TRANSACTION_TYPE_REFUND = 2;
-  TRANSACTION_TYPE_CHARGEBACK = 3;
-  TRANSACTION_TYPE_PAYOUT = 4;
-  TRANSACTION_TYPE_ADJUSTMENT = 5;
+enum PaymentMethod {
+  PAYMENT_METHOD_UNSPECIFIED = 0;
+  PAYMENT_METHOD_CREDIT_CARD = 1;
+  PAYMENT_METHOD_DEBIT_CARD = 2;
+  PAYMENT_METHOD_BANK_TRANSFER = 3;
+  PAYMENT_METHOD_PAYPAL = 4;
+  PAYMENT_METHOD_APPLE_PAY = 5;
+  PAYMENT_METHOD_GOOGLE_PAY = 6;
+  PAYMENT_METHOD_CRYPTOCURRENCY = 7;
+  PAYMENT_METHOD_WIRE_TRANSFER = 8;
+}
+```
+
+---
+
+### CardBrand
+
+<a name="cardbrand"></a>
+
+CardBrand represents card brands
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `CARD_BRAND_UNSPECIFIED` | 0 | - |
+| `CARD_BRAND_VISA` | 1 | - |
+| `CARD_BRAND_MASTERCARD` | 2 | - |
+| `CARD_BRAND_AMEX` | 3 | - |
+| `CARD_BRAND_DISCOVER` | 4 | - |
+| `CARD_BRAND_JCB` | 5 | - |
+| `CARD_BRAND_DINERS` | 6 | - |
+| `CARD_BRAND_UNIONPAY` | 7 | - |
+
+#### Proto Definition
+
+```protobuf
+enum CardBrand {
+  CARD_BRAND_UNSPECIFIED = 0;
+  CARD_BRAND_VISA = 1;
+  CARD_BRAND_MASTERCARD = 2;
+  CARD_BRAND_AMEX = 3;
+  CARD_BRAND_DISCOVER = 4;
+  CARD_BRAND_JCB = 5;
+  CARD_BRAND_DINERS = 6;
+  CARD_BRAND_UNIONPAY = 7;
+}
+```
+
+---
+
+### WalletProvider
+
+<a name="walletprovider"></a>
+
+WalletProvider represents wallet providers
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `WALLET_PROVIDER_UNSPECIFIED` | 0 | - |
+| `WALLET_PROVIDER_PAYPAL` | 1 | - |
+| `WALLET_PROVIDER_APPLE_PAY` | 2 | - |
+| `WALLET_PROVIDER_GOOGLE_PAY` | 3 | - |
+| `WALLET_PROVIDER_VENMO` | 4 | - |
+
+#### Proto Definition
+
+```protobuf
+enum WalletProvider {
+  WALLET_PROVIDER_UNSPECIFIED = 0;
+  WALLET_PROVIDER_PAYPAL = 1;
+  WALLET_PROVIDER_APPLE_PAY = 2;
+  WALLET_PROVIDER_GOOGLE_PAY = 3;
+  WALLET_PROVIDER_VENMO = 4;
+}
+```
+
+---
+
+### CryptoType
+
+<a name="cryptotype"></a>
+
+CryptoType represents cryptocurrency types
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `CRYPTO_TYPE_UNSPECIFIED` | 0 | - |
+| `CRYPTO_TYPE_BITCOIN` | 1 | - |
+| `CRYPTO_TYPE_ETHEREUM` | 2 | - |
+| `CRYPTO_TYPE_LITECOIN` | 3 | - |
+| `CRYPTO_TYPE_USDC` | 4 | - |
+| `CRYPTO_TYPE_USDT` | 5 | - |
+
+#### Proto Definition
+
+```protobuf
+enum CryptoType {
+  CRYPTO_TYPE_UNSPECIFIED = 0;
+  CRYPTO_TYPE_BITCOIN = 1;
+  CRYPTO_TYPE_ETHEREUM = 2;
+  CRYPTO_TYPE_LITECOIN = 3;
+  CRYPTO_TYPE_USDC = 4;
+  CRYPTO_TYPE_USDT = 5;
+}
+```
+
+---
+
+### SettlementStatus
+
+<a name="settlementstatus"></a>
+
+SettlementStatus represents settlement status
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `SETTLEMENT_STATUS_UNSPECIFIED` | 0 | - |
+| `SETTLEMENT_STATUS_PENDING` | 1 | - |
+| `SETTLEMENT_STATUS_IN_TRANSIT` | 2 | - |
+| `SETTLEMENT_STATUS_SETTLED` | 3 | - |
+| `SETTLEMENT_STATUS_FAILED` | 4 | - |
+
+#### Proto Definition
+
+```protobuf
+enum SettlementStatus {
+  SETTLEMENT_STATUS_UNSPECIFIED = 0;
+  SETTLEMENT_STATUS_PENDING = 1;
+  SETTLEMENT_STATUS_IN_TRANSIT = 2;
+  SETTLEMENT_STATUS_SETTLED = 3;
+  SETTLEMENT_STATUS_FAILED = 4;
 }
 ```
 

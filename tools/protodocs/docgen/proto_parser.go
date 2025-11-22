@@ -110,12 +110,28 @@ func (p *ProtoParser) parseDescriptorSet(fds *descriptorpb.FileDescriptorSet) ([
 
 // parseService parses a service descriptor
 func (p *ProtoParser) parseService(file *descriptorpb.FileDescriptorProto, service *descriptorpb.ServiceDescriptorProto) *ServiceDocumentation {
+	// Find service index
+	serviceIndex := -1
+	for i, svc := range file.GetService() {
+		if svc.GetName() == service.GetName() {
+			serviceIndex = i
+			break
+		}
+	}
+
+	// Extract service description from source code info
+	serviceDesc := ""
+	if serviceIndex >= 0 {
+		path := []int32{6, int32(serviceIndex)} // 6 = service field number
+		serviceDesc = extractCommentFromPath(file, path)
+	}
+
 	doc := &ServiceDocumentation{
 		Service: &ServiceDoc{
 			Name:        service.GetName(),
 			FullName:    fmt.Sprintf("%s.%s", file.GetPackage(), service.GetName()),
 			Package:     file.GetPackage(),
-			Description: "", // Will be extracted from source code info in enhanced version
+			Description: serviceDesc,
 			ProtoFile:   file.GetName(),
 		},
 		Methods:  make([]MethodDoc, 0),
@@ -125,8 +141,8 @@ func (p *ProtoParser) parseService(file *descriptorpb.FileDescriptorProto, servi
 	}
 
 	// Parse methods
-	for _, method := range service.GetMethod() {
-		methodDoc := p.parseMethod(file, method)
+	for i, method := range service.GetMethod() {
+		methodDoc := p.parseMethod(file, serviceIndex, i, method)
 		doc.Methods = append(doc.Methods, methodDoc)
 	}
 
@@ -146,11 +162,18 @@ func (p *ProtoParser) parseService(file *descriptorpb.FileDescriptorProto, servi
 }
 
 // parseMethod parses a method descriptor
-func (p *ProtoParser) parseMethod(file *descriptorpb.FileDescriptorProto, method *descriptorpb.MethodDescriptorProto) MethodDoc {
+func (p *ProtoParser) parseMethod(file *descriptorpb.FileDescriptorProto, serviceIndex, methodIndex int, method *descriptorpb.MethodDescriptorProto) MethodDoc {
+	// Extract method description
+	methodDesc := ""
+	if serviceIndex >= 0 && methodIndex >= 0 {
+		path := []int32{6, int32(serviceIndex), 2, int32(methodIndex)} // 6=service, 2=method
+		methodDesc = extractCommentFromPath(file, path)
+	}
+
 	return MethodDoc{
 		Name:            method.GetName(),
 		FullName:        fmt.Sprintf("%s.%s", file.GetPackage(), method.GetName()),
-		Description:     "", // Will be extracted from source code info in enhanced version
+		Description:     methodDesc,
 		InputType:       strings.TrimPrefix(method.GetInputType(), "."),
 		OutputType:      strings.TrimPrefix(method.GetOutputType(), "."),
 		ClientStreaming: method.GetClientStreaming(),
@@ -163,17 +186,44 @@ func (p *ProtoParser) parseMethod(file *descriptorpb.FileDescriptorProto, method
 // collectServiceMessages collects all messages used by the service
 func (p *ProtoParser) collectServiceMessages(file *descriptorpb.FileDescriptorProto, service *descriptorpb.ServiceDescriptorProto) map[string]MessageDoc {
 	messages := make(map[string]MessageDoc)
+	toProcess := make([]string, 0)
 
 	// Collect from methods
 	for _, method := range service.GetMethod() {
 		inputType := strings.TrimPrefix(method.GetInputType(), ".")
 		outputType := strings.TrimPrefix(method.GetOutputType(), ".")
+		toProcess = append(toProcess, inputType, outputType)
+	}
 
-		// Find message descriptors
+	// Process all messages recursively
+	processed := make(map[string]bool)
+	for len(toProcess) > 0 {
+		// Pop first item
+		typeName := toProcess[0]
+		toProcess = toProcess[1:]
+
+		if processed[typeName] {
+			continue
+		}
+		processed[typeName] = true
+
+		// Find and parse the message
 		for _, msg := range file.GetMessageType() {
 			fullName := fmt.Sprintf("%s.%s", file.GetPackage(), msg.GetName())
-			if fullName == inputType || fullName == outputType {
-				messages[fullName] = p.parseMessage(file, msg)
+			if fullName == typeName {
+				msgDoc := p.parseMessage(file, msg)
+				messages[fullName] = msgDoc
+
+				// Collect referenced types from fields
+				for _, field := range msgDoc.Fields {
+					if field.TypeName != "" {
+						// Skip well-known types
+						if !strings.HasPrefix(field.TypeName, "google.protobuf.") {
+							toProcess = append(toProcess, field.TypeName)
+						}
+					}
+				}
+				break
 			}
 		}
 	}
@@ -185,17 +235,33 @@ func (p *ProtoParser) collectServiceMessages(file *descriptorpb.FileDescriptorPr
 func (p *ProtoParser) parseMessage(file *descriptorpb.FileDescriptorProto, msg *descriptorpb.DescriptorProto) MessageDoc {
 	fullName := fmt.Sprintf("%s.%s", file.GetPackage(), msg.GetName())
 
+	// Find message index
+	messageIndex := -1
+	for i, m := range file.GetMessageType() {
+		if m.GetName() == msg.GetName() {
+			messageIndex = i
+			break
+		}
+	}
+
+	// Extract message description
+	messageDesc := ""
+	if messageIndex >= 0 {
+		path := []int32{4, int32(messageIndex)} // 4 = message_type field number
+		messageDesc = extractCommentFromPath(file, path)
+	}
+
 	doc := MessageDoc{
 		Name:        msg.GetName(),
 		FullName:    fullName,
-		Description: "", // Will be extracted from source code info in enhanced version
+		Description: messageDesc,
 		Fields:      make([]FieldDoc, 0),
 		NestedTypes: make([]string, 0),
 	}
 
 	// Parse fields
-	for _, field := range msg.GetField() {
-		fieldDoc := p.parseFieldWithOneofs(field, msg)
+	for i, field := range msg.GetField() {
+		fieldDoc := p.parseFieldWithOneofs(file, messageIndex, i, field, msg)
 		doc.Fields = append(doc.Fields, fieldDoc)
 	}
 
@@ -208,7 +274,7 @@ func (p *ProtoParser) parseMessage(file *descriptorpb.FileDescriptorProto, msg *
 }
 
 // parseFieldWithOneofs parses a field descriptor with oneof information
-func (p *ProtoParser) parseFieldWithOneofs(field *descriptorpb.FieldDescriptorProto, msg *descriptorpb.DescriptorProto) FieldDoc {
+func (p *ProtoParser) parseFieldWithOneofs(file *descriptorpb.FileDescriptorProto, messageIndex, fieldIndex int, field *descriptorpb.FieldDescriptorProto, msg *descriptorpb.DescriptorProto) FieldDoc {
 	label := "optional"
 	if field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
 		label = "repeated"
@@ -216,8 +282,40 @@ func (p *ProtoParser) parseFieldWithOneofs(field *descriptorpb.FieldDescriptorPr
 		label = "required"
 	}
 
-	fieldType := field.GetType().String()
+	// Convert protobuf type enum to readable name
+	fieldType := getFieldTypeName(field.GetType())
 	typeName := strings.TrimPrefix(field.GetTypeName(), ".")
+
+	// Check if this is a map field
+	if field.GetType() == descriptorpb.FieldDescriptorProto_TYPE_MESSAGE && field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED {
+		// Check if the message is a map entry
+		for _, nested := range msg.GetNestedType() {
+			nestedFullName := nested.GetName()
+			fieldTypeName := getShortTypeName(field.GetTypeName())
+			if nestedFullName == fieldTypeName && nested.GetOptions().GetMapEntry() {
+				// This is a map field - format as map<K, V>
+				var keyType, valueType string
+				for _, mapField := range nested.GetField() {
+					if mapField.GetName() == "key" {
+						keyType = getFieldTypeName(mapField.GetType())
+						if keyType == "" {
+							keyType = getShortTypeName(mapField.GetTypeName())
+						}
+					} else if mapField.GetName() == "value" {
+						valueType = getFieldTypeName(mapField.GetType())
+						if valueType == "" {
+							valueType = getShortTypeName(mapField.GetTypeName())
+						}
+					}
+				}
+				if keyType != "" && valueType != "" {
+					fieldType = fmt.Sprintf("map<%s, %s>", keyType, valueType)
+					typeName = "" // Clear typeName since we have the full map syntax
+					label = ""     // Maps don't need labels
+				}
+			}
+		}
+	}
 
 	// Get oneof group name if applicable
 	oneofGroup := ""
@@ -228,13 +326,25 @@ func (p *ProtoParser) parseFieldWithOneofs(field *descriptorpb.FieldDescriptorPr
 		}
 	}
 
+	// If oneof field, show oneof group in label instead of optional
+	if oneofGroup != "" {
+		label = fmt.Sprintf("oneof `%s`", oneofGroup)
+	}
+
+	// Extract field description
+	fieldDesc := ""
+	if messageIndex >= 0 && fieldIndex >= 0 {
+		path := []int32{4, int32(messageIndex), 2, int32(fieldIndex)} // 4=message, 2=field
+		fieldDesc = extractCommentFromPath(file, path)
+	}
+
 	return FieldDoc{
 		Name:         field.GetName(),
 		Number:       field.GetNumber(),
 		Type:         fieldType,
 		TypeName:     typeName,
 		Label:        label,
-		Description:  "", // Will be extracted from source code info in enhanced version
+		Description:  fieldDesc,
 		OneofGroup:   oneofGroup,
 		DefaultValue: "",
 	}
@@ -256,28 +366,49 @@ func (p *ProtoParser) collectServiceEnums(file *descriptorpb.FileDescriptorProto
 func (p *ProtoParser) parseEnum(file *descriptorpb.FileDescriptorProto, enum *descriptorpb.EnumDescriptorProto) EnumDoc {
 	fullName := fmt.Sprintf("%s.%s", file.GetPackage(), enum.GetName())
 
+	// Find enum index
+	enumIndex := -1
+	for i, e := range file.GetEnumType() {
+		if e.GetName() == enum.GetName() {
+			enumIndex = i
+			break
+		}
+	}
+
+	// Extract enum description
+	enumDesc := ""
+	if enumIndex >= 0 {
+		path := []int32{5, int32(enumIndex)} // 5 = enum_type field number
+		enumDesc = extractCommentFromPath(file, path)
+	}
+
 	doc := EnumDoc{
 		Name:        enum.GetName(),
 		FullName:    fullName,
-		Description: "", // Will be extracted from source code info in enhanced version
+		Description: enumDesc,
 		Values:      make([]EnumValueDoc, 0),
 	}
 
-	for _, value := range enum.GetValue() {
+	for i, value := range enum.GetValue() {
+		// Extract enum value description
+		valueDesc := ""
+		if enumIndex >= 0 {
+			path := []int32{5, int32(enumIndex), 2, int32(i)} // 5=enum, 2=value
+			valueDesc = extractCommentFromPath(file, path)
+		}
+
 		doc.Values = append(doc.Values, EnumValueDoc{
 			Name:        value.GetName(),
 			Number:      value.GetNumber(),
-			Description: "", // Will be extracted from source code info in enhanced version
+			Description: valueDesc,
 		})
 	}
 
 	return doc
 }
 
-// extractLeadingComments extracts leading comments from source code info
-// This is a placeholder for future enhancement
-// Full implementation would use source code info paths to match specific elements
-func extractLeadingComments(file *descriptorpb.FileDescriptorProto, path []int32) string {
+// extractCommentFromPath extracts comments from source code info for a given path
+func extractCommentFromPath(file *descriptorpb.FileDescriptorProto, path []int32) string {
 	if file.GetSourceCodeInfo() == nil {
 		return ""
 	}
@@ -285,8 +416,12 @@ func extractLeadingComments(file *descriptorpb.FileDescriptorProto, path []int32
 	// Match the path in source code info
 	for _, loc := range file.GetSourceCodeInfo().GetLocation() {
 		if pathsEqual(loc.GetPath(), path) {
+			// Prefer leading comments, fall back to trailing comments
 			if loc.GetLeadingComments() != "" {
 				return strings.TrimSpace(loc.GetLeadingComments())
+			}
+			if loc.GetTrailingComments() != "" {
+				return strings.TrimSpace(loc.GetTrailingComments())
 			}
 		}
 	}
@@ -320,4 +455,58 @@ func (fd *FieldDoc) GetOneofGroup() string {
 		return fd.OneofGroup
 	}
 	return ""
+}
+
+// getFieldTypeName converts protobuf field type enum to readable type name
+func getFieldTypeName(fieldType descriptorpb.FieldDescriptorProto_Type) string {
+	switch fieldType {
+	case descriptorpb.FieldDescriptorProto_TYPE_DOUBLE:
+		return "double"
+	case descriptorpb.FieldDescriptorProto_TYPE_FLOAT:
+		return "float"
+	case descriptorpb.FieldDescriptorProto_TYPE_INT64:
+		return "int64"
+	case descriptorpb.FieldDescriptorProto_TYPE_UINT64:
+		return "uint64"
+	case descriptorpb.FieldDescriptorProto_TYPE_INT32:
+		return "int32"
+	case descriptorpb.FieldDescriptorProto_TYPE_FIXED64:
+		return "fixed64"
+	case descriptorpb.FieldDescriptorProto_TYPE_FIXED32:
+		return "fixed32"
+	case descriptorpb.FieldDescriptorProto_TYPE_BOOL:
+		return "bool"
+	case descriptorpb.FieldDescriptorProto_TYPE_STRING:
+		return "string"
+	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
+		return "" // Will use TypeName instead
+	case descriptorpb.FieldDescriptorProto_TYPE_BYTES:
+		return "bytes"
+	case descriptorpb.FieldDescriptorProto_TYPE_UINT32:
+		return "uint32"
+	case descriptorpb.FieldDescriptorProto_TYPE_ENUM:
+		return "" // Will use TypeName instead
+	case descriptorpb.FieldDescriptorProto_TYPE_SFIXED32:
+		return "sfixed32"
+	case descriptorpb.FieldDescriptorProto_TYPE_SFIXED64:
+		return "sfixed64"
+	case descriptorpb.FieldDescriptorProto_TYPE_SINT32:
+		return "sint32"
+	case descriptorpb.FieldDescriptorProto_TYPE_SINT64:
+		return "sint64"
+	default:
+		return fieldType.String() // Fallback to enum name
+	}
+}
+
+// getShortTypeName extracts just the type name from a full type path
+// e.g., "users.v1.UserPreferences" -> "UserPreferences"
+// e.g., ".users.v1.CustomMetadataEntry" -> "CustomMetadataEntry"
+func getShortTypeName(fullTypeName string) string {
+	fullTypeName = strings.TrimPrefix(fullTypeName, ".")
+	parts := strings.Split(fullTypeName, ".")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	return fullTypeName
 }
