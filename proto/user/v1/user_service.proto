@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package company.user.v1;
+
+option go_package = "github.com/kyivinua/root/proto/user/v1;userv1";
+
+import "user/v1/user_types.proto";
+
+// Сервис управления пользователями.
+//
+// Сервис отвечает за создание, получение, обновление и деактивацию пользователей.
+// Не занимается аутентификацией или авторизацией.
+service UserService {
+  // Создает нового пользователя.
+  //
+  // В случае успеха возвращает созданный профиль пользователя.
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+
+  // Получает профиль пользователя по идентификатору.
+  //
+  // Возвращает профиль пользователя, если он существует и доступен вызывающей стороне.
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
+
+  // Деактивирует пользователя.
+  //
+  // После деактивации пользователь не может выполнять действия в системе.
+  rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse) {}
+}
+
+// Запрос на создание пользователя.
+message CreateUserRequest {
+  // Email-адрес пользователя.
+  //
+  // Должен быть уникальным в пределах системы.
+  string email = 1;
+
+  // Имя пользователя для отображения.
+  //
+  // Необязательное поле; при отсутствии будет сгенерировано автоматически.
+  string display_name = 2;
+}
+
+// Ответ на создание пользователя.
+message CreateUserResponse {
+  // Профиль созданного пользователя.
+  UserProfile user = 1;
+}
+
+// Запрос на получение пользователя.
+message GetUserRequest {
+  // Уникальный идентификатор пользователя (UUID v4).
+  string id = 1;
+}
+
+// Ответ на получение пользователя.
+message GetUserResponse {
+  // Профиль пользователя.
+  UserProfile user = 1;
+}
+
+// Запрос на деактивацию пользователя.
+message DeactivateUserRequest {
+  // Уникальный идентификатор пользователя (UUID v4).
+  string id = 1;
+}
+
+// Ответ на деактивацию пользователя.
+message DeactivateUserResponse {
+  // Успешность операции.
+  bool success = 1;
+}

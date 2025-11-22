@@ -1,0 +1,16 @@
+version: v1
+name: buf.build/company/monorepo
+
+build:
+  roots:
+    - ../proto
+
+lint:
+  use:
+    - DEFAULT
+  except:
+    - PACKAGE_VERSION_SUFFIX
+
+breaking:
+  use:
+    - FILE

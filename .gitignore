@@ -52,3 +52,6 @@ temp/
 
 # Dependencies
 vendor/
+/api-docs/
+*.bin
+.DS_Store
