@@ -308,6 +308,110 @@ make run-enricher
 make test-enricher
 ```
 
+## Notifications & Release Notes
+
+Система поддерживает автоматические уведомления в Slack о статусе pipeline и публикацию release notes.
+
+### Slack Integration
+
+#### Возможности
+
+- **Pipeline Notifications**: Уведомления о старте, завершении и ошибках pipeline
+- **Enrichment Results**: Статистика LLM enrichment с метриками
+- **Breaking Changes Alerts**: Автоматическое оповещение о breaking changes
+- **Release Notes**: Автоматическая генерация и публикация release notes
+- **Rich Formatting**: Цветные сообщения с полями и метриками
+
+#### Конфигурация
+
+```yaml
+# configs/proto-docs.config.yaml
+notifications:
+  enabled: true
+  slack:
+    enabled: true
+    # webhook_url: ""  # или через SLACK_WEBHOOK_URL env var
+    # bot_token: ""    # альтернатива webhook через SLACK_BOT_TOKEN
+    # channel: "#proto-docs"
+    username: "ProtoDocs Bot"
+    icon_emoji: ":book:"
+    notify_on_start: true
+    notify_on_complete: true
+    notify_on_failure: true
+    notify_on_breaking: true
+    notify_on_enrichment: true
+    notify_release_notes: true
+    release_notes_version: "v1.0.0"
+```
+
+#### Использование
+
+```bash
+# Настройка через Webhook (рекомендуется)
+export SLACK_WEBHOOK_URL="https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
+
+# Или через Bot Token (для более сложных сценариев)
+export SLACK_BOT_TOKEN="xoxb-your-bot-token"
+export SLACK_CHANNEL="#proto-docs"
+
+# Запуск pipeline с уведомлениями
+make proto-docs
+```
+
+### Release Notes Generator
+
+Автоматическая генерация release notes из git commits с поддержкой Conventional Commits.
+
+#### Поддерживаемые типы коммитов
+
+- `feat:` → ✨ New Features
+- `fix:` → 🐛 Bug Fixes
+- `perf:`/`refactor:`/`improvement:` → 🔧 Improvements
+- `feat!:` или `BREAKING CHANGE:` → ⚠️ Breaking Changes
+- `deprecate:` → 🗑️ Deprecations
+
+#### Пример Release Notes в Slack
+
+```
+📝 Release Notes - v1.0.0
+
+✨ New Features:
+• Add Enrichment Module with LLM support
+• Implement RAG integration with Weaviate
+
+🔧 Improvements:
+• Optimize ProtoContext loading performance
+• Enhance safety guards with entropy detection
+
+Statistics:
+• Services: 15
+• Messages: 120
+• LLM Enriched Targets: 148
+• Success Rate: 98.7%
+```
+
+#### Автоматическая публикация
+
+```yaml
+# Включить публикацию release notes
+notifications:
+  slack:
+    notify_release_notes: true
+    release_notes_version: "v1.1.0"  # Текущая версия
+    release_notes_from_ref: "v1.0.0"  # Сравнить с этим ref
+```
+
+### Типы уведомлений
+
+| Тип | Описание | Цвет |
+|-----|----------|------|
+| Pipeline Start | Старт документации build | Зеленый |
+| Pipeline Complete | Успешное завершение | Зеленый |
+| Pipeline Failed | Ошибка pipeline | Красный |
+| Enrichment Complete | Результаты LLM enrichment | Желтый/Зеленый |
+| Breaking Changes | Обнаружены breaking changes | Красный |
+| Release Notes | Публикация release notes | Синий |
+
 ## Runtime Service
 
 Пример HTTP сервиса, использующего ProtoContext для runtime операций.

@@ -12,15 +12,17 @@ import (
 
 // Pipeline orchestrates the documentation generation pipeline.
 type Pipeline struct {
-	config *PipelineConfig
-	logger *log.Logger
+	config              *PipelineConfig
+	logger              *log.Logger
+	notificationManager *NotificationManager
 }
 
 // NewPipeline creates a new pipeline with the given configuration.
 func NewPipeline(config *PipelineConfig) *Pipeline {
 	return &Pipeline{
-		config: config,
-		logger: log.New(os.Stdout, "[pipeline] ", log.LstdFlags),
+		config:              config,
+		logger:              log.New(os.Stdout, "[pipeline] ", log.LstdFlags),
+		notificationManager: NewNotificationManager(&config.Notifications),
 	}
 }
 
@@ -40,9 +42,21 @@ func NewPipeline(config *PipelineConfig) *Pipeline {
 func (p *Pipeline) RunAll() error {
 	p.logger.Println("Starting full documentation pipeline")
 
+	// Get commit and branch info for notifications
+	commit := getSourceCommit()
+	branch := getCurrentBranch()
+
+	// Notify pipeline start
+	if p.notificationManager != nil {
+		p.notificationManager.NotifyPipelineStart(commit, branch)
+	}
+
 	// Stage 0: Discovery
 	scope, err := p.runDiscovery()
 	if err != nil {
+		if p.notificationManager != nil {
+			p.notificationManager.NotifyPipelineComplete(false, nil, []string{err.Error()})
+		}
 		return fmt.Errorf("discovery: %w", err)
 	}
 
@@ -82,6 +96,11 @@ func (p *Pipeline) RunAll() error {
 			return fmt.Errorf("enrichment: %w", err)
 		}
 		model = enrichedModel
+
+		// Notify enrichment completion
+		if p.notificationManager != nil {
+			p.notificationManager.NotifyEnrichmentComplete(p.config.Enrichment.ManifestPath)
+		}
 	}
 
 	// Stage 5: Docs Generation
@@ -105,6 +124,18 @@ func (p *Pipeline) RunAll() error {
 		len(model.Modules),
 		model.Statistics["total_services"],
 		model.Statistics["total_messages"])
+
+	// Notify successful completion
+	if p.notificationManager != nil {
+		p.notificationManager.NotifyPipelineComplete(true, model, nil)
+
+		// Send release notes if configured
+		manifestPath := ""
+		if p.config.Enrichment.Enabled {
+			manifestPath = p.config.Enrichment.ManifestPath
+		}
+		p.notificationManager.NotifyReleaseNotes(model, manifestPath)
+	}
 
 	return nil
 }
@@ -307,4 +338,15 @@ func getSourceCommit() string {
 	}
 
 	return string(output[:7]) // Short SHA
+}
+
+// getCurrentBranch gets the current git branch.
+func getCurrentBranch() string {
+	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	output, err := cmd.Output()
+	if err != nil {
+		return "unknown"
+	}
+
+	return string(output[:len(output)-1]) // Remove trailing newline
 }

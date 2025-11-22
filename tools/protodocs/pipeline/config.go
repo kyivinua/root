@@ -12,9 +12,10 @@ type PipelineConfig struct {
 	ProtoRoot string `yaml:"proto_root"`
 	UseBuf    bool   `yaml:"use_buf"`
 
-	Lint       LintConfig       `yaml:"lint"`
-	Breaking   BreakingConfig   `yaml:"breaking"`
-	Enrichment EnrichmentConfig `yaml:"enrichment"`
+	Lint         LintConfig         `yaml:"lint"`
+	Breaking     BreakingConfig     `yaml:"breaking"`
+	Enrichment   EnrichmentConfig   `yaml:"enrichment"`
+	Notifications NotificationsConfig `yaml:"notifications"`
 
 	Descriptors DescriptorsConfig `yaml:"descriptors"`
 	Docs        DocsConfig        `yaml:"docs"`
@@ -68,6 +69,30 @@ type EnrichmentConfig struct {
 	ManifestPath   string `yaml:"manifest_path"`    // path to output manifest
 	Tenant         string `yaml:"tenant"`           // tenant ID for policy
 	OutputModelPath string `yaml:"output_model_path"` // path to enriched model
+}
+
+// NotificationsConfig holds notifications configuration.
+type NotificationsConfig struct {
+	Enabled    bool        `yaml:"enabled"`
+	Slack      SlackConfig `yaml:"slack"`
+}
+
+// SlackConfig holds Slack-specific configuration.
+type SlackConfig struct {
+	Enabled                bool   `yaml:"enabled"`
+	WebhookURL             string `yaml:"webhook_url"`              // Can be set via SLACK_WEBHOOK_URL
+	BotToken               string `yaml:"bot_token"`                // Can be set via SLACK_BOT_TOKEN
+	Channel                string `yaml:"channel"`
+	Username               string `yaml:"username"`
+	IconEmoji              string `yaml:"icon_emoji"`
+	NotifyOnStart          bool   `yaml:"notify_on_start"`
+	NotifyOnComplete       bool   `yaml:"notify_on_complete"`
+	NotifyOnFailure        bool   `yaml:"notify_on_failure"`
+	NotifyOnBreaking       bool   `yaml:"notify_on_breaking"`
+	NotifyOnEnrichment     bool   `yaml:"notify_on_enrichment"`
+	NotifyReleaseNotes     bool   `yaml:"notify_release_notes"`
+	ReleaseNotesVersion    string `yaml:"release_notes_version"`
+	ReleaseNotesFromRef    string `yaml:"release_notes_from_ref"`
 }
 
 // LoadConfig loads pipeline configuration from a YAML file.
@@ -127,6 +152,20 @@ func DefaultConfig() *PipelineConfig {
 			ManifestPath:    "api-docs/enrichment-manifest.json",
 			Tenant:          "default",
 			OutputModelPath: "api-docs/model/api-doc-model-enriched.json",
+		},
+		Notifications: NotificationsConfig{
+			Enabled: false,
+			Slack: SlackConfig{
+				Enabled:            false,
+				Username:           "ProtoDocs Bot",
+				IconEmoji:          ":book:",
+				NotifyOnStart:      true,
+				NotifyOnComplete:   true,
+				NotifyOnFailure:    true,
+				NotifyOnBreaking:   true,
+				NotifyOnEnrichment: true,
+				NotifyReleaseNotes: false,
+			},
 		},
 		Descriptors: DescriptorsConfig{
 			OutputPath: "api-docs/descriptors/image.bin",

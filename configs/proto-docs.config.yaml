@@ -16,6 +16,24 @@ enrichment:
   tenant: "default"
   output_model_path: "api-docs/model/api-doc-model-enriched.json"
 
+notifications:
+  enabled: false  # Set to true to enable notifications
+  slack:
+    enabled: false
+    # webhook_url: ""  # Set via SLACK_WEBHOOK_URL environment variable
+    # bot_token: ""    # Set via SLACK_BOT_TOKEN environment variable (alternative to webhook)
+    # channel: "#proto-docs"  # Set via SLACK_CHANNEL environment variable
+    username: "ProtoDocs Bot"
+    icon_emoji: ":book:"
+    notify_on_start: true
+    notify_on_complete: true
+    notify_on_failure: true
+    notify_on_breaking: true
+    notify_on_enrichment: true
+    notify_release_notes: false
+    # release_notes_version: "v1.0.0"  # Optional: version for release notes
+    # release_notes_from_ref: "v0.9.0"  # Optional: compare from this ref
+
 descriptors:
   output_path: "api-docs/descriptors/image.bin"
 
