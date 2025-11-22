@@ -1,0 +1,74 @@
+version: "1.0"
+project_name: test-monorepo
+output_dir: ./docs/generated
+
+services:
+  - name: UserService
+    proto_files:
+      - ./proto/users/users.proto
+      - ./proto/common/common.proto
+    enabled: true
+    package: users.v1
+    version: "1.0"
+
+  - name: PaymentService
+    proto_files:
+      - ./proto/payments/payments.proto
+      - ./proto/common/common.proto
+    enabled: true
+    package: payments.v1
+    version: "1.0"
+
+  - name: NotificationService
+    proto_files:
+      - ./proto/notifications/notifications.proto
+      - ./proto/common/common.proto
+    enabled: true
+    package: notifications.v1
+    version: "1.0"
+
+  - name: AnalyticsService
+    proto_files:
+      - ./proto/analytics/analytics.proto
+      - ./proto/common/common.proto
+    enabled: true
+    package: analytics.v1
+    version: "1.0"
+
+quality:
+  coverage_target: 80
+  description_quality_target: 85
+  auto_fix: true
+  fail_on_quality_gate: false
+  min_method_coverage: 75
+  min_field_coverage: 70
+
+enricher:
+  provider: claude
+  api_key: ${ANTHROPIC_API_KEY}
+  enabled: false
+  model: claude-3-5-sonnet-20241022
+  max_tokens: 2048
+  temperature: 0.7
+  cache_enabled: true
+  rate_limit_per_min: 50
+  parallel_requests: 5
+
+diagrams:
+  enabled: true
+  service_graph: true
+  message_graph: true
+  sequence_graph: true
+  overview_graph: true
+
+templates:
+  dir: ./templates
+  service_template: service.md.tmpl
+  method_template: method.md.tmpl
+  message_template: message.md.tmpl
+  custom_functions: {}
+
+logging:
+  level: info
+  format: text
+  output_file: ./logs/docgen.log

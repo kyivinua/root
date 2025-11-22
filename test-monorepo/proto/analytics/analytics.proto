@@ -1,0 +1,736 @@
+syntax = "proto3";
+
+package analytics.v1;
+
+option go_package = "github.com/test/monorepo/gen/go/analytics/v1;analyticsv1";
+
+import "common/common.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+// AnalyticsService provides analytics and reporting
+service AnalyticsService {
+  // TrackEvent tracks a single analytics event
+  rpc TrackEvent(TrackEventRequest) returns (TrackEventResponse) {}
+
+  // BatchTrackEvents tracks multiple events
+  rpc BatchTrackEvents(stream TrackEventRequest) returns (BatchTrackResponse) {}
+
+  // GetMetrics retrieves metrics
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse) {}
+
+  // GetReport generates a report
+  rpc GetReport(GetReportRequest) returns (GetReportResponse) {}
+
+  // StreamMetrics streams real-time metrics
+  rpc StreamMetrics(StreamMetricsRequest) returns (stream MetricUpdate) {}
+
+  // QueryData queries raw analytics data
+  rpc QueryData(QueryRequest) returns (QueryResponse) {}
+
+  // CreateDashboard creates a custom dashboard
+  rpc CreateDashboard(CreateDashboardRequest) returns (CreateDashboardResponse) {}
+
+  // GetDashboard retrieves dashboard data
+  rpc GetDashboard(GetDashboardRequest) returns (GetDashboardResponse) {}
+}
+
+// EventType represents tracked event types
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_PAGE_VIEW = 1;
+  EVENT_TYPE_CLICK = 2;
+  EVENT_TYPE_CONVERSION = 3;
+  EVENT_TYPE_PURCHASE = 4;
+  EVENT_TYPE_SIGNUP = 5;
+  EVENT_TYPE_LOGIN = 6;
+  EVENT_TYPE_LOGOUT = 7;
+  EVENT_TYPE_SEARCH = 8;
+  EVENT_TYPE_SHARE = 9;
+  EVENT_TYPE_CUSTOM = 100;
+}
+
+// MetricType represents metric types
+enum MetricType {
+  METRIC_TYPE_UNSPECIFIED = 0;
+  METRIC_TYPE_COUNTER = 1;
+  METRIC_TYPE_GAUGE = 2;
+  METRIC_TYPE_HISTOGRAM = 3;
+  METRIC_TYPE_SUMMARY = 4;
+}
+
+// AggregationType represents aggregation methods
+enum AggregationType {
+  AGGREGATION_TYPE_UNSPECIFIED = 0;
+  AGGREGATION_TYPE_SUM = 1;
+  AGGREGATION_TYPE_AVG = 2;
+  AGGREGATION_TYPE_MIN = 3;
+  AGGREGATION_TYPE_MAX = 4;
+  AGGREGATION_TYPE_COUNT = 5;
+  AGGREGATION_TYPE_PERCENTILE = 6;
+}
+
+// TimeGranularity represents time bucket sizes
+enum TimeGranularity {
+  TIME_GRANULARITY_UNSPECIFIED = 0;
+  TIME_GRANULARITY_MINUTE = 1;
+  TIME_GRANULARITY_HOUR = 2;
+  TIME_GRANULARITY_DAY = 3;
+  TIME_GRANULARITY_WEEK = 4;
+  TIME_GRANULARITY_MONTH = 5;
+  TIME_GRANULARITY_YEAR = 6;
+}
+
+// Event represents an analytics event
+message Event {
+  // Event ID
+  string event_id = 1;
+
+  // Event type
+  EventType event_type = 2;
+
+  // Event name
+  string event_name = 3;
+
+  // Timestamp
+  google.protobuf.Timestamp timestamp = 4;
+
+  // User information
+  UserContext user = 5;
+
+  // Session information
+  SessionContext session = 6;
+
+  // Device information
+  DeviceContext device = 7;
+
+  // Location information
+  LocationContext location = 8;
+
+  // Event properties
+  map<string, string> properties = 9;
+
+  // Event value (for revenue tracking)
+  double value = 10;
+
+  // Currency (for revenue events)
+  string currency = 11;
+
+  // UTM parameters
+  UTMContext utm = 12;
+
+  // Referrer
+  string referrer = 13;
+
+  // Custom dimensions
+  map<string, string> dimensions = 14;
+}
+
+// UserContext contains user information
+message UserContext {
+  // User ID
+  string user_id = 1;
+
+  // Anonymous ID
+  string anonymous_id = 2;
+
+  // Email
+  string email = 3;
+
+  // User traits
+  map<string, string> traits = 4;
+}
+
+// SessionContext contains session information
+message SessionContext {
+  // Session ID
+  string session_id = 1;
+
+  // Session start time
+  google.protobuf.Timestamp started_at = 2;
+
+  // Session duration
+  google.protobuf.Duration duration = 3;
+
+  // Page views in session
+  int32 page_views = 4;
+
+  // Events in session
+  int32 event_count = 5;
+}
+
+// DeviceContext contains device information
+message DeviceContext {
+  // Device type
+  DeviceType device_type = 1;
+
+  // Operating system
+  string os = 2;
+
+  // OS version
+  string os_version = 3;
+
+  // Browser
+  string browser = 4;
+
+  // Browser version
+  string browser_version = 5;
+
+  // Device brand
+  string brand = 6;
+
+  // Device model
+  string model = 7;
+
+  // Screen resolution
+  Resolution screen = 8;
+
+  // User agent
+  string user_agent = 9;
+}
+
+// DeviceType represents device types
+enum DeviceType {
+  DEVICE_TYPE_UNSPECIFIED = 0;
+  DEVICE_TYPE_DESKTOP = 1;
+  DEVICE_TYPE_MOBILE = 2;
+  DEVICE_TYPE_TABLET = 3;
+  DEVICE_TYPE_TV = 4;
+  DEVICE_TYPE_WEARABLE = 5;
+}
+
+// Resolution represents screen resolution
+message Resolution {
+  // Width
+  int32 width = 1;
+
+  // Height
+  int32 height = 2;
+}
+
+// LocationContext contains location data
+message LocationContext {
+  // IP address
+  string ip = 1;
+
+  // Country code
+  string country = 2;
+
+  // Region/State
+  string region = 3;
+
+  // City
+  string city = 4;
+
+  // Postal code
+  string postal_code = 5;
+
+  // Latitude
+  double latitude = 6;
+
+  // Longitude
+  double longitude = 7;
+
+  // Timezone
+  string timezone = 8;
+}
+
+// UTMContext contains UTM parameters
+message UTMContext {
+  // Source
+  string source = 1;
+
+  // Medium
+  string medium = 2;
+
+  // Campaign
+  string campaign = 3;
+
+  // Term
+  string term = 4;
+
+  // Content
+  string content = 5;
+}
+
+// Metric represents a metric data point
+message Metric {
+  // Metric name
+  string name = 1;
+
+  // Metric type
+  MetricType type = 2;
+
+  // Timestamp
+  google.protobuf.Timestamp timestamp = 3;
+
+  // Value
+  double value = 4;
+
+  // Tags/dimensions
+  map<string, string> tags = 5;
+
+  // Unit
+  string unit = 6;
+}
+
+// MetricSeries represents time series data
+message MetricSeries {
+  // Series name
+  string name = 1;
+
+  // Data points
+  repeated DataPoint points = 2;
+
+  // Metadata
+  map<string, string> metadata = 3;
+}
+
+// DataPoint represents a single data point
+message DataPoint {
+  // Timestamp
+  google.protobuf.Timestamp timestamp = 1;
+
+  // Value
+  double value = 2;
+
+  // Labels
+  map<string, string> labels = 3;
+}
+
+// Report represents an analytics report
+message Report {
+  // Report ID
+  string report_id = 1;
+
+  // Report name
+  string name = 2;
+
+  // Report type
+  ReportType type = 3;
+
+  // Time range
+  TimeRange time_range = 4;
+
+  // Metrics
+  repeated MetricSummary metrics = 5;
+
+  // Dimensions
+  repeated Dimension dimensions = 6;
+
+  // Charts
+  repeated Chart charts = 7;
+
+  // Tables
+  repeated DataTable tables = 8;
+
+  // Generated at
+  google.protobuf.Timestamp generated_at = 9;
+}
+
+// ReportType represents report types
+enum ReportType {
+  REPORT_TYPE_UNSPECIFIED = 0;
+  REPORT_TYPE_OVERVIEW = 1;
+  REPORT_TYPE_USER_ACTIVITY = 2;
+  REPORT_TYPE_CONVERSION = 3;
+  REPORT_TYPE_REVENUE = 4;
+  REPORT_TYPE_RETENTION = 5;
+  REPORT_TYPE_FUNNEL = 6;
+  REPORT_TYPE_COHORT = 7;
+  REPORT_TYPE_CUSTOM = 100;
+}
+
+// TimeRange represents a time period
+message TimeRange {
+  // Start time
+  google.protobuf.Timestamp start = 1;
+
+  // End time
+  google.protobuf.Timestamp end = 2;
+
+  // Granularity
+  TimeGranularity granularity = 3;
+}
+
+// MetricSummary contains aggregated metric data
+message MetricSummary {
+  // Metric name
+  string name = 1;
+
+  // Current value
+  double current_value = 2;
+
+  // Previous value
+  double previous_value = 3;
+
+  // Change percentage
+  double change_percent = 4;
+
+  // Trend
+  Trend trend = 5;
+
+  // Aggregation type
+  AggregationType aggregation = 6;
+}
+
+// Trend represents data trends
+enum Trend {
+  TREND_UNSPECIFIED = 0;
+  TREND_UP = 1;
+  TREND_DOWN = 2;
+  TREND_STABLE = 3;
+}
+
+// Dimension represents a data dimension
+message Dimension {
+  // Dimension name
+  string name = 1;
+
+  // Values
+  repeated DimensionValue values = 2;
+
+  // Total count
+  int64 total_count = 3;
+}
+
+// DimensionValue represents dimension breakdown
+message DimensionValue {
+  // Value
+  string value = 1;
+
+  // Count
+  int64 count = 2;
+
+  // Percentage
+  double percentage = 3;
+
+  // Metrics
+  map<string, double> metrics = 4;
+}
+
+// Chart represents a chart visualization
+message Chart {
+  // Chart ID
+  string chart_id = 1;
+
+  // Chart type
+  ChartType type = 2;
+
+  // Title
+  string title = 3;
+
+  // Data series
+  repeated MetricSeries series = 4;
+
+  // Configuration
+  map<string, string> config = 5;
+}
+
+// ChartType represents chart types
+enum ChartType {
+  CHART_TYPE_UNSPECIFIED = 0;
+  CHART_TYPE_LINE = 1;
+  CHART_TYPE_BAR = 2;
+  CHART_TYPE_PIE = 3;
+  CHART_TYPE_AREA = 4;
+  CHART_TYPE_SCATTER = 5;
+  CHART_TYPE_HEATMAP = 6;
+  CHART_TYPE_FUNNEL = 7;
+}
+
+// DataTable represents tabular data
+message DataTable {
+  // Table name
+  string name = 1;
+
+  // Columns
+  repeated Column columns = 2;
+
+  // Rows
+  repeated Row rows = 3;
+
+  // Total count
+  int64 total_count = 4;
+}
+
+// Column represents a table column
+message Column {
+  // Column name
+  string name = 1;
+
+  // Data type
+  DataType type = 2;
+
+  // Format
+  string format = 3;
+}
+
+// DataType represents data types
+enum DataType {
+  DATA_TYPE_UNSPECIFIED = 0;
+  DATA_TYPE_STRING = 1;
+  DATA_TYPE_NUMBER = 2;
+  DATA_TYPE_BOOLEAN = 3;
+  DATA_TYPE_TIMESTAMP = 4;
+  DATA_TYPE_DURATION = 5;
+}
+
+// Row represents a table row
+message Row {
+  // Cells
+  repeated Cell cells = 1;
+}
+
+// Cell represents a table cell
+message Cell {
+  // Value (as string)
+  string value = 1;
+
+  // Formatted value
+  string formatted_value = 2;
+}
+
+// Dashboard represents a custom dashboard
+message Dashboard {
+  // Dashboard ID
+  string dashboard_id = 1;
+
+  // Name
+  string name = 2;
+
+  // Description
+  string description = 3;
+
+  // Owner
+  string owner_id = 4;
+
+  // Widgets
+  repeated Widget widgets = 5;
+
+  // Layout
+  Layout layout = 6;
+
+  // Refresh interval
+  google.protobuf.Duration refresh_interval = 7;
+
+  // Created at
+  google.protobuf.Timestamp created_at = 8;
+
+  // Updated at
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+// Widget represents a dashboard widget
+message Widget {
+  // Widget ID
+  string widget_id = 1;
+
+  // Widget type
+  WidgetType type = 2;
+
+  // Title
+  string title = 3;
+
+  // Position
+  Position position = 4;
+
+  // Size
+  Size size = 5;
+
+  // Configuration
+  map<string, string> config = 6;
+
+  // Data query
+  QueryRequest query = 7;
+}
+
+// WidgetType represents widget types
+enum WidgetType {
+  WIDGET_TYPE_UNSPECIFIED = 0;
+  WIDGET_TYPE_METRIC = 1;
+  WIDGET_TYPE_CHART = 2;
+  WIDGET_TYPE_TABLE = 3;
+  WIDGET_TYPE_TEXT = 4;
+  WIDGET_TYPE_CUSTOM = 100;
+}
+
+// Position represents widget position
+message Position {
+  // X coordinate
+  int32 x = 1;
+
+  // Y coordinate
+  int32 y = 2;
+}
+
+// Size represents widget size
+message Size {
+  // Width
+  int32 width = 1;
+
+  // Height
+  int32 height = 2;
+}
+
+// Layout represents dashboard layout
+message Layout {
+  // Columns
+  int32 columns = 1;
+
+  // Rows
+  int32 rows = 2;
+
+  // Grid size
+  int32 grid_size = 3;
+}
+
+// TrackEventRequest tracks an event
+message TrackEventRequest {
+  // Event
+  Event event = 1;
+}
+
+// TrackEventResponse confirms tracking
+message TrackEventResponse {
+  // Event ID
+  string event_id = 1;
+
+  // Success
+  bool success = 2;
+}
+
+// BatchTrackResponse confirms batch tracking
+message BatchTrackResponse {
+  // Events tracked
+  int32 events_tracked = 1;
+
+  // Failed count
+  int32 failed_count = 2;
+}
+
+// GetMetricsRequest retrieves metrics
+message GetMetricsRequest {
+  // Metric names
+  repeated string metric_names = 1;
+
+  // Time range
+  TimeRange time_range = 2;
+
+  // Filters
+  map<string, string> filters = 3;
+
+  // Group by dimensions
+  repeated string group_by = 4;
+}
+
+// GetMetricsResponse returns metrics
+message GetMetricsResponse {
+  // Metrics
+  repeated MetricSeries metrics = 1;
+}
+
+// GetReportRequest generates a report
+message GetReportRequest {
+  // Report type
+  ReportType type = 1;
+
+  // Time range
+  TimeRange time_range = 2;
+
+  // Filters
+  map<string, string> filters = 3;
+
+  // Metrics to include
+  repeated string metrics = 4;
+
+  // Dimensions to group by
+  repeated string dimensions = 5;
+}
+
+// GetReportResponse returns report
+message GetReportResponse {
+  // Report
+  Report report = 1;
+}
+
+// StreamMetricsRequest subscribes to metrics
+message StreamMetricsRequest {
+  // Metric names
+  repeated string metric_names = 1;
+
+  // Update interval
+  google.protobuf.Duration interval = 2;
+}
+
+// MetricUpdate streams metric updates
+message MetricUpdate {
+  // Metric
+  Metric metric = 1;
+
+  // Timestamp
+  google.protobuf.Timestamp timestamp = 2;
+}
+
+// QueryRequest queries analytics data
+message QueryRequest {
+  // SQL-like query
+  string query = 1;
+
+  // Parameters
+  map<string, string> parameters = 2;
+
+  // Limit
+  int32 limit = 3;
+
+  // Offset
+  int32 offset = 4;
+}
+
+// QueryResponse returns query results
+message QueryResponse {
+  // Result table
+  DataTable result = 1;
+
+  // Execution time
+  google.protobuf.Duration execution_time = 2;
+}
+
+// CreateDashboardRequest creates dashboard
+message CreateDashboardRequest {
+  // Dashboard
+  Dashboard dashboard = 1;
+}
+
+// CreateDashboardResponse confirms creation
+message CreateDashboardResponse {
+  // Created dashboard
+  Dashboard dashboard = 1;
+}
+
+// GetDashboardRequest retrieves dashboard
+message GetDashboardRequest {
+  // Dashboard ID
+  string dashboard_id = 1;
+}
+
+// GetDashboardResponse returns dashboard
+message GetDashboardResponse {
+  // Dashboard
+  Dashboard dashboard = 1;
+
+  // Widget data
+  map<string, WidgetData> widget_data = 2;
+}
+
+// WidgetData contains widget data
+message WidgetData {
+  // Metric
+  MetricSummary metric = 1;
+
+  // Chart
+  Chart chart = 2;
+
+  // Table
+  DataTable table = 3;
+}

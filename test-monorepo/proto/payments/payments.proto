@@ -1,0 +1,723 @@
+syntax = "proto3";
+
+package payments.v1;
+
+option go_package = "github.com/test/monorepo/gen/go/payments/v1;paymentsv1";
+
+import "common/common.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/empty.proto";
+
+// PaymentService handles payment processing
+service PaymentService {
+  // CreatePayment initiates a new payment
+  rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse) {}
+
+  // GetPayment retrieves payment details
+  rpc GetPayment(GetPaymentRequest) returns (GetPaymentResponse) {}
+
+  // CancelPayment cancels a pending payment
+  rpc CancelPayment(CancelPaymentRequest) returns (CancelPaymentResponse) {}
+
+  // RefundPayment processes a refund
+  rpc RefundPayment(RefundPaymentRequest) returns (RefundPaymentResponse) {}
+
+  // ListPayments lists payments with filters
+  rpc ListPayments(ListPaymentsRequest) returns (ListPaymentsResponse) {}
+
+  // ProcessBatch processes multiple payments
+  rpc ProcessBatch(ProcessBatchRequest) returns (stream BatchProcessResult) {}
+
+  // SubscribeToPaymentEvents streams payment events
+  rpc SubscribeToPaymentEvents(SubscribeRequest) returns (stream PaymentEvent) {}
+}
+
+// PaymentMethod represents payment method types
+enum PaymentMethod {
+  PAYMENT_METHOD_UNSPECIFIED = 0;
+  PAYMENT_METHOD_CREDIT_CARD = 1;
+  PAYMENT_METHOD_DEBIT_CARD = 2;
+  PAYMENT_METHOD_BANK_TRANSFER = 3;
+  PAYMENT_METHOD_PAYPAL = 4;
+  PAYMENT_METHOD_APPLE_PAY = 5;
+  PAYMENT_METHOD_GOOGLE_PAY = 6;
+  PAYMENT_METHOD_CRYPTOCURRENCY = 7;
+  PAYMENT_METHOD_WIRE_TRANSFER = 8;
+}
+
+// PaymentStatus represents payment lifecycle status
+enum PaymentStatus {
+  PAYMENT_STATUS_UNSPECIFIED = 0;
+  PAYMENT_STATUS_PENDING = 1;
+  PAYMENT_STATUS_PROCESSING = 2;
+  PAYMENT_STATUS_AUTHORIZED = 3;
+  PAYMENT_STATUS_CAPTURED = 4;
+  PAYMENT_STATUS_COMPLETED = 5;
+  PAYMENT_STATUS_FAILED = 6;
+  PAYMENT_STATUS_CANCELLED = 7;
+  PAYMENT_STATUS_REFUNDED = 8;
+  PAYMENT_STATUS_PARTIALLY_REFUNDED = 9;
+  PAYMENT_STATUS_DISPUTED = 10;
+  PAYMENT_STATUS_EXPIRED = 11;
+}
+
+// TransactionType represents transaction types
+enum TransactionType {
+  TRANSACTION_TYPE_UNSPECIFIED = 0;
+  TRANSACTION_TYPE_PAYMENT = 1;
+  TRANSACTION_TYPE_REFUND = 2;
+  TRANSACTION_TYPE_CHARGEBACK = 3;
+  TRANSACTION_TYPE_PAYOUT = 4;
+  TRANSACTION_TYPE_ADJUSTMENT = 5;
+}
+
+// Payment represents a payment transaction
+message Payment {
+  // Payment metadata
+  common.v1.Metadata metadata = 1;
+
+  // Payment amount
+  common.v1.Money amount = 2;
+
+  // Payment method
+  PaymentMethod method = 3;
+
+  // Payment status
+  PaymentStatus status = 4;
+
+  // Transaction type
+  TransactionType type = 5;
+
+  // Payer information
+  PayerInfo payer = 6;
+
+  // Payee information
+  PayeeInfo payee = 7;
+
+  // Payment details specific to method
+  oneof payment_details {
+    CardPaymentDetails card_details = 8;
+    BankTransferDetails bank_details = 9;
+    WalletPaymentDetails wallet_details = 10;
+    CryptoPaymentDetails crypto_details = 11;
+  }
+
+  // Order reference
+  string order_id = 12;
+
+  // Invoice reference
+  string invoice_id = 13;
+
+  // Description
+  string description = 14;
+
+  // Payment gateway reference
+  string gateway_reference = 15;
+
+  // Authorization code
+  string authorization_code = 16;
+
+  // Capture details
+  CaptureDetails capture = 17;
+
+  // Refund details
+  repeated RefundDetails refunds = 18;
+
+  // Fraud check results
+  FraudCheckResult fraud_check = 19;
+
+  // Risk score (0-100)
+  int32 risk_score = 20;
+
+  // Metadata
+  map<string, string> custom_metadata = 21;
+
+  // Processing fees
+  repeated Fee fees = 22;
+
+  // Settlement details
+  SettlementDetails settlement = 23;
+}
+
+// PayerInfo contains payer information
+message PayerInfo {
+  // User ID
+  string user_id = 1;
+
+  // Email
+  string email = 2;
+
+  // Name
+  string name = 3;
+
+  // Phone
+  string phone = 4;
+
+  // Billing address
+  common.v1.Address billing_address = 5;
+
+  // IP address
+  string ip_address = 6;
+
+  // Device fingerprint
+  string device_fingerprint = 7;
+}
+
+// PayeeInfo contains payee information
+message PayeeInfo {
+  // Merchant ID
+  string merchant_id = 1;
+
+  // Merchant name
+  string merchant_name = 2;
+
+  // Account number
+  string account_number = 3;
+
+  // Business address
+  common.v1.Address address = 4;
+}
+
+// CardPaymentDetails for card payments
+message CardPaymentDetails {
+  // Last 4 digits
+  string last_four = 1;
+
+  // Card brand
+  CardBrand brand = 2;
+
+  // Expiry month
+  int32 expiry_month = 3;
+
+  // Expiry year
+  int32 expiry_year = 4;
+
+  // Cardholder name
+  string cardholder_name = 5;
+
+  // Card fingerprint
+  string fingerprint = 6;
+
+  // 3DS verification
+  ThreeDSecure three_d_secure = 7;
+}
+
+// CardBrand represents card brands
+enum CardBrand {
+  CARD_BRAND_UNSPECIFIED = 0;
+  CARD_BRAND_VISA = 1;
+  CARD_BRAND_MASTERCARD = 2;
+  CARD_BRAND_AMEX = 3;
+  CARD_BRAND_DISCOVER = 4;
+  CARD_BRAND_JCB = 5;
+  CARD_BRAND_DINERS = 6;
+  CARD_BRAND_UNIONPAY = 7;
+}
+
+// ThreeDSecure contains 3DS verification info
+message ThreeDSecure {
+  // Verification performed
+  bool verified = 1;
+
+  // Version (1 or 2)
+  string version = 2;
+
+  // Authentication value
+  string authentication_value = 3;
+
+  // Transaction ID
+  string transaction_id = 4;
+}
+
+// BankTransferDetails for bank transfers
+message BankTransferDetails {
+  // Account holder name
+  string account_holder = 1;
+
+  // Account number (masked)
+  string account_number_masked = 2;
+
+  // Routing number
+  string routing_number = 3;
+
+  // Bank name
+  string bank_name = 4;
+
+  // Swift/BIC code
+  string swift_code = 5;
+
+  // IBAN
+  string iban = 6;
+}
+
+// WalletPaymentDetails for digital wallets
+message WalletPaymentDetails {
+  // Wallet provider
+  WalletProvider provider = 1;
+
+  // Wallet account ID
+  string account_id = 2;
+
+  // Wallet email
+  string email = 3;
+}
+
+// WalletProvider represents wallet providers
+enum WalletProvider {
+  WALLET_PROVIDER_UNSPECIFIED = 0;
+  WALLET_PROVIDER_PAYPAL = 1;
+  WALLET_PROVIDER_APPLE_PAY = 2;
+  WALLET_PROVIDER_GOOGLE_PAY = 3;
+  WALLET_PROVIDER_VENMO = 4;
+}
+
+// CryptoPaymentDetails for cryptocurrency
+message CryptoPaymentDetails {
+  // Cryptocurrency type
+  CryptoType crypto_type = 1;
+
+  // Wallet address
+  string wallet_address = 2;
+
+  // Transaction hash
+  string transaction_hash = 3;
+
+  // Network
+  string network = 4;
+
+  // Confirmations
+  int32 confirmations = 5;
+}
+
+// CryptoType represents cryptocurrency types
+enum CryptoType {
+  CRYPTO_TYPE_UNSPECIFIED = 0;
+  CRYPTO_TYPE_BITCOIN = 1;
+  CRYPTO_TYPE_ETHEREUM = 2;
+  CRYPTO_TYPE_LITECOIN = 3;
+  CRYPTO_TYPE_USDC = 4;
+  CRYPTO_TYPE_USDT = 5;
+}
+
+// CaptureDetails contains capture information
+message CaptureDetails {
+  // Captured amount
+  common.v1.Money amount = 1;
+
+  // Capture timestamp
+  google.protobuf.Timestamp captured_at = 2;
+
+  // Is partial capture
+  bool partial = 3;
+
+  // Remaining amount
+  common.v1.Money remaining_amount = 4;
+}
+
+// RefundDetails contains refund information
+message RefundDetails {
+  // Refund ID
+  string refund_id = 1;
+
+  // Refund amount
+  common.v1.Money amount = 2;
+
+  // Refund reason
+  string reason = 3;
+
+  // Refund status
+  RefundStatus status = 4;
+
+  // Refund timestamp
+  google.protobuf.Timestamp refunded_at = 5;
+
+  // Expected arrival
+  google.protobuf.Timestamp expected_arrival = 6;
+}
+
+// RefundStatus represents refund status
+enum RefundStatus {
+  REFUND_STATUS_UNSPECIFIED = 0;
+  REFUND_STATUS_PENDING = 1;
+  REFUND_STATUS_PROCESSING = 2;
+  REFUND_STATUS_COMPLETED = 3;
+  REFUND_STATUS_FAILED = 4;
+  REFUND_STATUS_CANCELLED = 5;
+}
+
+// FraudCheckResult contains fraud detection results
+message FraudCheckResult {
+  // Overall result
+  FraudCheckOutcome outcome = 1;
+
+  // Risk signals
+  repeated RiskSignal signals = 2;
+
+  // Risk score (0-100)
+  int32 risk_score = 3;
+
+  // Checked at
+  google.protobuf.Timestamp checked_at = 4;
+
+  // Provider
+  string provider = 5;
+}
+
+// FraudCheckOutcome represents fraud check results
+enum FraudCheckOutcome {
+  FRAUD_CHECK_OUTCOME_UNSPECIFIED = 0;
+  FRAUD_CHECK_OUTCOME_PASS = 1;
+  FRAUD_CHECK_OUTCOME_REVIEW = 2;
+  FRAUD_CHECK_OUTCOME_DECLINE = 3;
+}
+
+// RiskSignal represents a risk indicator
+message RiskSignal {
+  // Signal type
+  string type = 1;
+
+  // Signal severity
+  common.v1.Priority severity = 2;
+
+  // Description
+  string description = 3;
+
+  // Signal value
+  string value = 4;
+}
+
+// Fee represents a processing fee
+message Fee {
+  // Fee type
+  FeeType type = 1;
+
+  // Fee amount
+  common.v1.Money amount = 2;
+
+  // Description
+  string description = 3;
+}
+
+// FeeType represents fee types
+enum FeeType {
+  FEE_TYPE_UNSPECIFIED = 0;
+  FEE_TYPE_PROCESSING = 1;
+  FEE_TYPE_TRANSACTION = 2;
+  FEE_TYPE_CURRENCY_CONVERSION = 3;
+  FEE_TYPE_CROSS_BORDER = 4;
+  FEE_TYPE_SERVICE = 5;
+}
+
+// SettlementDetails contains settlement information
+message SettlementDetails {
+  // Settlement status
+  SettlementStatus status = 1;
+
+  // Expected settlement date
+  google.protobuf.Timestamp expected_at = 2;
+
+  // Actual settlement date
+  google.protobuf.Timestamp settled_at = 3;
+
+  // Settlement batch ID
+  string batch_id = 4;
+
+  // Net amount
+  common.v1.Money net_amount = 5;
+}
+
+// SettlementStatus represents settlement status
+enum SettlementStatus {
+  SETTLEMENT_STATUS_UNSPECIFIED = 0;
+  SETTLEMENT_STATUS_PENDING = 1;
+  SETTLEMENT_STATUS_IN_TRANSIT = 2;
+  SETTLEMENT_STATUS_SETTLED = 3;
+  SETTLEMENT_STATUS_FAILED = 4;
+}
+
+// CreatePaymentRequest initiates a payment
+message CreatePaymentRequest {
+  // Amount to charge
+  common.v1.Money amount = 1;
+
+  // Payment method
+  PaymentMethod method = 2;
+
+  // Payer information
+  PayerInfo payer = 3;
+
+  // Payment source details
+  oneof source {
+    CardSource card_source = 4;
+    BankAccountSource bank_source = 5;
+    WalletSource wallet_source = 6;
+    CryptoSource crypto_source = 7;
+  }
+
+  // Order ID
+  string order_id = 8;
+
+  // Description
+  string description = 9;
+
+  // Capture immediately
+  bool auto_capture = 10;
+
+  // Idempotency key
+  string idempotency_key = 11;
+
+  // Custom metadata
+  map<string, string> metadata = 12;
+}
+
+// CardSource for card payments
+message CardSource {
+  // Card token
+  string token = 1;
+
+  // Save card for future use
+  bool save_card = 2;
+}
+
+// BankAccountSource for bank payments
+message BankAccountSource {
+  // Account token
+  string token = 1;
+}
+
+// WalletSource for wallet payments
+message WalletSource {
+  // Wallet provider
+  WalletProvider provider = 1;
+
+  // Wallet token
+  string token = 2;
+}
+
+// CryptoSource for crypto payments
+message CryptoSource {
+  // Crypto type
+  CryptoType crypto_type = 1;
+
+  // Wallet address
+  string wallet_address = 2;
+}
+
+// CreatePaymentResponse returns created payment
+message CreatePaymentResponse {
+  // Created payment
+  Payment payment = 1;
+
+  // Client secret for confirmation
+  string client_secret = 2;
+
+  // Next action required
+  NextAction next_action = 3;
+}
+
+// NextAction represents required next steps
+message NextAction {
+  // Action type
+  ActionType type = 1;
+
+  // Redirect URL for 3DS
+  string redirect_url = 2;
+
+  // Additional data
+  map<string, string> data = 3;
+}
+
+// ActionType represents action types
+enum ActionType {
+  ACTION_TYPE_UNSPECIFIED = 0;
+  ACTION_TYPE_NONE = 1;
+  ACTION_TYPE_REDIRECT = 2;
+  ACTION_TYPE_VERIFY = 3;
+  ACTION_TYPE_AUTHORIZE = 4;
+}
+
+// GetPaymentRequest retrieves a payment
+message GetPaymentRequest {
+  // Payment ID
+  string payment_id = 1;
+}
+
+// GetPaymentResponse returns payment details
+message GetPaymentResponse {
+  // Payment
+  Payment payment = 1;
+}
+
+// CancelPaymentRequest cancels a payment
+message CancelPaymentRequest {
+  // Payment ID
+  string payment_id = 1;
+
+  // Cancellation reason
+  string reason = 2;
+}
+
+// CancelPaymentResponse confirms cancellation
+message CancelPaymentResponse {
+  // Cancelled payment
+  Payment payment = 1;
+}
+
+// RefundPaymentRequest processes a refund
+message RefundPaymentRequest {
+  // Payment ID
+  string payment_id = 1;
+
+  // Refund amount (null for full refund)
+  common.v1.Money amount = 2;
+
+  // Refund reason
+  string reason = 3;
+
+  // Refund metadata
+  map<string, string> metadata = 4;
+}
+
+// RefundPaymentResponse confirms refund
+message RefundPaymentResponse {
+  // Updated payment
+  Payment payment = 1;
+
+  // Refund details
+  RefundDetails refund = 2;
+}
+
+// ListPaymentsRequest lists payments
+message ListPaymentsRequest {
+  // Pagination
+  common.v1.PaginationRequest pagination = 1;
+
+  // Filter by status
+  repeated PaymentStatus statuses = 2;
+
+  // Filter by method
+  repeated PaymentMethod methods = 3;
+
+  // Filter by user
+  string user_id = 4;
+
+  // Date range
+  DateRangeFilter date_range = 5;
+
+  // Amount range
+  AmountRangeFilter amount_range = 6;
+}
+
+// DateRangeFilter filters by date range
+message DateRangeFilter {
+  // Start date
+  google.protobuf.Timestamp start = 1;
+
+  // End date
+  google.protobuf.Timestamp end = 2;
+
+  // Field to filter
+  string field = 3;
+}
+
+// AmountRangeFilter filters by amount
+message AmountRangeFilter {
+  // Minimum amount
+  common.v1.Money min = 1;
+
+  // Maximum amount
+  common.v1.Money max = 2;
+}
+
+// ListPaymentsResponse returns payments
+message ListPaymentsResponse {
+  // Payments
+  repeated Payment payments = 1;
+
+  // Pagination
+  common.v1.PaginationResponse pagination = 2;
+
+  // Summary statistics
+  PaymentSummary summary = 3;
+}
+
+// PaymentSummary contains aggregate statistics
+message PaymentSummary {
+  // Total count
+  int64 total_count = 1;
+
+  // Total amount
+  common.v1.Money total_amount = 2;
+
+  // Status breakdown
+  map<string, int64> status_counts = 3;
+
+  // Method breakdown
+  map<string, int64> method_counts = 4;
+}
+
+// ProcessBatchRequest processes multiple payments
+message ProcessBatchRequest {
+  // Batch payments
+  repeated CreatePaymentRequest payments = 1;
+
+  // Batch ID
+  string batch_id = 2;
+
+  // Continue on error
+  bool continue_on_error = 3;
+}
+
+// BatchProcessResult streams results
+message BatchProcessResult {
+  // Index in batch
+  int32 index = 1;
+
+  // Success status
+  bool success = 2;
+
+  // Payment result
+  Payment payment = 3;
+
+  // Error if failed
+  common.v1.Error error = 4;
+}
+
+// SubscribeRequest subscribes to events
+message SubscribeRequest {
+  // Filter by payment IDs
+  repeated string payment_ids = 1;
+
+  // Filter by user IDs
+  repeated string user_ids = 2;
+
+  // Event types to receive
+  repeated EventType event_types = 3;
+}
+
+// EventType represents event types
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_PAYMENT_CREATED = 1;
+  EVENT_TYPE_PAYMENT_UPDATED = 2;
+  EVENT_TYPE_PAYMENT_COMPLETED = 3;
+  EVENT_TYPE_PAYMENT_FAILED = 4;
+  EVENT_TYPE_PAYMENT_REFUNDED = 5;
+  EVENT_TYPE_PAYMENT_DISPUTED = 6;
+}
+
+// PaymentEvent represents a payment event
+message PaymentEvent {
+  // Event type
+  EventType event_type = 1;
+
+  // Payment
+  Payment payment = 2;
+
+  // Event timestamp
+  google.protobuf.Timestamp event_time = 3;
+
+  // Event metadata
+  map<string, string> metadata = 4;
+}

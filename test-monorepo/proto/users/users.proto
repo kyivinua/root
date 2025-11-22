@@ -1,0 +1,590 @@
+syntax = "proto3";
+
+package users.v1;
+
+option go_package = "github.com/test/monorepo/gen/go/users/v1;usersv1";
+
+import "common/common.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/empty.proto";
+
+// UserService manages user accounts and profiles
+service UserService {
+  // CreateUser creates a new user account
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+
+  // GetUser retrieves a user by ID
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
+
+  // UpdateUser updates an existing user
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse) {}
+
+  // DeleteUser soft-deletes a user
+  rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty) {}
+
+  // ListUsers lists users with pagination
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
+
+  // SearchUsers searches users by criteria
+  rpc SearchUsers(SearchUsersRequest) returns (SearchUsersResponse) {}
+
+  // BatchGetUsers retrieves multiple users
+  rpc BatchGetUsers(BatchGetUsersRequest) returns (BatchGetUsersResponse) {}
+
+  // StreamUserUpdates streams real-time user updates (server streaming)
+  rpc StreamUserUpdates(StreamUserUpdatesRequest) returns (stream UserUpdateEvent) {}
+
+  // UpdateUserPreferences updates user preferences (client streaming)
+  rpc UpdateUserPreferences(stream PreferenceUpdate) returns (UpdateUserPreferencesResponse) {}
+
+  // SyncUserData bidirectional streaming for real-time sync
+  rpc SyncUserData(stream UserSyncRequest) returns (stream UserSyncResponse) {}
+}
+
+// UserRole represents user roles in the system
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_GUEST = 1;
+  USER_ROLE_USER = 2;
+  USER_ROLE_MODERATOR = 3;
+  USER_ROLE_ADMIN = 4;
+  USER_ROLE_SUPER_ADMIN = 5;
+}
+
+// UserStatus represents user account status
+enum UserStatus {
+  USER_STATUS_UNSPECIFIED = 0;
+  USER_STATUS_PENDING_VERIFICATION = 1;
+  USER_STATUS_ACTIVE = 2;
+  USER_STATUS_SUSPENDED = 3;
+  USER_STATUS_BANNED = 4;
+  USER_STATUS_DELETED = 5;
+}
+
+// User represents a user account
+message User {
+  // User metadata
+  common.v1.Metadata metadata = 1;
+
+  // Email address (unique)
+  string email = 2;
+
+  // Username (unique)
+  string username = 3;
+
+  // User's full name
+  string full_name = 4;
+
+  // Profile information
+  UserProfile profile = 5;
+
+  // User role
+  UserRole role = 6;
+
+  // Account status
+  UserStatus status = 7;
+
+  // Email verification status
+  bool email_verified = 8;
+
+  // Phone verification status
+  bool phone_verified = 9;
+
+  // Two-factor authentication enabled
+  bool two_factor_enabled = 10;
+
+  // Last login timestamp
+  google.protobuf.Timestamp last_login_at = 11;
+
+  // User preferences
+  UserPreferences preferences = 12;
+
+  // Security settings
+  SecuritySettings security = 13;
+}
+
+// UserProfile contains user profile information
+message UserProfile {
+  // Avatar URL
+  string avatar_url = 1;
+
+  // Cover photo URL
+  string cover_photo_url = 2;
+
+  // Bio or description
+  string bio = 3;
+
+  // Phone number
+  string phone = 4;
+
+  // Birth date
+  google.protobuf.Timestamp birth_date = 5;
+
+  // Gender
+  Gender gender = 6;
+
+  // Primary address
+  common.v1.Address address = 7;
+
+  // Additional addresses
+  repeated common.v1.Address additional_addresses = 8;
+
+  // Social media links
+  map<string, string> social_links = 9;
+
+  // Custom profile fields
+  map<string, string> custom_fields = 10;
+}
+
+// Gender represents user gender
+enum Gender {
+  GENDER_UNSPECIFIED = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
+  GENDER_NON_BINARY = 3;
+  GENDER_PREFER_NOT_TO_SAY = 4;
+}
+
+// UserPreferences contains user preferences
+message UserPreferences {
+  // Language preference (ISO 639-1)
+  string language = 1;
+
+  // Timezone (IANA timezone)
+  string timezone = 2;
+
+  // Theme preference
+  Theme theme = 3;
+
+  // Notification preferences
+  NotificationPreferences notifications = 4;
+
+  // Privacy settings
+  PrivacySettings privacy = 5;
+
+  // Display preferences
+  map<string, string> display = 6;
+}
+
+// Theme represents UI theme preference
+enum Theme {
+  THEME_UNSPECIFIED = 0;
+  THEME_LIGHT = 1;
+  THEME_DARK = 2;
+  THEME_AUTO = 3;
+}
+
+// NotificationPreferences contains notification settings
+message NotificationPreferences {
+  // Email notifications enabled
+  bool email_enabled = 1;
+
+  // Push notifications enabled
+  bool push_enabled = 2;
+
+  // SMS notifications enabled
+  bool sms_enabled = 3;
+
+  // Notification types to receive
+  repeated NotificationType enabled_types = 4;
+
+  // Quiet hours
+  QuietHours quiet_hours = 5;
+}
+
+// NotificationType represents types of notifications
+enum NotificationType {
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+  NOTIFICATION_TYPE_ACCOUNT = 1;
+  NOTIFICATION_TYPE_SECURITY = 2;
+  NOTIFICATION_TYPE_MARKETING = 3;
+  NOTIFICATION_TYPE_SOCIAL = 4;
+  NOTIFICATION_TYPE_TRANSACTION = 5;
+}
+
+// QuietHours defines when notifications are muted
+message QuietHours {
+  // Enabled
+  bool enabled = 1;
+
+  // Start time (HH:MM format)
+  string start_time = 2;
+
+  // End time (HH:MM format)
+  string end_time = 3;
+
+  // Days of week (0=Sunday, 6=Saturday)
+  repeated int32 days = 4;
+}
+
+// PrivacySettings contains privacy preferences
+message PrivacySettings {
+  // Profile visibility
+  Visibility profile_visibility = 1;
+
+  // Show email to others
+  bool show_email = 2;
+
+  // Show phone to others
+  bool show_phone = 3;
+
+  // Allow search engines to index
+  bool searchable = 4;
+
+  // Data sharing consent
+  bool data_sharing_consent = 5;
+}
+
+// Visibility represents visibility levels
+enum Visibility {
+  VISIBILITY_UNSPECIFIED = 0;
+  VISIBILITY_PUBLIC = 1;
+  VISIBILITY_FRIENDS = 2;
+  VISIBILITY_PRIVATE = 3;
+}
+
+// SecuritySettings contains security configuration
+message SecuritySettings {
+  // Password last changed
+  google.protobuf.Timestamp password_changed_at = 1;
+
+  // Active sessions count
+  int32 active_sessions = 2;
+
+  // Trusted devices
+  repeated TrustedDevice trusted_devices = 3;
+
+  // Login attempt tracking
+  LoginAttempts login_attempts = 4;
+}
+
+// TrustedDevice represents a trusted device
+message TrustedDevice {
+  // Device ID
+  string device_id = 1;
+
+  // Device name
+  string device_name = 2;
+
+  // Last used timestamp
+  google.protobuf.Timestamp last_used_at = 3;
+
+  // Device fingerprint
+  string fingerprint = 4;
+}
+
+// LoginAttempts tracks login attempts
+message LoginAttempts {
+  // Failed attempts count
+  int32 failed_count = 1;
+
+  // Last failed attempt
+  google.protobuf.Timestamp last_failed_at = 2;
+
+  // Account locked until
+  google.protobuf.Timestamp locked_until = 3;
+}
+
+// CreateUserRequest creates a new user
+message CreateUserRequest {
+  // Email address
+  string email = 1;
+
+  // Username
+  string username = 2;
+
+  // Full name
+  string full_name = 3;
+
+  // Password (will be hashed)
+  string password = 4;
+
+  // Initial profile data
+  UserProfile profile = 5;
+
+  // Initial preferences
+  UserPreferences preferences = 6;
+
+  // Invite code (optional)
+  string invite_code = 7;
+}
+
+// CreateUserResponse returns the created user
+message CreateUserResponse {
+  // Created user
+  User user = 1;
+
+  // Verification token
+  string verification_token = 2;
+}
+
+// GetUserRequest retrieves a user
+message GetUserRequest {
+  // User ID
+  string user_id = 1;
+}
+
+// GetUserResponse returns the requested user
+message GetUserResponse {
+  // User data
+  User user = 1;
+}
+
+// UpdateUserRequest updates a user
+message UpdateUserRequest {
+  // User ID
+  string user_id = 1;
+
+  // Updated user data
+  User user = 2;
+
+  // Field mask for partial updates
+  google.protobuf.FieldMask update_mask = 3;
+}
+
+// UpdateUserResponse returns the updated user
+message UpdateUserResponse {
+  // Updated user
+  User user = 1;
+}
+
+// DeleteUserRequest deletes a user
+message DeleteUserRequest {
+  // User ID
+  string user_id = 1;
+
+  // Hard delete (permanent)
+  bool hard_delete = 2;
+
+  // Deletion reason
+  string reason = 3;
+}
+
+// ListUsersRequest lists users
+message ListUsersRequest {
+  // Pagination
+  common.v1.PaginationRequest pagination = 1;
+
+  // Filter by role
+  UserRole role = 2;
+
+  // Filter by status
+  UserStatus status = 3;
+
+  // Sort field
+  string sort_by = 4;
+
+  // Sort order (asc/desc)
+  string sort_order = 5;
+}
+
+// ListUsersResponse returns list of users
+message ListUsersResponse {
+  // Users list
+  repeated User users = 1;
+
+  // Pagination metadata
+  common.v1.PaginationResponse pagination = 2;
+}
+
+// SearchUsersRequest searches users
+message SearchUsersRequest {
+  // Search query
+  string query = 1;
+
+  // Search filters
+  SearchFilters filters = 2;
+
+  // Pagination
+  common.v1.PaginationRequest pagination = 3;
+}
+
+// SearchFilters defines search criteria
+message SearchFilters {
+  // Role filter
+  repeated UserRole roles = 1;
+
+  // Status filter
+  repeated UserStatus statuses = 2;
+
+  // Date range
+  DateRange created_at = 3;
+
+  // Tag filters
+  map<string, string> tags = 4;
+}
+
+// DateRange represents a date range
+message DateRange {
+  // Start date
+  google.protobuf.Timestamp start = 1;
+
+  // End date
+  google.protobuf.Timestamp end = 2;
+}
+
+// SearchUsersResponse returns search results
+message SearchUsersResponse {
+  // Matched users
+  repeated User users = 1;
+
+  // Search metadata
+  SearchMetadata metadata = 2;
+
+  // Pagination
+  common.v1.PaginationResponse pagination = 3;
+}
+
+// SearchMetadata contains search result metadata
+message SearchMetadata {
+  // Total matches
+  int64 total_matches = 1;
+
+  // Search execution time (ms)
+  int64 execution_time_ms = 2;
+
+  // Applied filters
+  SearchFilters applied_filters = 3;
+}
+
+// BatchGetUsersRequest retrieves multiple users
+message BatchGetUsersRequest {
+  // User IDs to retrieve
+  repeated string user_ids = 1;
+}
+
+// BatchGetUsersResponse returns multiple users
+message BatchGetUsersResponse {
+  // Users map (ID -> User)
+  map<string, User> users = 1;
+
+  // IDs not found
+  repeated string not_found = 2;
+}
+
+// StreamUserUpdatesRequest initiates user update stream
+message StreamUserUpdatesRequest {
+  // User IDs to watch
+  repeated string user_ids = 1;
+
+  // Event types to receive
+  repeated UpdateEventType event_types = 2;
+}
+
+// UpdateEventType represents types of update events
+enum UpdateEventType {
+  UPDATE_EVENT_TYPE_UNSPECIFIED = 0;
+  UPDATE_EVENT_TYPE_CREATED = 1;
+  UPDATE_EVENT_TYPE_UPDATED = 2;
+  UPDATE_EVENT_TYPE_DELETED = 3;
+  UPDATE_EVENT_TYPE_STATUS_CHANGED = 4;
+}
+
+// UserUpdateEvent represents a user update event
+message UserUpdateEvent {
+  // Event type
+  UpdateEventType event_type = 1;
+
+  // User that was updated
+  User user = 2;
+
+  // Timestamp of event
+  google.protobuf.Timestamp event_time = 3;
+
+  // Changed fields
+  repeated string changed_fields = 4;
+}
+
+// PreferenceUpdate for client streaming
+message PreferenceUpdate {
+  // User ID
+  string user_id = 1;
+
+  // Preference key
+  string key = 2;
+
+  // Preference value
+  string value = 3;
+}
+
+// UpdateUserPreferencesResponse confirms preference updates
+message UpdateUserPreferencesResponse {
+  // Number of preferences updated
+  int32 updated_count = 1;
+
+  // Updated user
+  User user = 2;
+}
+
+// UserSyncRequest for bidirectional streaming
+message UserSyncRequest {
+  // Request type
+  oneof request {
+    // Initial sync request
+    InitialSyncRequest initial = 1;
+
+    // Data update
+    UserDataUpdate update = 2;
+
+    // Keep-alive ping
+    Ping ping = 3;
+  }
+}
+
+// InitialSyncRequest initiates sync
+message InitialSyncRequest {
+  // User ID
+  string user_id = 1;
+
+  // Last sync timestamp
+  google.protobuf.Timestamp last_sync_at = 2;
+}
+
+// UserDataUpdate represents data changes
+message UserDataUpdate {
+  // Updated fields
+  map<string, string> fields = 1;
+
+  // Update timestamp
+  google.protobuf.Timestamp updated_at = 2;
+}
+
+// Ping for keep-alive
+message Ping {
+  // Timestamp
+  google.protobuf.Timestamp timestamp = 1;
+}
+
+// UserSyncResponse for bidirectional streaming
+message UserSyncResponse {
+  // Response type
+  oneof response {
+    // Sync acknowledgment
+    SyncAck ack = 1;
+
+    // Server-side update
+    UserDataUpdate update = 2;
+
+    // Pong response
+    Pong pong = 3;
+
+    // Error
+    common.v1.Error error = 4;
+  }
+}
+
+// SyncAck acknowledges sync
+message SyncAck {
+  // Synced successfully
+  bool success = 1;
+
+  // Sync timestamp
+  google.protobuf.Timestamp synced_at = 2;
+}
+
+// Pong response to ping
+message Pong {
+  // Timestamp
+  google.protobuf.Timestamp timestamp = 1;
+}

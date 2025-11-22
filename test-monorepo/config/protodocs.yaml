@@ -1,0 +1,242 @@
+# ProtoDocs Configuration for Test Monorepository
+# This configuration tests all ProtoDocs features
+
+# Basic Configuration
+module_name: "test-monorepo"
+version: "1.0.0"
+description: "Comprehensive test monorepository for ProtoDocs documentation generation"
+
+# Proto Sources
+proto:
+  # Root directory for proto files
+  root_dir: "./proto"
+
+  # Proto import paths
+  import_paths:
+    - "./proto"
+    - "./proto/common"
+    - "./proto/users"
+    - "./proto/payments"
+    - "./proto/notifications"
+    - "./proto/analytics"
+
+  # Proto files to process (all services)
+  files:
+    - "common/common.proto"
+    - "users/users.proto"
+    - "payments/payments.proto"
+    - "notifications/notifications.proto"
+    - "analytics/analytics.proto"
+
+# Output Configuration
+output:
+  # Documentation output directory
+  docs_dir: "./docs"
+
+  # Output formats
+  formats:
+    markdown: true
+    html: true
+    pdf: false
+    json: true
+
+  # Generate index
+  generate_index: true
+
+  # Generate diagrams
+  generate_diagrams: true
+
+# Documentation Features
+features:
+  # Include service documentation
+  services: true
+
+  # Include message documentation
+  messages: true
+
+  # Include enum documentation
+  enums: true
+
+  # Include field documentation
+  fields: true
+
+  # Include method documentation
+  methods: true
+
+  # Generate API examples
+  examples: true
+
+  # Generate sequence diagrams
+  sequence_diagrams: true
+
+  # Generate class diagrams
+  class_diagrams: true
+
+  # Generate data flow diagrams
+  data_flow_diagrams: true
+
+# HLD Generator Configuration (v7.0)
+hldgen:
+  # Enable HLD generation
+  enabled: true
+
+  # Version
+  version: "7.0"
+
+  # Default generation mode
+  default_mode: "ultra_advanced"
+
+  # Refinement configuration
+  refinement:
+    max_rounds: 3
+    consensus_threshold: 0.88
+    min_improvement_per_round: 0.05
+    critical_issue_override: true
+    fallback_on_stagnation: true
+    final_validation: true
+
+  # Intelligence configuration
+  intelligence:
+    consensus_threshold: 0.88
+
+    multi_agent:
+      enabled: true
+
+      agents:
+        - role: "architect"
+          weight: 0.30
+          model: "claude-3-5-sonnet-20241022"
+          temperature: 0.7
+          max_tokens: 4000
+
+        - role: "pm"
+          weight: 0.15
+          model: "claude-3-5-sonnet-20241022"
+          temperature: 0.6
+          max_tokens: 2000
+
+        - role: "security"
+          weight: 0.25
+          model: "claude-3-5-sonnet-20241022"
+          temperature: 0.5
+          max_tokens: 2500
+
+        - role: "sre"
+          weight: 0.20
+          model: "claude-3-5-sonnet-20241022"
+          temperature: 0.6
+          max_tokens: 2500
+
+        - role: "qa"
+          weight: 0.10
+          model: "claude-3-5-sonnet-20241022"
+          temperature: 0.6
+          max_tokens: 2000
+
+        - role: "critic"
+          weight: 1.0
+          model: "claude-3-5-sonnet-20241022"
+          temperature: 0.3
+          max_tokens: 3000
+
+  # Context configuration
+  context:
+    enabled: true
+
+    sources:
+      - type: "git_history"
+        weight: 0.15
+        config:
+          depth: 50
+
+      - type: "ownership"
+        weight: 0.10
+        config:
+          file: "CODEOWNERS"
+
+    rag:
+      enabled: false
+      vector_db: "weaviate"
+      top_k: 5
+      min_relevance: 0.7
+
+  # LLM configuration
+  llm:
+    providers:
+      - name: "anthropic"
+        model: "claude-3-5-sonnet-20241022"
+        api_key_env: "ANTHROPIC_API_KEY"
+        max_tokens: 4096
+        temperature: 0.7
+        timeout: 60
+        max_retries: 3
+
+  # Performance configuration
+  performance:
+    concurrency: 10
+    timeout_seconds: 300
+    cache_enabled: true
+    cache_ttl: 3600
+
+# Template Configuration
+templates:
+  # Service template
+  service:
+    header: |
+      # {{.ServiceName}}
+
+      {{.Description}}
+
+      **Package**: `{{.Package}}`
+
+    method: |
+      ## {{.MethodName}}
+
+      {{.Description}}
+
+      **Type**: {{.Type}}
+
+      ### Request
+      ```protobuf
+      {{.Request}}
+      ```
+
+      ### Response
+      ```protobuf
+      {{.Response}}
+      ```
+
+  # Message template
+  message:
+    header: |
+      ### {{.MessageName}}
+
+      {{.Description}}
+
+    field: |
+      - **{{.FieldName}}** ({{.Type}}): {{.Description}}
+
+# Validation Configuration
+validation:
+  # Validate proto syntax
+  syntax: true
+
+  # Validate imports
+  imports: true
+
+  # Validate field names
+  field_names: true
+
+  # Validate service names
+  service_names: true
+
+  # Strict mode
+  strict: true
+
+# Metadata
+metadata:
+  author: "Test Team"
+  organization: "Test Organization"
+  contact: "test@example.com"
+  repository: "https://github.com/test/monorepo"
+  license: "MIT"

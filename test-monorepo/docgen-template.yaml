@@ -1,0 +1,43 @@
+version: "1.0"
+project_name: my-project
+output_dir: ./docs/generated
+services:
+    - name: ExampleService
+      proto_files:
+        - ./proto/example/v1/service.proto
+      enabled: true
+      package: example.v1
+      version: "1.0"
+quality:
+    coverage_target: 80
+    description_quality_target: 85
+    auto_fix: true
+    fail_on_quality_gate: false
+    min_method_coverage: 75
+    min_field_coverage: 70
+enricher:
+    provider: claude
+    api_key: ${ANTHROPIC_API_KEY}
+    enabled: false
+    model: claude-3-5-sonnet-20241022
+    max_tokens: 1024
+    temperature: 0.3
+    cache_enabled: true
+    rate_limit_per_min: 50
+    parallel_requests: 5
+diagrams:
+    enabled: true
+    service_graph: true
+    message_graph: true
+    sequence_graph: false
+    overview_graph: true
+templates:
+    dir: ./templates
+    service_template: service.md.tmpl
+    method_template: method.md.tmpl
+    message_template: message.md.tmpl
+    custom_functions: {}
+logging:
+    level: info
+    format: json
+    output_file: ""
