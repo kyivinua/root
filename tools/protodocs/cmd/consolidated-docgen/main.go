@@ -112,6 +112,12 @@ func main() {
 		UseEmojis:             !*noEmoji,
 		CodeHighlighting:      "protobuf",
 		DiagramTheme:          *themeName,
+		// New diagram types
+		IncludeClassDiagram:      true,  // UML Class diagrams for messages
+		IncludeServiceInteraction: true, // gRPC service interaction diagrams
+		IncludeERD:               true,  // Entity-Relationship diagrams
+		IncludeComponentDiagram:  false, // Component architecture (optional)
+		IncludeDeploymentDiagram: false, // Deployment architecture (optional)
 	}
 
 	generator := docgen.NewConsolidatedDocGenerator(config)

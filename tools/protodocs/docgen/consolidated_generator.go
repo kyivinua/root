@@ -22,10 +22,15 @@ type ConsolidatedConfig struct {
 	IncludeAnchors        bool
 
 	// Diagram types to include
-	IncludeArchitecture   bool
-	IncludeSequence       bool
-	IncludeMessageGraph   bool
-	IncludeDataFlow       bool
+	IncludeArchitecture      bool
+	IncludeSequence          bool
+	IncludeMessageGraph      bool
+	IncludeDataFlow          bool
+	IncludeClassDiagram      bool // UML Class diagram for messages
+	IncludeServiceInteraction bool // gRPC service interaction diagram
+	IncludeERD               bool // Entity-Relationship diagram
+	IncludeComponentDiagram  bool // Component architecture diagram
+	IncludeDeploymentDiagram bool // Deployment diagram
 
 	// Content sections
 	IncludeOverview       bool
@@ -53,12 +58,17 @@ func DefaultConsolidatedConfig() ConsolidatedConfig {
 		IncludeDiagrams:       true,
 		DiagramPosition:       "section",
 		IncludeCrossReferences: true,
-		IncludeAnchors:        true,
-		IncludeArchitecture:   true,
-		IncludeSequence:       true,
-		IncludeMessageGraph:   true,
-		IncludeDataFlow:       true,
-		IncludeOverview:       true,
+		IncludeAnchors:           true,
+		IncludeArchitecture:      true,
+		IncludeSequence:          true,
+		IncludeMessageGraph:      true,
+		IncludeDataFlow:          false, // Can be large
+		IncludeClassDiagram:      true,  // UML Class diagrams for messages
+		IncludeServiceInteraction: true,  // gRPC service interactions
+		IncludeERD:               true,  // Entity-Relationship diagram
+		IncludeComponentDiagram:  false, // Component architecture (pipeline-specific)
+		IncludeDeploymentDiagram: false, // Deployment architecture (deployment-specific)
+		IncludeOverview:          true,
 		IncludeAuthentication: true,
 		IncludeExamples:       true,
 		IncludeErrorCodes:     true,
@@ -195,6 +205,16 @@ func (g *ConsolidatedDocGenerator) GenerateConsolidatedDoc(doc *ServiceDocumenta
 		g.writeArchitectureDiagram(&sb, doc)
 	}
 
+	// Service Interaction diagram
+	if g.config.IncludeDiagrams && g.config.IncludeServiceInteraction {
+		g.writeServiceInteractionDiagram(&sb, doc)
+	}
+
+	// Class diagram (UML for messages)
+	if g.config.IncludeDiagrams && g.config.IncludeClassDiagram {
+		g.writeClassDiagram(&sb, doc)
+	}
+
 	// Methods section
 	g.writeMethods(&sb, doc)
 
@@ -204,6 +224,21 @@ func (g *ConsolidatedDocGenerator) GenerateConsolidatedDoc(doc *ServiceDocumenta
 	// Enums section
 	if len(doc.Enums) > 0 {
 		g.writeEnums(&sb, doc)
+	}
+
+	// Entity-Relationship Diagram (ERD)
+	if g.config.IncludeDiagrams && g.config.IncludeERD {
+		g.writeERDDiagram(&sb, doc)
+	}
+
+	// Component Diagram (if enabled)
+	if g.config.IncludeDiagrams && g.config.IncludeComponentDiagram {
+		g.writeComponentDiagram(&sb, doc)
+	}
+
+	// Deployment Diagram (if enabled)
+	if g.config.IncludeDiagrams && g.config.IncludeDeploymentDiagram {
+		g.writeDeploymentDiagram(&sb, doc)
 	}
 
 	// Diagrams appendix
@@ -270,6 +305,16 @@ func (g *ConsolidatedDocGenerator) writeTOC(sb *strings.Builder, doc *ServiceDoc
 	// Architecture
 	if g.config.IncludeDiagrams && g.config.IncludeArchitecture {
 		sb.WriteString("- [Architecture](#architecture)\n")
+	}
+
+	// Service Interaction
+	if g.config.IncludeDiagrams && g.config.IncludeServiceInteraction {
+		sb.WriteString("- [gRPC Service Interactions](#service-interaction)\n")
+	}
+
+	// Class Diagram
+	if g.config.IncludeDiagrams && g.config.IncludeClassDiagram {
+		sb.WriteString("- [Message Type Diagrams](#class-diagram)\n")
 	}
 
 	// Methods
@@ -452,4 +497,259 @@ func getShortName(fullName string) string {
 		return parts[len(parts)-1]
 	}
 	return fullName
+}
+
+// writeServiceInteractionDiagram generates a diagram showing gRPC service interactions
+func (g *ConsolidatedDocGenerator) writeServiceInteractionDiagram(sb *strings.Builder, doc *ServiceDocumentation) {
+	emoji := ""
+	if g.config.UseEmojis {
+		emoji = "🔄 "
+	}
+
+	sb.WriteString(fmt.Sprintf("## %sgRPC Service Interactions\n\n", emoji))
+
+	if g.config.IncludeAnchors {
+		sb.WriteString("<a name=\"service-interaction\"></a>\n\n")
+	}
+
+	sb.WriteString("This diagram shows the interactions between the service methods and message types.\n\n")
+
+	sb.WriteString("```mermaid\n")
+	if g.config.DiagramTheme != "default" {
+		sb.WriteString(fmt.Sprintf("%%{init: {'theme':'%s'}}%%\n", g.config.DiagramTheme))
+	}
+	sb.WriteString("sequenceDiagram\n")
+	sb.WriteString("    participant Client\n")
+	sb.WriteString(fmt.Sprintf("    participant %s\n", doc.Service.Name))
+
+	// Show interactions for each method
+	for _, method := range doc.Methods {
+		inputMsg := getShortName(method.InputType)
+		outputMsg := getShortName(method.OutputType)
+
+		if method.ClientStreaming && method.ServerStreaming {
+			sb.WriteString(fmt.Sprintf("    Client->>+%s: %s (bidirectional stream)\n", doc.Service.Name, method.Name))
+			sb.WriteString(fmt.Sprintf("    Note over Client,%s: Stream of %s\n", doc.Service.Name, inputMsg))
+			sb.WriteString(fmt.Sprintf("    %s->>-Client: Stream of %s\n", doc.Service.Name, outputMsg))
+		} else if method.ClientStreaming {
+			sb.WriteString(fmt.Sprintf("    Client->>+%s: %s (client stream)\n", doc.Service.Name, method.Name))
+			sb.WriteString(fmt.Sprintf("    Note over Client,%s: Stream of %s\n", doc.Service.Name, inputMsg))
+			sb.WriteString(fmt.Sprintf("    %s->>-Client: %s\n", doc.Service.Name, outputMsg))
+		} else if method.ServerStreaming {
+			sb.WriteString(fmt.Sprintf("    Client->>+%s: %s\n", doc.Service.Name, method.Name))
+			sb.WriteString(fmt.Sprintf("    Note right of %s: %s\n", doc.Service.Name, inputMsg))
+			sb.WriteString(fmt.Sprintf("    %s->>-Client: Stream of %s\n", doc.Service.Name, outputMsg))
+		} else {
+			// Unary
+			sb.WriteString(fmt.Sprintf("    Client->>+%s: %s\n", doc.Service.Name, method.Name))
+			sb.WriteString(fmt.Sprintf("    Note right of %s: %s\n", doc.Service.Name, inputMsg))
+			sb.WriteString(fmt.Sprintf("    %s->>-Client: %s\n", doc.Service.Name, outputMsg))
+		}
+	}
+
+	sb.WriteString("```\n\n")
+	sb.WriteString("---\n\n")
+}
+
+// writeClassDiagram generates UML class diagram for message types
+func (g *ConsolidatedDocGenerator) writeClassDiagram(sb *strings.Builder, doc *ServiceDocumentation) {
+	emoji := ""
+	if g.config.UseEmojis {
+		emoji = "📦 "
+	}
+
+	sb.WriteString(fmt.Sprintf("## %sMessage Type Diagrams\n\n", emoji))
+
+	if g.config.IncludeAnchors {
+		sb.WriteString("<a name=\"class-diagram\"></a>\n\n")
+	}
+
+	sb.WriteString("UML class diagrams showing the structure of message types.\n\n")
+
+	sb.WriteString("```mermaid\n")
+	if g.config.DiagramTheme != "default" {
+		sb.WriteString(fmt.Sprintf("%%{init: {'theme':'%s'}}%%\n", g.config.DiagramTheme))
+	}
+	sb.WriteString("classDiagram\n")
+
+	// Add service class
+	sb.WriteString(fmt.Sprintf("    class %s {\n", doc.Service.Name))
+	sb.WriteString("        <<service>>\n")
+	for _, method := range doc.Messages {
+		inputShort := getShortName(method.Name)
+		sb.WriteString(fmt.Sprintf("        +%s()\n", inputShort))
+	}
+	sb.WriteString("    }\n\n")
+
+	// Add message classes
+	for _, msg := range doc.Messages {
+		msgName := sanitizeMermaidName(msg.Name)
+		sb.WriteString(fmt.Sprintf("    class %s {\n", msgName))
+
+		// Add fields
+		for _, field := range msg.Fields {
+			fieldType := field.Type
+			if field.TypeName != "" {
+				fieldType = getShortName(field.TypeName)
+			}
+			label := ""
+			if field.Label == "repeated" {
+				label = "[]"
+			}
+			sb.WriteString(fmt.Sprintf("        +%s %s%s\n", fieldType, field.Name, label))
+		}
+		sb.WriteString("    }\n\n")
+
+		// Add relationships
+		for _, field := range msg.Fields {
+			if field.TypeName != "" && !strings.HasPrefix(field.TypeName, "google.protobuf.") {
+				refType := getShortName(field.TypeName)
+				if field.Label == "repeated" {
+					sb.WriteString(fmt.Sprintf("    %s \"1\" --> \"*\" %s\n", msgName, sanitizeMermaidName(refType)))
+				} else {
+					sb.WriteString(fmt.Sprintf("    %s \"1\" --> \"1\" %s\n", msgName, sanitizeMermaidName(refType)))
+				}
+			}
+		}
+	}
+
+	sb.WriteString("```\n\n")
+	sb.WriteString("---\n\n")
+}
+
+// writeERDDiagram generates Entity-Relationship diagram
+func (g *ConsolidatedDocGenerator) writeERDDiagram(sb *strings.Builder, doc *ServiceDocumentation) {
+	emoji := ""
+	if g.config.UseEmojis {
+		emoji = "🗄️ "
+	}
+
+	sb.WriteString(fmt.Sprintf("## %sData Model (ERD)\n\n", emoji))
+
+	if g.config.IncludeAnchors {
+		sb.WriteString("<a name=\"erd\"></a>\n\n")
+	}
+
+	sb.WriteString("Entity-Relationship diagram showing the data model.\n\n")
+
+	sb.WriteString("```mermaid\n")
+	if g.config.DiagramTheme != "default" {
+		sb.WriteString(fmt.Sprintf("%%{init: {'theme':'%s'}}%%\n", g.config.DiagramTheme))
+	}
+	sb.WriteString("erDiagram\n")
+
+	// Generate ER diagram from messages
+	for _, msg := range doc.Messages {
+		msgName := sanitizeMermaidName(msg.Name)
+
+		// Define entity
+		sb.WriteString(fmt.Sprintf("    %s {\n", msgName))
+		for _, field := range msg.Fields {
+			fieldType := field.Type
+			if fieldType == "" && field.TypeName != "" {
+				fieldType = getShortName(field.TypeName)
+			}
+			sb.WriteString(fmt.Sprintf("        %s %s\n", fieldType, field.Name))
+		}
+		sb.WriteString("    }\n\n")
+
+		// Add relationships
+		for _, field := range msg.Fields {
+			if field.TypeName != "" && !strings.HasPrefix(field.TypeName, "google.protobuf.") {
+				refType := sanitizeMermaidName(getShortName(field.TypeName))
+				if field.Label == "repeated" {
+					sb.WriteString(fmt.Sprintf("    %s ||--o{ %s : has\n", msgName, refType))
+				} else {
+					sb.WriteString(fmt.Sprintf("    %s ||--|| %s : has\n", msgName, refType))
+				}
+			}
+		}
+	}
+
+	sb.WriteString("```\n\n")
+	sb.WriteString("---\n\n")
+}
+
+// writeComponentDiagram generates component architecture diagram
+func (g *ConsolidatedDocGenerator) writeComponentDiagram(sb *strings.Builder, doc *ServiceDocumentation) {
+	emoji := ""
+	if g.config.UseEmojis {
+		emoji = "🧩 "
+	}
+
+	sb.WriteString(fmt.Sprintf("## %sComponent Architecture\n\n", emoji))
+
+	if g.config.IncludeAnchors {
+		sb.WriteString("<a name=\"component-diagram\"></a>\n\n")
+	}
+
+	sb.WriteString("Component architecture diagram.\n\n")
+
+	sb.WriteString("```mermaid\n")
+	if g.config.DiagramTheme != "default" {
+		sb.WriteString(fmt.Sprintf("%%{init: {'theme':'%s'}}%%\n", g.config.DiagramTheme))
+	}
+	sb.WriteString("graph TB\n")
+	sb.WriteString("    Client[Client Application]\n")
+	sb.WriteString(fmt.Sprintf("    Service[%s]\n", doc.Service.Name))
+	sb.WriteString("    DB[(Database)]\n")
+	sb.WriteString("    Cache[(Cache)]\n\n")
+	sb.WriteString("    Client -->|gRPC| Service\n")
+	sb.WriteString("    Service -->|Read/Write| DB\n")
+	sb.WriteString("    Service -->|Cache| Cache\n")
+	sb.WriteString("```\n\n")
+	sb.WriteString("---\n\n")
+}
+
+// writeDeploymentDiagram generates deployment architecture diagram
+func (g *ConsolidatedDocGenerator) writeDeploymentDiagram(sb *strings.Builder, doc *ServiceDocumentation) {
+	emoji := ""
+	if g.config.UseEmojis {
+		emoji = "🚀 "
+	}
+
+	sb.WriteString(fmt.Sprintf("## %sDeployment Architecture\n\n", emoji))
+
+	if g.config.IncludeAnchors {
+		sb.WriteString("<a name=\"deployment-diagram\"></a>\n\n")
+	}
+
+	sb.WriteString("Deployment architecture diagram.\n\n")
+
+	sb.WriteString("```mermaid\n")
+	if g.config.DiagramTheme != "default" {
+		sb.WriteString(fmt.Sprintf("%%{init: {'theme':'%s'}}%%\n", g.config.DiagramTheme))
+	}
+	sb.WriteString("graph TD\n")
+	sb.WriteString("    LB[Load Balancer]\n")
+	sb.WriteString(fmt.Sprintf("    S1[%s Instance 1]\n", doc.Service.Name))
+	sb.WriteString(fmt.Sprintf("    S2[%s Instance 2]\n", doc.Service.Name))
+	sb.WriteString(fmt.Sprintf("    S3[%s Instance 3]\n", doc.Service.Name))
+	sb.WriteString("    DB[(Primary DB)]\n")
+	sb.WriteString("    DBR[(Replica DB)]\n")
+	sb.WriteString("    Redis[(Redis Cluster)]\n\n")
+	sb.WriteString("    LB --> S1\n")
+	sb.WriteString("    LB --> S2\n")
+	sb.WriteString("    LB --> S3\n")
+	sb.WriteString("    S1 --> DB\n")
+	sb.WriteString("    S2 --> DB\n")
+	sb.WriteString("    S3 --> DB\n")
+	sb.WriteString("    S1 --> Redis\n")
+	sb.WriteString("    S2 --> Redis\n")
+	sb.WriteString("    S3 --> Redis\n")
+	sb.WriteString("    DB -.replicate.-> DBR\n")
+	sb.WriteString("```\n\n")
+	sb.WriteString("---\n\n")
+}
+
+// sanitizeMermaidName sanitizes names for Mermaid diagrams
+func sanitizeMermaidName(name string) string {
+	name = strings.ReplaceAll(name, ".", "_")
+	name = strings.ReplaceAll(name, "-", "_")
+	name = strings.ReplaceAll(name, " ", "_")
+	name = strings.ReplaceAll(name, "<", "_")
+	name = strings.ReplaceAll(name, ">", "_")
+	name = strings.ReplaceAll(name, "[", "_")
+	name = strings.ReplaceAll(name, "]", "_")
+	return name
 }
