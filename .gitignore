@@ -56,3 +56,4 @@ vendor/
 *.bin
 .DS_Store
 tools/protodocs/cmd/consolidated-docgen/consolidated-docgen
+consolidated-docgen

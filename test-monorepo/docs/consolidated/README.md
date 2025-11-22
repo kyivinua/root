@@ -31,50 +31,50 @@ Each service documentation includes:
 
 ### [AnalyticsService](AnalyticsService.md)
 
-AnalyticsService provides analytics and reporting
+AnalyticsService provides analytics and reporting.
 
 **Methods:**
-- `TrackEvent` - TrackEvent tracks a single analytics event
-- `BatchTrackEvents` - BatchTrackEvents tracks multiple events
-- `GetMetrics` - GetMetrics retrieves metrics
-- `GetReport` - GetReport generates a report
-- `StreamMetrics` - StreamMetrics streams real-time metrics
+- `TrackEvent` - TrackEvent tracks a single analytics event.
+- `BatchTrackEvents` - BatchTrackEvents tracks multiple events. Uses client-side streaming to send multiple requests
+- `GetMetrics` - GetMetrics retrieves metrics.
+- `GetReport` - GetReport generates a report.
+- `StreamMetrics` - StreamMetrics streams real-time metrics.
 - ... and 3 more
 
 ### [NotificationService](NotificationService.md)
 
-NotificationService manages notifications
+NotificationService manages notifications.
 
 **Methods:**
-- `SendNotification` - SendNotification sends a single notification
-- `SendBulkNotifications` - SendBulkNotifications sends notifications to multiple recipients
-- `GetNotification` - GetNotification retrieves a notification
-- `ListNotifications` - ListNotifications lists user notifications
-- `MarkAsRead` - MarkAsRead marks notifications as read
+- `SendNotification` - SendNotification sends a single notification.
+- `SendBulkNotifications` - SendBulkNotifications sends notifications to multiple recipients. Uses server-side streaming to deliver multiple responses
+- `GetNotification` - GetNotification retrieves a notification.
+- `ListNotifications` - ListNotifications lists user notifications.
+- `MarkAsRead` - MarkAsRead marks notifications as read.
 - ... and 4 more
 
 ### [PaymentService](PaymentService.md)
 
-PaymentService handles payment processing
+PaymentService handles payment processing.
 
 **Methods:**
-- `CreatePayment` - CreatePayment initiates a new payment
-- `GetPayment` - GetPayment retrieves payment details
-- `CancelPayment` - CancelPayment cancels a pending payment
-- `RefundPayment` - RefundPayment processes a refund
-- `ListPayments` - ListPayments lists payments with filters
+- `CreatePayment` - CreatePayment initiates a new payment.
+- `GetPayment` - GetPayment retrieves payment details.
+- `CancelPayment` - CancelPayment cancels a pending payment.
+- `RefundPayment` - RefundPayment processes a refund.
+- `ListPayments` - ListPayments lists payments with filters.
 - ... and 2 more
 
 ### [UserService](UserService.md)
 
-UserService manages user accounts and profiles
+UserService manages user accounts and profiles.
 
 **Methods:**
-- `CreateUser` - CreateUser creates a new user account
-- `GetUser` - GetUser retrieves a user by ID
-- `UpdateUser` - UpdateUser updates an existing user
-- `DeleteUser` - DeleteUser soft-deletes a user
-- `ListUsers` - ListUsers lists users with pagination
+- `CreateUser` - CreateUser creates a new user account.
+- `GetUser` - GetUser retrieves a user by ID.
+- `UpdateUser` - UpdateUser updates an existing user.
+- `DeleteUser` - DeleteUser soft-deletes a user.
+- `ListUsers` - ListUsers lists users with pagination.
 - ... and 5 more
 
 ---

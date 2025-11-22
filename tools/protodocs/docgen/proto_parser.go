@@ -12,15 +12,17 @@ import (
 
 // ProtoParser parses protocol buffer files and extracts documentation
 type ProtoParser struct {
-	protoFiles []string
+	protoFiles  []string
 	importPaths []string
+	descGen     *DescriptionGenerator
 }
 
 // NewProtoParser creates a new proto parser
 func NewProtoParser(protoFiles, importPaths []string) *ProtoParser {
 	return &ProtoParser{
-		protoFiles: protoFiles,
+		protoFiles:  protoFiles,
 		importPaths: importPaths,
+		descGen:     NewDescriptionGenerator(),
 	}
 }
 
@@ -126,12 +128,15 @@ func (p *ProtoParser) parseService(file *descriptorpb.FileDescriptorProto, servi
 		serviceDesc = extractCommentFromPath(file, path)
 	}
 
+	// Enhance service description with smart generation
+	enhancedServiceDesc := p.descGen.EnhanceServiceDescription(service.GetName(), serviceDesc)
+
 	doc := &ServiceDocumentation{
 		Service: &ServiceDoc{
 			Name:        service.GetName(),
 			FullName:    fmt.Sprintf("%s.%s", file.GetPackage(), service.GetName()),
 			Package:     file.GetPackage(),
-			Description: serviceDesc,
+			Description: enhancedServiceDesc,
 			ProtoFile:   file.GetName(),
 		},
 		Methods:  make([]MethodDoc, 0),
@@ -170,12 +175,31 @@ func (p *ProtoParser) parseMethod(file *descriptorpb.FileDescriptorProto, servic
 		methodDesc = extractCommentFromPath(file, path)
 	}
 
+	inputType := strings.TrimPrefix(method.GetInputType(), ".")
+	outputType := strings.TrimPrefix(method.GetOutputType(), ".")
+
+	// Enhance method description with smart generation
+	enhancedMethodDesc := p.descGen.EnhanceMethodDescription(
+		method.GetName(),
+		methodDesc,
+		inputType,
+		outputType,
+		method.GetClientStreaming(),
+		method.GetServerStreaming(),
+	)
+
+	// Check for deprecation
+	deprecated, deprecationMsg := p.descGen.DetectDeprecation(method.GetOptions())
+	if deprecated {
+		enhancedMethodDesc = deprecationMsg + "\n\n" + enhancedMethodDesc
+	}
+
 	return MethodDoc{
 		Name:            method.GetName(),
 		FullName:        fmt.Sprintf("%s.%s", file.GetPackage(), method.GetName()),
-		Description:     methodDesc,
-		InputType:       strings.TrimPrefix(method.GetInputType(), "."),
-		OutputType:      strings.TrimPrefix(method.GetOutputType(), "."),
+		Description:     enhancedMethodDesc,
+		InputType:       inputType,
+		OutputType:      outputType,
 		ClientStreaming: method.GetClientStreaming(),
 		ServerStreaming: method.GetServerStreaming(),
 		HTTPBindings:    p.extractHTTPBindings(method),
@@ -251,10 +275,24 @@ func (p *ProtoParser) parseMessage(file *descriptorpb.FileDescriptorProto, msg *
 		messageDesc = extractCommentFromPath(file, path)
 	}
 
+	// Detect if this is a request or response message
+	msgName := msg.GetName()
+	isRequest := strings.HasSuffix(msgName, "Request")
+	isResponse := strings.HasSuffix(msgName, "Response")
+
+	// Enhance message description with smart generation
+	enhancedMessageDesc := p.descGen.EnhanceMessageDescription(msgName, messageDesc, isRequest, isResponse)
+
+	// Check for deprecation
+	deprecated, deprecationMsg := p.descGen.DetectDeprecation(msg.GetOptions())
+	if deprecated {
+		enhancedMessageDesc = deprecationMsg + "\n\n" + enhancedMessageDesc
+	}
+
 	doc := MessageDoc{
-		Name:        msg.GetName(),
+		Name:        msgName,
 		FullName:    fullName,
-		Description: messageDesc,
+		Description: enhancedMessageDesc,
 		Fields:      make([]FieldDoc, 0),
 		NestedTypes: make([]string, 0),
 	}
@@ -338,13 +376,39 @@ func (p *ProtoParser) parseFieldWithOneofs(file *descriptorpb.FileDescriptorProt
 		fieldDesc = extractCommentFromPath(file, path)
 	}
 
+	// Enhance field description with smart generation
+	isRepeated := field.GetLabel() == descriptorpb.FieldDescriptorProto_LABEL_REPEATED
+	enhancedFieldDesc := p.descGen.EnhanceFieldDescription(
+		field.GetName(),
+		fieldDesc,
+		fieldType,
+		typeName,
+		isRepeated,
+		oneofGroup != "",
+	)
+
+	// Add validation hints
+	enhancedFieldDesc = p.descGen.AddValidationHints(field.GetName(), fieldType, enhancedFieldDesc)
+
+	// Add constraint hints
+	constraints := p.descGen.GenerateFieldConstraints(field.GetName(), fieldType)
+	if constraints != "" {
+		enhancedFieldDesc = strings.TrimSuffix(enhancedFieldDesc, ".") + constraints
+	}
+
+	// Check for deprecation
+	deprecated, deprecationMsg := p.descGen.DetectDeprecation(field.GetOptions())
+	if deprecated {
+		enhancedFieldDesc = deprecationMsg + " " + enhancedFieldDesc
+	}
+
 	return FieldDoc{
 		Name:         field.GetName(),
 		Number:       field.GetNumber(),
 		Type:         fieldType,
 		TypeName:     typeName,
 		Label:        label,
-		Description:  fieldDesc,
+		Description:  enhancedFieldDesc,
 		OneofGroup:   oneofGroup,
 		DefaultValue: "",
 	}
@@ -382,10 +446,19 @@ func (p *ProtoParser) parseEnum(file *descriptorpb.FileDescriptorProto, enum *de
 		enumDesc = extractCommentFromPath(file, path)
 	}
 
+	// Enhance enum description with smart generation
+	enhancedEnumDesc := p.descGen.EnhanceEnumDescription(enum.GetName(), enumDesc)
+
+	// Check for deprecation
+	deprecated, deprecationMsg := p.descGen.DetectDeprecation(enum.GetOptions())
+	if deprecated {
+		enhancedEnumDesc = deprecationMsg + "\n\n" + enhancedEnumDesc
+	}
+
 	doc := EnumDoc{
 		Name:        enum.GetName(),
 		FullName:    fullName,
-		Description: enumDesc,
+		Description: enhancedEnumDesc,
 		Values:      make([]EnumValueDoc, 0),
 	}
 
@@ -395,6 +468,17 @@ func (p *ProtoParser) parseEnum(file *descriptorpb.FileDescriptorProto, enum *de
 		if enumIndex >= 0 {
 			path := []int32{5, int32(enumIndex), 2, int32(i)} // 5=enum, 2=value
 			valueDesc = extractCommentFromPath(file, path)
+		}
+
+		// If no description, use formatting at minimum
+		if valueDesc == "" {
+			valueDesc = fmt.Sprintf("%s value.", value.GetName())
+		}
+
+		// Check for deprecation on enum values
+		deprecated, deprecationMsg := p.descGen.DetectDeprecation(value.GetOptions())
+		if deprecated {
+			valueDesc = deprecationMsg + " " + valueDesc
 		}
 
 		doc.Values = append(doc.Values, EnumValueDoc{

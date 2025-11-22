@@ -8,7 +8,7 @@
 | **Proto File** | `users/users.proto` |
 | **Generated** | 0001-01-01T00:00:00Z |
 
-UserService manages user accounts and profiles
+UserService manages user accounts and profiles.
 
 ---
 
@@ -28,42 +28,42 @@ UserService manages user accounts and profiles
   - [UpdateUserPreferences](#updateuserpreferences)
   - [SyncUserData](#syncuserdata)
 - [Messages](#messages)
+  - [UserSyncResponse](#usersyncresponse)
+  - [User](#user)
+  - [SearchFilters](#searchfilters)
+  - [SyncAck](#syncack)
+  - [CreateUserResponse](#createuserresponse)
+  - [ListUsersRequest](#listusersrequest)
+  - [Pong](#pong)
+  - [SearchUsersRequest](#searchusersrequest)
+  - [BatchGetUsersRequest](#batchgetusersrequest)
+  - [BatchGetUsersResponse](#batchgetusersresponse)
+  - [UserProfile](#userprofile)
+  - [UserDataUpdate](#userdataupdate)
+  - [PrivacySettings](#privacysettings)
+  - [CreateUserRequest](#createuserrequest)
+  - [GetUserResponse](#getuserresponse)
+  - [ListUsersResponse](#listusersresponse)
   - [UpdateUserPreferencesResponse](#updateuserpreferencesresponse)
   - [UserPreferences](#userpreferences)
   - [InitialSyncRequest](#initialsyncrequest)
-  - [UserDataUpdate](#userdataupdate)
-  - [Ping](#ping)
-  - [ListUsersResponse](#listusersresponse)
-  - [SearchUsersResponse](#searchusersresponse)
-  - [UserUpdateEvent](#userupdateevent)
-  - [PrivacySettings](#privacysettings)
-  - [SecuritySettings](#securitysettings)
-  - [DateRange](#daterange)
-  - [CreateUserRequest](#createuserrequest)
-  - [StreamUserUpdatesRequest](#streamuserupdatesrequest)
-  - [TrustedDevice](#trusteddevice)
-  - [DeleteUserRequest](#deleteuserrequest)
-  - [UserSyncRequest](#usersyncrequest)
-  - [User](#user)
-  - [SearchMetadata](#searchmetadata)
-  - [Pong](#pong)
   - [NotificationPreferences](#notificationpreferences)
-  - [GetUserResponse](#getuserresponse)
-  - [UpdateUserResponse](#updateuserresponse)
-  - [BatchGetUsersResponse](#batchgetusersresponse)
-  - [UserProfile](#userprofile)
-  - [UpdateUserRequest](#updateuserrequest)
-  - [SearchUsersRequest](#searchusersrequest)
-  - [BatchGetUsersRequest](#batchgetusersrequest)
-  - [UserSyncResponse](#usersyncresponse)
-  - [LoginAttempts](#loginattempts)
-  - [SearchFilters](#searchfilters)
-  - [SyncAck](#syncack)
+  - [DeleteUserRequest](#deleteuserrequest)
   - [QuietHours](#quiethours)
-  - [GetUserRequest](#getuserrequest)
-  - [CreateUserResponse](#createuserresponse)
-  - [ListUsersRequest](#listusersrequest)
+  - [LoginAttempts](#loginattempts)
+  - [UpdateUserResponse](#updateuserresponse)
+  - [SearchUsersResponse](#searchusersresponse)
   - [PreferenceUpdate](#preferenceupdate)
+  - [UserSyncRequest](#usersyncrequest)
+  - [Ping](#ping)
+  - [SecuritySettings](#securitysettings)
+  - [TrustedDevice](#trusteddevice)
+  - [SearchMetadata](#searchmetadata)
+  - [UpdateUserRequest](#updateuserrequest)
+  - [StreamUserUpdatesRequest](#streamuserupdatesrequest)
+  - [DateRange](#daterange)
+  - [GetUserRequest](#getuserrequest)
+  - [UserUpdateEvent](#userupdateevent)
 - [Enumerations](#enumerations)
 - [Error Codes](#error-codes)
 - [Examples](#examples)
@@ -87,11 +87,11 @@ UserService manages user accounts and profiles
 
 This service provides the following capabilities:
 
-- [`CreateUser`](#createuser): CreateUser creates a new user account
-- [`GetUser`](#getuser): GetUser retrieves a user by ID
-- [`UpdateUser`](#updateuser): UpdateUser updates an existing user
-- [`DeleteUser`](#deleteuser): DeleteUser soft-deletes a user
-- [`ListUsers`](#listusers): ListUsers lists users with pagination
+- [`CreateUser`](#createuser): CreateUser creates a new user account.
+- [`GetUser`](#getuser): GetUser retrieves a user by ID.
+- [`UpdateUser`](#updateuser): UpdateUser updates an existing user.
+- [`DeleteUser`](#deleteuser): DeleteUser soft-deletes a user.
+- [`ListUsers`](#listusers): ListUsers lists users with pagination.
 - ... and 5 more methods
 
 ---
@@ -182,7 +182,7 @@ This service defines **10 RPC methods**:
 
 <a name="createuser"></a>
 
-CreateUser creates a new user account
+CreateUser creates a new user account.
 
 #### Method Signature
 
@@ -219,7 +219,7 @@ sequenceDiagram
 
 <a name="getuser"></a>
 
-GetUser retrieves a user by ID
+GetUser retrieves a user by ID.
 
 #### Method Signature
 
@@ -256,7 +256,7 @@ sequenceDiagram
 
 <a name="updateuser"></a>
 
-UpdateUser updates an existing user
+UpdateUser updates an existing user.
 
 #### Method Signature
 
@@ -293,7 +293,7 @@ sequenceDiagram
 
 <a name="deleteuser"></a>
 
-DeleteUser soft-deletes a user
+DeleteUser soft-deletes a user.
 
 #### Method Signature
 
@@ -330,7 +330,7 @@ sequenceDiagram
 
 <a name="listusers"></a>
 
-ListUsers lists users with pagination
+ListUsers lists users with pagination.
 
 #### Method Signature
 
@@ -367,7 +367,7 @@ sequenceDiagram
 
 <a name="searchusers"></a>
 
-SearchUsers searches users by criteria
+SearchUsers searches users by criteria.
 
 #### Method Signature
 
@@ -404,7 +404,7 @@ sequenceDiagram
 
 <a name="batchgetusers"></a>
 
-BatchGetUsers retrieves multiple users
+BatchGetUsers retrieves multiple users.
 
 #### Method Signature
 
@@ -441,7 +441,7 @@ sequenceDiagram
 
 <a name="streamuserupdates"></a>
 
-StreamUserUpdates streams real-time user updates (server streaming)
+StreamUserUpdates streams real-time user updates (server streaming).
 
 #### Method Signature
 
@@ -481,7 +481,7 @@ sequenceDiagram
 
 <a name="updateuserpreferences"></a>
 
-UpdateUserPreferences updates user preferences (client streaming)
+UpdateUserPreferences updates user preferences (client streaming).
 
 #### Method Signature
 
@@ -520,7 +520,7 @@ sequenceDiagram
 
 <a name="syncuserdata"></a>
 
-SyncUserData bidirectional streaming for real-time sync
+SyncUserData bidirectional streaming for real-time sync.
 
 #### Method Signature
 
@@ -562,755 +562,40 @@ sequenceDiagram
 
 This service defines **36 message types**:
 
-### UpdateUserPreferencesResponse
+### UserSyncResponse
 
-<a name="updateuserpreferencesresponse"></a>
+<a name="usersyncresponse"></a>
 
-UpdateUserPreferencesResponse confirms preference updates
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.UpdateUserPreferencesResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `updated_count` | int32 | optional | Number of preferences updated |
-| 2 | `user` | [`User`](#user) | optional | Updated user |
-
-#### Proto Definition
-
-```protobuf
-message UpdateUserPreferencesResponse {
-  // Number of preferences updated
-  optional int32 updated_count = 1;
-  // Updated user
-  optional User user = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UpdateUserPreferencesResponse {
-        +int32 updated_count
-        +User user
-    }
-    UpdateUserPreferencesResponse --> User
-```
-
----
-
-### UserPreferences
-
-<a name="userpreferences"></a>
-
-UserPreferences contains user preferences
+UserSyncResponse for bidirectional streaming.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `users.v1.UserPreferences` |
-| **Field Count** | 6 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `language` | string | optional | Language preference (ISO 639-1) |
-| 2 | `timezone` | string | optional | Timezone (IANA timezone) |
-| 3 | `theme` | [`Theme`](#theme) | optional | Theme preference |
-| 4 | `notifications` | [`NotificationPreferences`](#notificationpreferences) | optional | Notification preferences |
-| 5 | `privacy` | [`PrivacySettings`](#privacysettings) | optional | Privacy settings |
-| 6 | `display` | map<string, string> |  | Display preferences |
-
-#### Proto Definition
-
-```protobuf
-message UserPreferences {
-  // Language preference (ISO 639-1)
-  optional string language = 1;
-  // Timezone (IANA timezone)
-  optional string timezone = 2;
-  // Theme preference
-  optional Theme theme = 3;
-  // Notification preferences
-  optional NotificationPreferences notifications = 4;
-  // Privacy settings
-  optional PrivacySettings privacy = 5;
-  // Display preferences
-   map<string, string> display = 6;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UserPreferences {
-        +string language
-        +string timezone
-        +Theme theme
-        +NotificationPreferences notifications
-        +PrivacySettings privacy
-        +map<string, string> display
-    }
-    UserPreferences --> Theme
-    UserPreferences --> NotificationPreferences
-    UserPreferences --> PrivacySettings
-```
-
----
-
-### InitialSyncRequest
-
-<a name="initialsyncrequest"></a>
-
-InitialSyncRequest initiates sync
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.InitialSyncRequest` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_id` | string | optional | User ID |
-| 2 | `last_sync_at` | [`Timestamp`](#timestamp) | optional | Last sync timestamp |
-
-#### Proto Definition
-
-```protobuf
-message InitialSyncRequest {
-  // User ID
-  optional string user_id = 1;
-  // Last sync timestamp
-  optional Timestamp last_sync_at = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class InitialSyncRequest {
-        +string user_id
-        +Timestamp last_sync_at
-    }
-    InitialSyncRequest --> Timestamp
-```
-
----
-
-### UserDataUpdate
-
-<a name="userdataupdate"></a>
-
-UserDataUpdate represents data changes
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.UserDataUpdate` |
-| **Field Count** | 2 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `fields` | map<string, string> |  | Updated fields |
-| 2 | `updated_at` | [`Timestamp`](#timestamp) | optional | Update timestamp |
-
-#### Proto Definition
-
-```protobuf
-message UserDataUpdate {
-  // Updated fields
-   map<string, string> fields = 1;
-  // Update timestamp
-  optional Timestamp updated_at = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UserDataUpdate {
-        +map<string, string> fields
-        +Timestamp updated_at
-    }
-    UserDataUpdate --> Timestamp
-```
-
----
-
-### Ping
-
-<a name="ping"></a>
-
-Ping for keep-alive
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.Ping` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `timestamp` | [`Timestamp`](#timestamp) | optional | Timestamp |
-
-#### Proto Definition
-
-```protobuf
-message Ping {
-  // Timestamp
-  optional Timestamp timestamp = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class Ping {
-        +Timestamp timestamp
-    }
-    Ping --> Timestamp
-```
-
----
-
-### ListUsersResponse
-
-<a name="listusersresponse"></a>
-
-ListUsersResponse returns list of users
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.ListUsersResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `users` | [`User`](#user) | repeated | Users list |
-| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination metadata |
-
-#### Proto Definition
-
-```protobuf
-message ListUsersResponse {
-  // Users list
-  repeated User users = 1;
-  // Pagination metadata
-  optional PaginationResponse pagination = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class ListUsersResponse {
-        +User[] users
-        +PaginationResponse pagination
-    }
-    ListUsersResponse "1" --> "*" User
-    ListUsersResponse --> PaginationResponse
-```
-
----
-
-### SearchUsersResponse
-
-<a name="searchusersresponse"></a>
-
-SearchUsersResponse returns search results
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.SearchUsersResponse` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `users` | [`User`](#user) | repeated | Matched users |
-| 2 | `metadata` | [`SearchMetadata`](#searchmetadata) | optional | Search metadata |
-| 3 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination |
-
-#### Proto Definition
-
-```protobuf
-message SearchUsersResponse {
-  // Matched users
-  repeated User users = 1;
-  // Search metadata
-  optional SearchMetadata metadata = 2;
-  // Pagination
-  optional PaginationResponse pagination = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class SearchUsersResponse {
-        +User[] users
-        +SearchMetadata metadata
-        +PaginationResponse pagination
-    }
-    SearchUsersResponse "1" --> "*" User
-    SearchUsersResponse --> SearchMetadata
-    SearchUsersResponse --> PaginationResponse
-```
-
----
-
-### UserUpdateEvent
-
-<a name="userupdateevent"></a>
-
-UserUpdateEvent represents a user update event
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.UserUpdateEvent` |
+| **Full Name** | `users.v1.UserSyncResponse` |
 | **Field Count** | 4 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `event_type` | [`UpdateEventType`](#updateeventtype) | optional | Event type |
-| 2 | `user` | [`User`](#user) | optional | User that was updated |
-| 3 | `event_time` | [`Timestamp`](#timestamp) | optional | Timestamp of event |
-| 4 | `changed_fields` | string | repeated | Changed fields |
+| 1 | `ack` | [`SyncAck`](#syncack) | oneof `response` | Sync acknowledgment. |
+| 2 | `update` | [`UserDataUpdate`](#userdataupdate) | oneof `response` | Server-side update. |
+| 3 | `pong` | [`Pong`](#pong) | oneof `response` | Pong response. |
+| 4 | `error` | [`Error`](#error) | oneof `response` | Error. |
 
 #### Proto Definition
 
 ```protobuf
-message UserUpdateEvent {
-  // Event type
-  optional UpdateEventType event_type = 1;
-  // User that was updated
-  optional User user = 2;
-  // Timestamp of event
-  optional Timestamp event_time = 3;
-  // Changed fields
-  repeated string changed_fields = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UserUpdateEvent {
-        +UpdateEventType event_type
-        +User user
-        +Timestamp event_time
-        +string[] changed_fields
-    }
-    UserUpdateEvent --> UpdateEventType
-    UserUpdateEvent --> User
-    UserUpdateEvent --> Timestamp
-```
-
----
-
-### PrivacySettings
-
-<a name="privacysettings"></a>
-
-PrivacySettings contains privacy preferences
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.PrivacySettings` |
-| **Field Count** | 5 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `profile_visibility` | [`Visibility`](#visibility) | optional | Profile visibility |
-| 2 | `show_email` | bool | optional | Show email to others |
-| 3 | `show_phone` | bool | optional | Show phone to others |
-| 4 | `searchable` | bool | optional | Allow search engines to index |
-| 5 | `data_sharing_consent` | bool | optional | Data sharing consent |
-
-#### Proto Definition
-
-```protobuf
-message PrivacySettings {
-  // Profile visibility
-  optional Visibility profile_visibility = 1;
-  // Show email to others
-  optional bool show_email = 2;
-  // Show phone to others
-  optional bool show_phone = 3;
-  // Allow search engines to index
-  optional bool searchable = 4;
-  // Data sharing consent
-  optional bool data_sharing_consent = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class PrivacySettings {
-        +Visibility profile_visibility
-        +bool show_email
-        +bool show_phone
-        +bool searchable
-        +bool data_sharing_consent
-    }
-    PrivacySettings --> Visibility
-```
-
----
-
-### SecuritySettings
-
-<a name="securitysettings"></a>
-
-SecuritySettings contains security configuration
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.SecuritySettings` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `password_changed_at` | [`Timestamp`](#timestamp) | optional | Password last changed |
-| 2 | `active_sessions` | int32 | optional | Active sessions count |
-| 3 | `trusted_devices` | [`TrustedDevice`](#trusteddevice) | repeated | Trusted devices |
-| 4 | `login_attempts` | [`LoginAttempts`](#loginattempts) | optional | Login attempt tracking |
-
-#### Proto Definition
-
-```protobuf
-message SecuritySettings {
-  // Password last changed
-  optional Timestamp password_changed_at = 1;
-  // Active sessions count
-  optional int32 active_sessions = 2;
-  // Trusted devices
-  repeated TrustedDevice trusted_devices = 3;
-  // Login attempt tracking
-  optional LoginAttempts login_attempts = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class SecuritySettings {
-        +Timestamp password_changed_at
-        +int32 active_sessions
-        +TrustedDevice[] trusted_devices
-        +LoginAttempts login_attempts
-    }
-    SecuritySettings --> Timestamp
-    SecuritySettings "1" --> "*" TrustedDevice
-    SecuritySettings --> LoginAttempts
-```
-
----
-
-### DateRange
-
-<a name="daterange"></a>
-
-DateRange represents a date range
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.DateRange` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `start` | [`Timestamp`](#timestamp) | optional | Start date |
-| 2 | `end` | [`Timestamp`](#timestamp) | optional | End date |
-
-#### Proto Definition
-
-```protobuf
-message DateRange {
-  // Start date
-  optional Timestamp start = 1;
-  // End date
-  optional Timestamp end = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class DateRange {
-        +Timestamp start
-        +Timestamp end
-    }
-    DateRange --> Timestamp
-    DateRange --> Timestamp
-```
-
----
-
-### CreateUserRequest
-
-<a name="createuserrequest"></a>
-
-CreateUserRequest creates a new user
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.CreateUserRequest` |
-| **Field Count** | 7 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `email` | string | optional | Email address |
-| 2 | `username` | string | optional | Username |
-| 3 | `full_name` | string | optional | Full name |
-| 4 | `password` | string | optional | Password (will be hashed) |
-| 5 | `profile` | [`UserProfile`](#userprofile) | optional | Initial profile data |
-| 6 | `preferences` | [`UserPreferences`](#userpreferences) | optional | Initial preferences |
-| 7 | `invite_code` | string | optional | Invite code (optional) |
-
-#### Proto Definition
-
-```protobuf
-message CreateUserRequest {
-  // Email address
-  optional string email = 1;
-  // Username
-  optional string username = 2;
-  // Full name
-  optional string full_name = 3;
-  // Password (will be hashed)
-  optional string password = 4;
-  // Initial profile data
-  optional UserProfile profile = 5;
-  // Initial preferences
-  optional UserPreferences preferences = 6;
-  // Invite code (optional)
-  optional string invite_code = 7;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class CreateUserRequest {
-        +string email
-        +string username
-        +string full_name
-        +string password
-        +UserProfile profile
-        +UserPreferences preferences
-        +string invite_code
-    }
-    CreateUserRequest --> UserProfile
-    CreateUserRequest --> UserPreferences
-```
-
----
-
-### StreamUserUpdatesRequest
-
-<a name="streamuserupdatesrequest"></a>
-
-StreamUserUpdatesRequest initiates user update stream
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.StreamUserUpdatesRequest` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_ids` | string | repeated | User IDs to watch |
-| 2 | `event_types` | [`UpdateEventType`](#updateeventtype) | repeated | Event types to receive |
-
-#### Proto Definition
-
-```protobuf
-message StreamUserUpdatesRequest {
-  // User IDs to watch
-  repeated string user_ids = 1;
-  // Event types to receive
-  repeated UpdateEventType event_types = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class StreamUserUpdatesRequest {
-        +string[] user_ids
-        +UpdateEventType[] event_types
-    }
-    StreamUserUpdatesRequest "1" --> "*" UpdateEventType
-```
-
----
-
-### TrustedDevice
-
-<a name="trusteddevice"></a>
-
-TrustedDevice represents a trusted device
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.TrustedDevice` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `device_id` | string | optional | Device ID |
-| 2 | `device_name` | string | optional | Device name |
-| 3 | `last_used_at` | [`Timestamp`](#timestamp) | optional | Last used timestamp |
-| 4 | `fingerprint` | string | optional | Device fingerprint |
-
-#### Proto Definition
-
-```protobuf
-message TrustedDevice {
-  // Device ID
-  optional string device_id = 1;
-  // Device name
-  optional string device_name = 2;
-  // Last used timestamp
-  optional Timestamp last_used_at = 3;
-  // Device fingerprint
-  optional string fingerprint = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class TrustedDevice {
-        +string device_id
-        +string device_name
-        +Timestamp last_used_at
-        +string fingerprint
-    }
-    TrustedDevice --> Timestamp
-```
-
----
-
-### DeleteUserRequest
-
-<a name="deleteuserrequest"></a>
-
-DeleteUserRequest deletes a user
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.DeleteUserRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_id` | string | optional | User ID |
-| 2 | `hard_delete` | bool | optional | Hard delete (permanent) |
-| 3 | `reason` | string | optional | Deletion reason |
-
-#### Proto Definition
-
-```protobuf
-message DeleteUserRequest {
-  // User ID
-  optional string user_id = 1;
-  // Hard delete (permanent)
-  optional bool hard_delete = 2;
-  // Deletion reason
-  optional string reason = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class DeleteUserRequest {
-        +string user_id
-        +bool hard_delete
-        +string reason
-    }
-```
-
----
-
-### UserSyncRequest
-
-<a name="usersyncrequest"></a>
-
-UserSyncRequest for bidirectional streaming
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.UserSyncRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `initial` | [`InitialSyncRequest`](#initialsyncrequest) | oneof `request` | Initial sync request |
-| 2 | `update` | [`UserDataUpdate`](#userdataupdate) | oneof `request` | Data update |
-| 3 | `ping` | [`Ping`](#ping) | oneof `request` | Keep-alive ping |
-
-#### Proto Definition
-
-```protobuf
-message UserSyncRequest {
-
-  oneof request {
-    // Initial sync request
-    InitialSyncRequest initial = 1;
-    // Data update
+message UserSyncResponse {
+
+  oneof response {
+    // Sync acknowledgment.
+    SyncAck ack = 1;
+    // Server-side update.
     UserDataUpdate update = 2;
-    // Keep-alive ping
-    Ping ping = 3;
+    // Pong response.
+    Pong pong = 3;
+    // Error.
+    Error error = 4;
   }
 }
 ```
@@ -1319,14 +604,16 @@ message UserSyncRequest {
 
 ```mermaid
 classDiagram
-    class UserSyncRequest {
-        +InitialSyncRequest initial
+    class UserSyncResponse {
+        +SyncAck ack
         +UserDataUpdate update
-        +Ping ping
+        +Pong pong
+        +Error error
     }
-    UserSyncRequest --> InitialSyncRequest
-    UserSyncRequest --> UserDataUpdate
-    UserSyncRequest --> Ping
+    UserSyncResponse --> SyncAck
+    UserSyncResponse --> UserDataUpdate
+    UserSyncResponse --> Pong
+    UserSyncResponse --> Error
 ```
 
 ---
@@ -1335,7 +622,7 @@ classDiagram
 
 <a name="user"></a>
 
-User represents a user account
+User represents a user account.
 
 | Attribute | Value |
 |-----------|-------|
@@ -1346,49 +633,49 @@ User represents a user account
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `metadata` | [`Metadata`](#metadata) | optional | User metadata |
-| 2 | `email` | string | optional | Email address (unique) |
-| 3 | `username` | string | optional | Username (unique) |
-| 4 | `full_name` | string | optional | User's full name |
-| 5 | `profile` | [`UserProfile`](#userprofile) | optional | Profile information |
-| 6 | `role` | [`UserRole`](#userrole) | optional | User role |
-| 7 | `status` | [`UserStatus`](#userstatus) | optional | Account status |
-| 8 | `email_verified` | bool | optional | Email verification status |
-| 9 | `phone_verified` | bool | optional | Phone verification status |
-| 10 | `two_factor_enabled` | bool | optional | Two-factor authentication enabled |
-| 11 | `last_login_at` | [`Timestamp`](#timestamp) | optional | Last login timestamp |
-| 12 | `preferences` | [`UserPreferences`](#userpreferences) | optional | User preferences |
-| 13 | `security` | [`SecuritySettings`](#securitysettings) | optional | Security settings |
+| 1 | `metadata` | [`Metadata`](#metadata) | optional | User metadata. |
+| 2 | `email` | string | optional | Email address (unique). (Must be a valid email address format) |
+| 3 | `username` | string | optional | Username (unique). |
+| 4 | `full_name` | string | optional | User's full name. |
+| 5 | `profile` | [`UserProfile`](#userprofile) | optional | Profile information. |
+| 6 | `role` | [`UserRole`](#userrole) | optional | User role. |
+| 7 | `status` | [`UserStatus`](#userstatus) | optional | Account status. |
+| 8 | `email_verified` | bool | optional | Email verification status. (Must be a valid email address format) |
+| 9 | `phone_verified` | bool | optional | Phone verification status. (Should follow E.164 format) |
+| 10 | `two_factor_enabled` | bool | optional | Two-factor authentication enabled. |
+| 11 | `last_login_at` | [`Timestamp`](#timestamp) | optional | Last login timestamp. (RFC 3339 timestamp format) |
+| 12 | `preferences` | [`UserPreferences`](#userpreferences) | optional | User preferences. |
+| 13 | `security` | [`SecuritySettings`](#securitysettings) | optional | Security settings. (Must be a valid URL) |
 
 #### Proto Definition
 
 ```protobuf
 message User {
-  // User metadata
+  // User metadata.
   optional Metadata metadata = 1;
-  // Email address (unique)
+  // Email address (unique). (Must be a valid email address format)
   optional string email = 2;
-  // Username (unique)
+  // Username (unique).
   optional string username = 3;
-  // User's full name
+  // User's full name.
   optional string full_name = 4;
-  // Profile information
+  // Profile information.
   optional UserProfile profile = 5;
-  // User role
+  // User role.
   optional UserRole role = 6;
-  // Account status
+  // Account status.
   optional UserStatus status = 7;
-  // Email verification status
+  // Email verification status. (Must be a valid email address format)
   optional bool email_verified = 8;
-  // Phone verification status
+  // Phone verification status. (Should follow E.164 format)
   optional bool phone_verified = 9;
-  // Two-factor authentication enabled
+  // Two-factor authentication enabled.
   optional bool two_factor_enabled = 10;
-  // Last login timestamp
+  // Last login timestamp. (RFC 3339 timestamp format)
   optional Timestamp last_login_at = 11;
-  // User preferences
+  // User preferences.
   optional UserPreferences preferences = 12;
-  // Security settings
+  // Security settings. (Must be a valid URL)
   optional SecuritySettings security = 13;
 }
 ```
@@ -1423,35 +710,39 @@ classDiagram
 
 ---
 
-### SearchMetadata
+### SearchFilters
 
-<a name="searchmetadata"></a>
+<a name="searchfilters"></a>
 
-SearchMetadata contains search result metadata
+SearchFilters defines search criteria.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `users.v1.SearchMetadata` |
-| **Field Count** | 3 |
+| **Full Name** | `users.v1.SearchFilters` |
+| **Field Count** | 4 |
+| **Nested Types** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `total_matches` | int64 | optional | Total matches |
-| 2 | `execution_time_ms` | int64 | optional | Search execution time (ms) |
-| 3 | `applied_filters` | [`SearchFilters`](#searchfilters) | optional | Applied filters |
+| 1 | `roles` | [`UserRole`](#userrole) | repeated | Role filter. |
+| 2 | `statuses` | [`UserStatus`](#userstatus) | repeated | Status filter. |
+| 3 | `created_at` | [`DateRange`](#daterange) | optional | Date range. (RFC 3339 timestamp format) |
+| 4 | `tags` | map<string, string> |  | Tag filters. |
 
 #### Proto Definition
 
 ```protobuf
-message SearchMetadata {
-  // Total matches
-  optional int64 total_matches = 1;
-  // Search execution time (ms)
-  optional int64 execution_time_ms = 2;
-  // Applied filters
-  optional SearchFilters applied_filters = 3;
+message SearchFilters {
+  // Role filter.
+  repeated UserRole roles = 1;
+  // Status filter.
+  repeated UserStatus statuses = 2;
+  // Date range. (RFC 3339 timestamp format)
+  optional DateRange created_at = 3;
+  // Tag filters.
+   map<string, string> tags = 4;
 }
 ```
 
@@ -1459,12 +750,155 @@ message SearchMetadata {
 
 ```mermaid
 classDiagram
-    class SearchMetadata {
-        +int64 total_matches
-        +int64 execution_time_ms
-        +SearchFilters applied_filters
+    class SearchFilters {
+        +UserRole[] roles
+        +UserStatus[] statuses
+        +DateRange created_at
+        +map<string, string> tags
     }
-    SearchMetadata --> SearchFilters
+    SearchFilters "1" --> "*" UserRole
+    SearchFilters "1" --> "*" UserStatus
+    SearchFilters --> DateRange
+```
+
+---
+
+### SyncAck
+
+<a name="syncack"></a>
+
+SyncAck acknowledges sync.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.SyncAck` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `success` | bool | optional | Synced successfully. |
+| 2 | `synced_at` | [`Timestamp`](#timestamp) | optional | Sync timestamp. (RFC 3339 timestamp format) |
+
+#### Proto Definition
+
+```protobuf
+message SyncAck {
+  // Synced successfully.
+  optional bool success = 1;
+  // Sync timestamp. (RFC 3339 timestamp format)
+  optional Timestamp synced_at = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class SyncAck {
+        +bool success
+        +Timestamp synced_at
+    }
+    SyncAck --> Timestamp
+```
+
+---
+
+### CreateUserResponse
+
+<a name="createuserresponse"></a>
+
+CreateUserResponse returns the created user.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.CreateUserResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user` | [`User`](#user) | optional | Created user. |
+| 2 | `verification_token` | string | optional | Verification token. (Sensitive - should be transmitted securely) |
+
+#### Proto Definition
+
+```protobuf
+message CreateUserResponse {
+  // Created user.
+  optional User user = 1;
+  // Verification token. (Sensitive - should be transmitted securely)
+  optional string verification_token = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CreateUserResponse {
+        +User user
+        +string verification_token
+    }
+    CreateUserResponse --> User
+```
+
+---
+
+### ListUsersRequest
+
+<a name="listusersrequest"></a>
+
+ListUsersRequest lists users.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.ListUsersRequest` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination. |
+| 2 | `role` | [`UserRole`](#userrole) | optional | Filter by role. |
+| 3 | `status` | [`UserStatus`](#userstatus) | optional | Filter by status. |
+| 4 | `sort_by` | string | optional | Sort field. |
+| 5 | `sort_order` | string | optional | Sort order (asc/desc). |
+
+#### Proto Definition
+
+```protobuf
+message ListUsersRequest {
+  // Pagination.
+  optional PaginationRequest pagination = 1;
+  // Filter by role.
+  optional UserRole role = 2;
+  // Filter by status.
+  optional UserStatus status = 3;
+  // Sort field.
+  optional string sort_by = 4;
+  // Sort order (asc/desc).
+  optional string sort_order = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class ListUsersRequest {
+        +PaginationRequest pagination
+        +UserRole role
+        +UserStatus status
+        +string sort_by
+        +string sort_order
+    }
+    ListUsersRequest --> PaginationRequest
+    ListUsersRequest --> UserRole
+    ListUsersRequest --> UserStatus
 ```
 
 ---
@@ -1473,7 +907,7 @@ classDiagram
 
 <a name="pong"></a>
 
-Pong response to ping
+Pong response to ping.
 
 | Attribute | Value |
 |-----------|-------|
@@ -1484,13 +918,13 @@ Pong response to ping
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `timestamp` | [`Timestamp`](#timestamp) | optional | Timestamp |
+| 1 | `timestamp` | [`Timestamp`](#timestamp) | optional | Timestamp. (RFC 3339 timestamp format) |
 
 #### Proto Definition
 
 ```protobuf
 message Pong {
-  // Timestamp
+  // Timestamp. (RFC 3339 timestamp format)
   optional Timestamp timestamp = 1;
 }
 ```
@@ -1507,41 +941,35 @@ classDiagram
 
 ---
 
-### NotificationPreferences
+### SearchUsersRequest
 
-<a name="notificationpreferences"></a>
+<a name="searchusersrequest"></a>
 
-NotificationPreferences contains notification settings
+SearchUsersRequest searches users.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `users.v1.NotificationPreferences` |
-| **Field Count** | 5 |
+| **Full Name** | `users.v1.SearchUsersRequest` |
+| **Field Count** | 3 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `email_enabled` | bool | optional | Email notifications enabled |
-| 2 | `push_enabled` | bool | optional | Push notifications enabled |
-| 3 | `sms_enabled` | bool | optional | SMS notifications enabled |
-| 4 | `enabled_types` | [`NotificationType`](#notificationtype) | repeated | Notification types to receive |
-| 5 | `quiet_hours` | [`QuietHours`](#quiethours) | optional | Quiet hours |
+| 1 | `query` | string | optional | Search query. |
+| 2 | `filters` | [`SearchFilters`](#searchfilters) | optional | Search filters. |
+| 3 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination. |
 
 #### Proto Definition
 
 ```protobuf
-message NotificationPreferences {
-  // Email notifications enabled
-  optional bool email_enabled = 1;
-  // Push notifications enabled
-  optional bool push_enabled = 2;
-  // SMS notifications enabled
-  optional bool sms_enabled = 3;
-  // Notification types to receive
-  repeated NotificationType enabled_types = 4;
-  // Quiet hours
-  optional QuietHours quiet_hours = 5;
+message SearchUsersRequest {
+  // Search query.
+  optional string query = 1;
+  // Search filters.
+  optional SearchFilters filters = 2;
+  // Pagination.
+  optional PaginationRequest pagination = 3;
 }
 ```
 
@@ -1549,42 +977,40 @@ message NotificationPreferences {
 
 ```mermaid
 classDiagram
-    class NotificationPreferences {
-        +bool email_enabled
-        +bool push_enabled
-        +bool sms_enabled
-        +NotificationType[] enabled_types
-        +QuietHours quiet_hours
+    class SearchUsersRequest {
+        +string query
+        +SearchFilters filters
+        +PaginationRequest pagination
     }
-    NotificationPreferences "1" --> "*" NotificationType
-    NotificationPreferences --> QuietHours
+    SearchUsersRequest --> SearchFilters
+    SearchUsersRequest --> PaginationRequest
 ```
 
 ---
 
-### GetUserResponse
+### BatchGetUsersRequest
 
-<a name="getuserresponse"></a>
+<a name="batchgetusersrequest"></a>
 
-GetUserResponse returns the requested user
+BatchGetUsersRequest retrieves multiple users.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `users.v1.GetUserResponse` |
+| **Full Name** | `users.v1.BatchGetUsersRequest` |
 | **Field Count** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `user` | [`User`](#user) | optional | User data |
+| 1 | `user_ids` | string | repeated | User IDs to retrieve. |
 
 #### Proto Definition
 
 ```protobuf
-message GetUserResponse {
-  // User data
-  optional User user = 1;
+message BatchGetUsersRequest {
+  // User IDs to retrieve.
+  repeated string user_ids = 1;
 }
 ```
 
@@ -1592,48 +1018,9 @@ message GetUserResponse {
 
 ```mermaid
 classDiagram
-    class GetUserResponse {
-        +User user
+    class BatchGetUsersRequest {
+        +string[] user_ids
     }
-    GetUserResponse --> User
-```
-
----
-
-### UpdateUserResponse
-
-<a name="updateuserresponse"></a>
-
-UpdateUserResponse returns the updated user
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.UpdateUserResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user` | [`User`](#user) | optional | Updated user |
-
-#### Proto Definition
-
-```protobuf
-message UpdateUserResponse {
-  // Updated user
-  optional User user = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class UpdateUserResponse {
-        +User user
-    }
-    UpdateUserResponse --> User
 ```
 
 ---
@@ -1642,7 +1029,7 @@ classDiagram
 
 <a name="batchgetusersresponse"></a>
 
-BatchGetUsersResponse returns multiple users
+BatchGetUsersResponse returns multiple users.
 
 | Attribute | Value |
 |-----------|-------|
@@ -1654,16 +1041,16 @@ BatchGetUsersResponse returns multiple users
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `users` | map<string, User> |  | Users map (ID -> User) |
-| 2 | `not_found` | string | repeated | IDs not found |
+| 1 | `users` | map<string, User> |  | Users map (ID -> User). |
+| 2 | `not_found` | string | repeated | IDs not found. |
 
 #### Proto Definition
 
 ```protobuf
 message BatchGetUsersResponse {
-  // Users map (ID -> User)
+  // Users map (ID -> User).
    map<string, User> users = 1;
-  // IDs not found
+  // IDs not found.
   repeated string not_found = 2;
 }
 ```
@@ -1684,7 +1071,7 @@ classDiagram
 
 <a name="userprofile"></a>
 
-UserProfile contains user profile information
+UserProfile contains user profile information.
 
 | Attribute | Value |
 |-----------|-------|
@@ -1696,40 +1083,40 @@ UserProfile contains user profile information
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `avatar_url` | string | optional | Avatar URL |
-| 2 | `cover_photo_url` | string | optional | Cover photo URL |
-| 3 | `bio` | string | optional | Bio or description |
-| 4 | `phone` | string | optional | Phone number |
-| 5 | `birth_date` | [`Timestamp`](#timestamp) | optional | Birth date |
-| 6 | `gender` | [`Gender`](#gender) | optional | Gender |
-| 7 | `address` | [`Address`](#address) | optional | Primary address |
-| 8 | `additional_addresses` | [`Address`](#address) | repeated | Additional addresses |
-| 9 | `social_links` | map<string, string> |  | Social media links |
-| 10 | `custom_fields` | map<string, string> |  | Custom profile fields |
+| 1 | `avatar_url` | string | optional | Avatar URL. (Must be a valid URL) |
+| 2 | `cover_photo_url` | string | optional | Cover photo URL. (Must be a valid URL) |
+| 3 | `bio` | string | optional | Bio or description. |
+| 4 | `phone` | string | optional | Phone number. (Should follow E.164 format) |
+| 5 | `birth_date` | [`Timestamp`](#timestamp) | optional | Birth date. |
+| 6 | `gender` | [`Gender`](#gender) | optional | Gender. |
+| 7 | `address` | [`Address`](#address) | optional | Primary address. |
+| 8 | `additional_addresses` | [`Address`](#address) | repeated | Additional addresses. |
+| 9 | `social_links` | map<string, string> |  | Social media links. |
+| 10 | `custom_fields` | map<string, string> |  | Custom profile fields. |
 
 #### Proto Definition
 
 ```protobuf
 message UserProfile {
-  // Avatar URL
+  // Avatar URL. (Must be a valid URL)
   optional string avatar_url = 1;
-  // Cover photo URL
+  // Cover photo URL. (Must be a valid URL)
   optional string cover_photo_url = 2;
-  // Bio or description
+  // Bio or description.
   optional string bio = 3;
-  // Phone number
+  // Phone number. (Should follow E.164 format)
   optional string phone = 4;
-  // Birth date
+  // Birth date.
   optional Timestamp birth_date = 5;
-  // Gender
+  // Gender.
   optional Gender gender = 6;
-  // Primary address
+  // Primary address.
   optional Address address = 7;
-  // Additional addresses
+  // Additional addresses.
   repeated Address additional_addresses = 8;
-  // Social media links
+  // Social media links.
    map<string, string> social_links = 9;
-  // Custom profile fields
+  // Custom profile fields.
    map<string, string> custom_fields = 10;
 }
 ```
@@ -1758,35 +1145,33 @@ classDiagram
 
 ---
 
-### UpdateUserRequest
+### UserDataUpdate
 
-<a name="updateuserrequest"></a>
+<a name="userdataupdate"></a>
 
-UpdateUserRequest updates a user
+UserDataUpdate represents data changes.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `users.v1.UpdateUserRequest` |
-| **Field Count** | 3 |
+| **Full Name** | `users.v1.UserDataUpdate` |
+| **Field Count** | 2 |
+| **Nested Types** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `user_id` | string | optional | User ID |
-| 2 | `user` | [`User`](#user) | optional | Updated user data |
-| 3 | `update_mask` | [`FieldMask`](#fieldmask) | optional | Field mask for partial updates |
+| 1 | `fields` | map<string, string> |  | Updated fields. |
+| 2 | `updated_at` | [`Timestamp`](#timestamp) | optional | Update timestamp. (RFC 3339 timestamp format) |
 
 #### Proto Definition
 
 ```protobuf
-message UpdateUserRequest {
-  // User ID
-  optional string user_id = 1;
-  // Updated user data
-  optional User user = 2;
-  // Field mask for partial updates
-  optional FieldMask update_mask = 3;
+message UserDataUpdate {
+  // Updated fields.
+   map<string, string> fields = 1;
+  // Update timestamp. (RFC 3339 timestamp format)
+  optional Timestamp updated_at = 2;
 }
 ```
 
@@ -1794,46 +1179,50 @@ message UpdateUserRequest {
 
 ```mermaid
 classDiagram
-    class UpdateUserRequest {
-        +string user_id
-        +User user
-        +FieldMask update_mask
+    class UserDataUpdate {
+        +map<string, string> fields
+        +Timestamp updated_at
     }
-    UpdateUserRequest --> User
-    UpdateUserRequest --> FieldMask
+    UserDataUpdate --> Timestamp
 ```
 
 ---
 
-### SearchUsersRequest
+### PrivacySettings
 
-<a name="searchusersrequest"></a>
+<a name="privacysettings"></a>
 
-SearchUsersRequest searches users
+PrivacySettings contains privacy preferences.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `users.v1.SearchUsersRequest` |
-| **Field Count** | 3 |
+| **Full Name** | `users.v1.PrivacySettings` |
+| **Field Count** | 5 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `query` | string | optional | Search query |
-| 2 | `filters` | [`SearchFilters`](#searchfilters) | optional | Search filters |
-| 3 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination |
+| 1 | `profile_visibility` | [`Visibility`](#visibility) | optional | Profile visibility. |
+| 2 | `show_email` | bool | optional | Show email to others. (Must be a valid email address format) |
+| 3 | `show_phone` | bool | optional | Show phone to others. (Should follow E.164 format) |
+| 4 | `searchable` | bool | optional | Allow search engines to index. |
+| 5 | `data_sharing_consent` | bool | optional | Data sharing consent. |
 
 #### Proto Definition
 
 ```protobuf
-message SearchUsersRequest {
-  // Search query
-  optional string query = 1;
-  // Search filters
-  optional SearchFilters filters = 2;
-  // Pagination
-  optional PaginationRequest pagination = 3;
+message PrivacySettings {
+  // Profile visibility.
+  optional Visibility profile_visibility = 1;
+  // Show email to others. (Must be a valid email address format)
+  optional bool show_email = 2;
+  // Show phone to others. (Should follow E.164 format)
+  optional bool show_phone = 3;
+  // Allow search engines to index.
+  optional bool searchable = 4;
+  // Data sharing consent.
+  optional bool data_sharing_consent = 5;
 }
 ```
 
@@ -1841,40 +1230,104 @@ message SearchUsersRequest {
 
 ```mermaid
 classDiagram
-    class SearchUsersRequest {
-        +string query
-        +SearchFilters filters
-        +PaginationRequest pagination
+    class PrivacySettings {
+        +Visibility profile_visibility
+        +bool show_email
+        +bool show_phone
+        +bool searchable
+        +bool data_sharing_consent
     }
-    SearchUsersRequest --> SearchFilters
-    SearchUsersRequest --> PaginationRequest
+    PrivacySettings --> Visibility
 ```
 
 ---
 
-### BatchGetUsersRequest
+### CreateUserRequest
 
-<a name="batchgetusersrequest"></a>
+<a name="createuserrequest"></a>
 
-BatchGetUsersRequest retrieves multiple users
+CreateUserRequest creates a new user.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `users.v1.BatchGetUsersRequest` |
+| **Full Name** | `users.v1.CreateUserRequest` |
+| **Field Count** | 7 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `email` | string | optional | Email address. (Must be a valid email address format) |
+| 2 | `username` | string | optional | Username. |
+| 3 | `full_name` | string | optional | Full name. |
+| 4 | `password` | string | optional | Password (will be hashed). (Sensitive - should be hashed/encrypted) |
+| 5 | `profile` | [`UserProfile`](#userprofile) | optional | Initial profile data. |
+| 6 | `preferences` | [`UserPreferences`](#userpreferences) | optional | Initial preferences. |
+| 7 | `invite_code` | string | optional | Invite code (optional). |
+
+#### Proto Definition
+
+```protobuf
+message CreateUserRequest {
+  // Email address. (Must be a valid email address format)
+  optional string email = 1;
+  // Username.
+  optional string username = 2;
+  // Full name.
+  optional string full_name = 3;
+  // Password (will be hashed). (Sensitive - should be hashed/encrypted)
+  optional string password = 4;
+  // Initial profile data.
+  optional UserProfile profile = 5;
+  // Initial preferences.
+  optional UserPreferences preferences = 6;
+  // Invite code (optional).
+  optional string invite_code = 7;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class CreateUserRequest {
+        +string email
+        +string username
+        +string full_name
+        +string password
+        +UserProfile profile
+        +UserPreferences preferences
+        +string invite_code
+    }
+    CreateUserRequest --> UserProfile
+    CreateUserRequest --> UserPreferences
+```
+
+---
+
+### GetUserResponse
+
+<a name="getuserresponse"></a>
+
+GetUserResponse returns the requested user.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.GetUserResponse` |
 | **Field Count** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `user_ids` | string | repeated | User IDs to retrieve |
+| 1 | `user` | [`User`](#user) | optional | User data. |
 
 #### Proto Definition
 
 ```protobuf
-message BatchGetUsersRequest {
-  // User IDs to retrieve
-  repeated string user_ids = 1;
+message GetUserResponse {
+  // User data.
+  optional User user = 1;
 }
 ```
 
@@ -1882,48 +1335,334 @@ message BatchGetUsersRequest {
 
 ```mermaid
 classDiagram
-    class BatchGetUsersRequest {
-        +string[] user_ids
+    class GetUserResponse {
+        +User user
+    }
+    GetUserResponse --> User
+```
+
+---
+
+### ListUsersResponse
+
+<a name="listusersresponse"></a>
+
+ListUsersResponse returns list of users.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.ListUsersResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `users` | [`User`](#user) | repeated | Users list. |
+| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination metadata. |
+
+#### Proto Definition
+
+```protobuf
+message ListUsersResponse {
+  // Users list.
+  repeated User users = 1;
+  // Pagination metadata.
+  optional PaginationResponse pagination = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class ListUsersResponse {
+        +User[] users
+        +PaginationResponse pagination
+    }
+    ListUsersResponse "1" --> "*" User
+    ListUsersResponse --> PaginationResponse
+```
+
+---
+
+### UpdateUserPreferencesResponse
+
+<a name="updateuserpreferencesresponse"></a>
+
+UpdateUserPreferencesResponse confirms preference updates.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.UpdateUserPreferencesResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `updated_count` | int32 | optional | Number of preferences updated Must be >= 0. |
+| 2 | `user` | [`User`](#user) | optional | Updated user. |
+
+#### Proto Definition
+
+```protobuf
+message UpdateUserPreferencesResponse {
+  // Number of preferences updated Must be >= 0.
+  optional int32 updated_count = 1;
+  // Updated user.
+  optional User user = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UpdateUserPreferencesResponse {
+        +int32 updated_count
+        +User user
+    }
+    UpdateUserPreferencesResponse --> User
+```
+
+---
+
+### UserPreferences
+
+<a name="userpreferences"></a>
+
+UserPreferences contains user preferences.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.UserPreferences` |
+| **Field Count** | 6 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `language` | string | optional | Language preference (ISO 639-1). |
+| 2 | `timezone` | string | optional | Timezone (IANA timezone). |
+| 3 | `theme` | [`Theme`](#theme) | optional | Theme preference. |
+| 4 | `notifications` | [`NotificationPreferences`](#notificationpreferences) | optional | Notification preferences. |
+| 5 | `privacy` | [`PrivacySettings`](#privacysettings) | optional | Privacy settings. |
+| 6 | `display` | map<string, string> |  | Display preferences. |
+
+#### Proto Definition
+
+```protobuf
+message UserPreferences {
+  // Language preference (ISO 639-1).
+  optional string language = 1;
+  // Timezone (IANA timezone).
+  optional string timezone = 2;
+  // Theme preference.
+  optional Theme theme = 3;
+  // Notification preferences.
+  optional NotificationPreferences notifications = 4;
+  // Privacy settings.
+  optional PrivacySettings privacy = 5;
+  // Display preferences.
+   map<string, string> display = 6;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UserPreferences {
+        +string language
+        +string timezone
+        +Theme theme
+        +NotificationPreferences notifications
+        +PrivacySettings privacy
+        +map<string, string> display
+    }
+    UserPreferences --> Theme
+    UserPreferences --> NotificationPreferences
+    UserPreferences --> PrivacySettings
+```
+
+---
+
+### InitialSyncRequest
+
+<a name="initialsyncrequest"></a>
+
+InitialSyncRequest initiates sync.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.InitialSyncRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+| 2 | `last_sync_at` | [`Timestamp`](#timestamp) | optional | Last sync timestamp. (RFC 3339 timestamp format) |
+
+#### Proto Definition
+
+```protobuf
+message InitialSyncRequest {
+  // User ID. (Must be a non-empty identifier)
+  optional string user_id = 1;
+  // Last sync timestamp. (RFC 3339 timestamp format)
+  optional Timestamp last_sync_at = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class InitialSyncRequest {
+        +string user_id
+        +Timestamp last_sync_at
+    }
+    InitialSyncRequest --> Timestamp
+```
+
+---
+
+### NotificationPreferences
+
+<a name="notificationpreferences"></a>
+
+NotificationPreferences contains notification settings.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.NotificationPreferences` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `email_enabled` | bool | optional | Email notifications enabled. (Must be a valid email address format) |
+| 2 | `push_enabled` | bool | optional | Push notifications enabled. |
+| 3 | `sms_enabled` | bool | optional | SMS notifications enabled. |
+| 4 | `enabled_types` | [`NotificationType`](#notificationtype) | repeated | Notification types to receive. |
+| 5 | `quiet_hours` | [`QuietHours`](#quiethours) | optional | Quiet hours. |
+
+#### Proto Definition
+
+```protobuf
+message NotificationPreferences {
+  // Email notifications enabled. (Must be a valid email address format)
+  optional bool email_enabled = 1;
+  // Push notifications enabled.
+  optional bool push_enabled = 2;
+  // SMS notifications enabled.
+  optional bool sms_enabled = 3;
+  // Notification types to receive.
+  repeated NotificationType enabled_types = 4;
+  // Quiet hours.
+  optional QuietHours quiet_hours = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class NotificationPreferences {
+        +bool email_enabled
+        +bool push_enabled
+        +bool sms_enabled
+        +NotificationType[] enabled_types
+        +QuietHours quiet_hours
+    }
+    NotificationPreferences "1" --> "*" NotificationType
+    NotificationPreferences --> QuietHours
+```
+
+---
+
+### DeleteUserRequest
+
+<a name="deleteuserrequest"></a>
+
+DeleteUserRequest deletes a user.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.DeleteUserRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+| 2 | `hard_delete` | bool | optional | Hard delete (permanent). |
+| 3 | `reason` | string | optional | Deletion reason. |
+
+#### Proto Definition
+
+```protobuf
+message DeleteUserRequest {
+  // User ID. (Must be a non-empty identifier)
+  optional string user_id = 1;
+  // Hard delete (permanent).
+  optional bool hard_delete = 2;
+  // Deletion reason.
+  optional string reason = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class DeleteUserRequest {
+        +string user_id
+        +bool hard_delete
+        +string reason
     }
 ```
 
 ---
 
-### UserSyncResponse
+### QuietHours
 
-<a name="usersyncresponse"></a>
+<a name="quiethours"></a>
 
-UserSyncResponse for bidirectional streaming
+QuietHours defines when notifications are muted.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `users.v1.UserSyncResponse` |
+| **Full Name** | `users.v1.QuietHours` |
 | **Field Count** | 4 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `ack` | [`SyncAck`](#syncack) | oneof `response` | Sync acknowledgment |
-| 2 | `update` | [`UserDataUpdate`](#userdataupdate) | oneof `response` | Server-side update |
-| 3 | `pong` | [`Pong`](#pong) | oneof `response` | Pong response |
-| 4 | `error` | [`Error`](#error) | oneof `response` | Error |
+| 1 | `enabled` | bool | optional | Enabled. |
+| 2 | `start_time` | string | optional | Start time (HH:MM format). |
+| 3 | `end_time` | string | optional | End time (HH:MM format). |
+| 4 | `days` | int32 | repeated | Days of week (0=Sunday, 6=Saturday). |
 
 #### Proto Definition
 
 ```protobuf
-message UserSyncResponse {
-
-  oneof response {
-    // Sync acknowledgment
-    SyncAck ack = 1;
-    // Server-side update
-    UserDataUpdate update = 2;
-    // Pong response
-    Pong pong = 3;
-    // Error
-    Error error = 4;
-  }
+message QuietHours {
+  // Enabled.
+  optional bool enabled = 1;
+  // Start time (HH:MM format).
+  optional string start_time = 2;
+  // End time (HH:MM format).
+  optional string end_time = 3;
+  // Days of week (0=Sunday, 6=Saturday).
+  repeated int32 days = 4;
 }
 ```
 
@@ -1931,16 +1670,12 @@ message UserSyncResponse {
 
 ```mermaid
 classDiagram
-    class UserSyncResponse {
-        +SyncAck ack
-        +UserDataUpdate update
-        +Pong pong
-        +Error error
+    class QuietHours {
+        +bool enabled
+        +string start_time
+        +string end_time
+        +int32[] days
     }
-    UserSyncResponse --> SyncAck
-    UserSyncResponse --> UserDataUpdate
-    UserSyncResponse --> Pong
-    UserSyncResponse --> Error
 ```
 
 ---
@@ -1949,7 +1684,7 @@ classDiagram
 
 <a name="loginattempts"></a>
 
-LoginAttempts tracks login attempts
+LoginAttempts tracks login attempts.
 
 | Attribute | Value |
 |-----------|-------|
@@ -1960,19 +1695,19 @@ LoginAttempts tracks login attempts
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `failed_count` | int32 | optional | Failed attempts count |
-| 2 | `last_failed_at` | [`Timestamp`](#timestamp) | optional | Last failed attempt |
-| 3 | `locked_until` | [`Timestamp`](#timestamp) | optional | Account locked until |
+| 1 | `failed_count` | int32 | optional | Failed attempts count Must be >= 0. |
+| 2 | `last_failed_at` | [`Timestamp`](#timestamp) | optional | Last failed attempt. (RFC 3339 timestamp format) |
+| 3 | `locked_until` | [`Timestamp`](#timestamp) | optional | Account locked until. |
 
 #### Proto Definition
 
 ```protobuf
 message LoginAttempts {
-  // Failed attempts count
+  // Failed attempts count Must be >= 0.
   optional int32 failed_count = 1;
-  // Last failed attempt
+  // Last failed attempt. (RFC 3339 timestamp format)
   optional Timestamp last_failed_at = 2;
-  // Account locked until
+  // Account locked until.
   optional Timestamp locked_until = 3;
 }
 ```
@@ -1992,213 +1727,29 @@ classDiagram
 
 ---
 
-### SearchFilters
+### UpdateUserResponse
 
-<a name="searchfilters"></a>
+<a name="updateuserresponse"></a>
 
-SearchFilters defines search criteria
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.SearchFilters` |
-| **Field Count** | 4 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `roles` | [`UserRole`](#userrole) | repeated | Role filter |
-| 2 | `statuses` | [`UserStatus`](#userstatus) | repeated | Status filter |
-| 3 | `created_at` | [`DateRange`](#daterange) | optional | Date range |
-| 4 | `tags` | map<string, string> |  | Tag filters |
-
-#### Proto Definition
-
-```protobuf
-message SearchFilters {
-  // Role filter
-  repeated UserRole roles = 1;
-  // Status filter
-  repeated UserStatus statuses = 2;
-  // Date range
-  optional DateRange created_at = 3;
-  // Tag filters
-   map<string, string> tags = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class SearchFilters {
-        +UserRole[] roles
-        +UserStatus[] statuses
-        +DateRange created_at
-        +map<string, string> tags
-    }
-    SearchFilters "1" --> "*" UserRole
-    SearchFilters "1" --> "*" UserStatus
-    SearchFilters --> DateRange
-```
-
----
-
-### SyncAck
-
-<a name="syncack"></a>
-
-SyncAck acknowledges sync
+UpdateUserResponse returns the updated user.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `users.v1.SyncAck` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `success` | bool | optional | Synced successfully |
-| 2 | `synced_at` | [`Timestamp`](#timestamp) | optional | Sync timestamp |
-
-#### Proto Definition
-
-```protobuf
-message SyncAck {
-  // Synced successfully
-  optional bool success = 1;
-  // Sync timestamp
-  optional Timestamp synced_at = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class SyncAck {
-        +bool success
-        +Timestamp synced_at
-    }
-    SyncAck --> Timestamp
-```
-
----
-
-### QuietHours
-
-<a name="quiethours"></a>
-
-QuietHours defines when notifications are muted
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.QuietHours` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `enabled` | bool | optional | Enabled |
-| 2 | `start_time` | string | optional | Start time (HH:MM format) |
-| 3 | `end_time` | string | optional | End time (HH:MM format) |
-| 4 | `days` | int32 | repeated | Days of week (0=Sunday, 6=Saturday) |
-
-#### Proto Definition
-
-```protobuf
-message QuietHours {
-  // Enabled
-  optional bool enabled = 1;
-  // Start time (HH:MM format)
-  optional string start_time = 2;
-  // End time (HH:MM format)
-  optional string end_time = 3;
-  // Days of week (0=Sunday, 6=Saturday)
-  repeated int32 days = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class QuietHours {
-        +bool enabled
-        +string start_time
-        +string end_time
-        +int32[] days
-    }
-```
-
----
-
-### GetUserRequest
-
-<a name="getuserrequest"></a>
-
-GetUserRequest retrieves a user
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.GetUserRequest` |
+| **Full Name** | `users.v1.UpdateUserResponse` |
 | **Field Count** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `user_id` | string | optional | User ID |
+| 1 | `user` | [`User`](#user) | optional | Updated user. |
 
 #### Proto Definition
 
 ```protobuf
-message GetUserRequest {
-  // User ID
-  optional string user_id = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetUserRequest {
-        +string user_id
-    }
-```
-
----
-
-### CreateUserResponse
-
-<a name="createuserresponse"></a>
-
-CreateUserResponse returns the created user
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `users.v1.CreateUserResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user` | [`User`](#user) | optional | Created user |
-| 2 | `verification_token` | string | optional | Verification token |
-
-#### Proto Definition
-
-```protobuf
-message CreateUserResponse {
-  // Created user
+message UpdateUserResponse {
+  // Updated user.
   optional User user = 1;
-  // Verification token
-  optional string verification_token = 2;
 }
 ```
 
@@ -2206,50 +1757,43 @@ message CreateUserResponse {
 
 ```mermaid
 classDiagram
-    class CreateUserResponse {
+    class UpdateUserResponse {
         +User user
-        +string verification_token
     }
-    CreateUserResponse --> User
+    UpdateUserResponse --> User
 ```
 
 ---
 
-### ListUsersRequest
+### SearchUsersResponse
 
-<a name="listusersrequest"></a>
+<a name="searchusersresponse"></a>
 
-ListUsersRequest lists users
+SearchUsersResponse returns search results.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `users.v1.ListUsersRequest` |
-| **Field Count** | 5 |
+| **Full Name** | `users.v1.SearchUsersResponse` |
+| **Field Count** | 3 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination |
-| 2 | `role` | [`UserRole`](#userrole) | optional | Filter by role |
-| 3 | `status` | [`UserStatus`](#userstatus) | optional | Filter by status |
-| 4 | `sort_by` | string | optional | Sort field |
-| 5 | `sort_order` | string | optional | Sort order (asc/desc) |
+| 1 | `users` | [`User`](#user) | repeated | Matched users. |
+| 2 | `metadata` | [`SearchMetadata`](#searchmetadata) | optional | Search metadata. |
+| 3 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination. |
 
 #### Proto Definition
 
 ```protobuf
-message ListUsersRequest {
-  // Pagination
-  optional PaginationRequest pagination = 1;
-  // Filter by role
-  optional UserRole role = 2;
-  // Filter by status
-  optional UserStatus status = 3;
-  // Sort field
-  optional string sort_by = 4;
-  // Sort order (asc/desc)
-  optional string sort_order = 5;
+message SearchUsersResponse {
+  // Matched users.
+  repeated User users = 1;
+  // Search metadata.
+  optional SearchMetadata metadata = 2;
+  // Pagination.
+  optional PaginationResponse pagination = 3;
 }
 ```
 
@@ -2257,16 +1801,14 @@ message ListUsersRequest {
 
 ```mermaid
 classDiagram
-    class ListUsersRequest {
-        +PaginationRequest pagination
-        +UserRole role
-        +UserStatus status
-        +string sort_by
-        +string sort_order
+    class SearchUsersResponse {
+        +User[] users
+        +SearchMetadata metadata
+        +PaginationResponse pagination
     }
-    ListUsersRequest --> PaginationRequest
-    ListUsersRequest --> UserRole
-    ListUsersRequest --> UserStatus
+    SearchUsersResponse "1" --> "*" User
+    SearchUsersResponse --> SearchMetadata
+    SearchUsersResponse --> PaginationResponse
 ```
 
 ---
@@ -2275,7 +1817,7 @@ classDiagram
 
 <a name="preferenceupdate"></a>
 
-PreferenceUpdate for client streaming
+PreferenceUpdate for client streaming.
 
 | Attribute | Value |
 |-----------|-------|
@@ -2286,19 +1828,19 @@ PreferenceUpdate for client streaming
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `user_id` | string | optional | User ID |
-| 2 | `key` | string | optional | Preference key |
-| 3 | `value` | string | optional | Preference value |
+| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+| 2 | `key` | string | optional | Preference key. |
+| 3 | `value` | string | optional | Preference value. |
 
 #### Proto Definition
 
 ```protobuf
 message PreferenceUpdate {
-  // User ID
+  // User ID. (Must be a non-empty identifier)
   optional string user_id = 1;
-  // Preference key
+  // Preference key.
   optional string key = 2;
-  // Preference value
+  // Preference value.
   optional string value = 3;
 }
 ```
@@ -2316,60 +1858,494 @@ classDiagram
 
 ---
 
+### UserSyncRequest
+
+<a name="usersyncrequest"></a>
+
+UserSyncRequest for bidirectional streaming.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.UserSyncRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `initial` | [`InitialSyncRequest`](#initialsyncrequest) | oneof `request` | Initial sync request. |
+| 2 | `update` | [`UserDataUpdate`](#userdataupdate) | oneof `request` | Data update. |
+| 3 | `ping` | [`Ping`](#ping) | oneof `request` | Keep-alive ping. |
+
+#### Proto Definition
+
+```protobuf
+message UserSyncRequest {
+
+  oneof request {
+    // Initial sync request.
+    InitialSyncRequest initial = 1;
+    // Data update.
+    UserDataUpdate update = 2;
+    // Keep-alive ping.
+    Ping ping = 3;
+  }
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UserSyncRequest {
+        +InitialSyncRequest initial
+        +UserDataUpdate update
+        +Ping ping
+    }
+    UserSyncRequest --> InitialSyncRequest
+    UserSyncRequest --> UserDataUpdate
+    UserSyncRequest --> Ping
+```
+
+---
+
+### Ping
+
+<a name="ping"></a>
+
+Ping for keep-alive.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.Ping` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `timestamp` | [`Timestamp`](#timestamp) | optional | Timestamp. (RFC 3339 timestamp format) |
+
+#### Proto Definition
+
+```protobuf
+message Ping {
+  // Timestamp. (RFC 3339 timestamp format)
+  optional Timestamp timestamp = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class Ping {
+        +Timestamp timestamp
+    }
+    Ping --> Timestamp
+```
+
+---
+
+### SecuritySettings
+
+<a name="securitysettings"></a>
+
+SecuritySettings contains security configuration.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.SecuritySettings` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `password_changed_at` | [`Timestamp`](#timestamp) | optional | Password last changed. (Sensitive - should be hashed/encrypted; RFC 3339 timestamp format) |
+| 2 | `active_sessions` | int32 | optional | Active sessions count. |
+| 3 | `trusted_devices` | [`TrustedDevice`](#trusteddevice) | repeated | Trusted devices. |
+| 4 | `login_attempts` | [`LoginAttempts`](#loginattempts) | optional | Login attempt tracking. (RFC 3339 timestamp format) |
+
+#### Proto Definition
+
+```protobuf
+message SecuritySettings {
+  // Password last changed. (Sensitive - should be hashed/encrypted; RFC 3339 timestamp format)
+  optional Timestamp password_changed_at = 1;
+  // Active sessions count.
+  optional int32 active_sessions = 2;
+  // Trusted devices.
+  repeated TrustedDevice trusted_devices = 3;
+  // Login attempt tracking. (RFC 3339 timestamp format)
+  optional LoginAttempts login_attempts = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class SecuritySettings {
+        +Timestamp password_changed_at
+        +int32 active_sessions
+        +TrustedDevice[] trusted_devices
+        +LoginAttempts login_attempts
+    }
+    SecuritySettings --> Timestamp
+    SecuritySettings "1" --> "*" TrustedDevice
+    SecuritySettings --> LoginAttempts
+```
+
+---
+
+### TrustedDevice
+
+<a name="trusteddevice"></a>
+
+TrustedDevice represents a trusted device.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.TrustedDevice` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `device_id` | string | optional | Device ID. (Must be a non-empty identifier) |
+| 2 | `device_name` | string | optional | Device name. |
+| 3 | `last_used_at` | [`Timestamp`](#timestamp) | optional | Last used timestamp. (RFC 3339 timestamp format) |
+| 4 | `fingerprint` | string | optional | Device fingerprint. |
+
+#### Proto Definition
+
+```protobuf
+message TrustedDevice {
+  // Device ID. (Must be a non-empty identifier)
+  optional string device_id = 1;
+  // Device name.
+  optional string device_name = 2;
+  // Last used timestamp. (RFC 3339 timestamp format)
+  optional Timestamp last_used_at = 3;
+  // Device fingerprint.
+  optional string fingerprint = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class TrustedDevice {
+        +string device_id
+        +string device_name
+        +Timestamp last_used_at
+        +string fingerprint
+    }
+    TrustedDevice --> Timestamp
+```
+
+---
+
+### SearchMetadata
+
+<a name="searchmetadata"></a>
+
+SearchMetadata contains search result metadata.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.SearchMetadata` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `total_matches` | int64 | optional | Total matches. |
+| 2 | `execution_time_ms` | int64 | optional | Search execution time (ms). |
+| 3 | `applied_filters` | [`SearchFilters`](#searchfilters) | optional | Applied filters. |
+
+#### Proto Definition
+
+```protobuf
+message SearchMetadata {
+  // Total matches.
+  optional int64 total_matches = 1;
+  // Search execution time (ms).
+  optional int64 execution_time_ms = 2;
+  // Applied filters.
+  optional SearchFilters applied_filters = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class SearchMetadata {
+        +int64 total_matches
+        +int64 execution_time_ms
+        +SearchFilters applied_filters
+    }
+    SearchMetadata --> SearchFilters
+```
+
+---
+
+### UpdateUserRequest
+
+<a name="updateuserrequest"></a>
+
+UpdateUserRequest updates a user.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.UpdateUserRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+| 2 | `user` | [`User`](#user) | optional | Updated user data. |
+| 3 | `update_mask` | [`FieldMask`](#fieldmask) | optional | Field mask for partial updates. |
+
+#### Proto Definition
+
+```protobuf
+message UpdateUserRequest {
+  // User ID. (Must be a non-empty identifier)
+  optional string user_id = 1;
+  // Updated user data.
+  optional User user = 2;
+  // Field mask for partial updates.
+  optional FieldMask update_mask = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UpdateUserRequest {
+        +string user_id
+        +User user
+        +FieldMask update_mask
+    }
+    UpdateUserRequest --> User
+    UpdateUserRequest --> FieldMask
+```
+
+---
+
+### StreamUserUpdatesRequest
+
+<a name="streamuserupdatesrequest"></a>
+
+StreamUserUpdatesRequest initiates user update stream.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.StreamUserUpdatesRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_ids` | string | repeated | User IDs to watch. |
+| 2 | `event_types` | [`UpdateEventType`](#updateeventtype) | repeated | Event types to receive. |
+
+#### Proto Definition
+
+```protobuf
+message StreamUserUpdatesRequest {
+  // User IDs to watch.
+  repeated string user_ids = 1;
+  // Event types to receive.
+  repeated UpdateEventType event_types = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class StreamUserUpdatesRequest {
+        +string[] user_ids
+        +UpdateEventType[] event_types
+    }
+    StreamUserUpdatesRequest "1" --> "*" UpdateEventType
+```
+
+---
+
+### DateRange
+
+<a name="daterange"></a>
+
+DateRange represents a date range.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.DateRange` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `start` | [`Timestamp`](#timestamp) | optional | Start date. |
+| 2 | `end` | [`Timestamp`](#timestamp) | optional | End date. |
+
+#### Proto Definition
+
+```protobuf
+message DateRange {
+  // Start date.
+  optional Timestamp start = 1;
+  // End date.
+  optional Timestamp end = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class DateRange {
+        +Timestamp start
+        +Timestamp end
+    }
+    DateRange --> Timestamp
+    DateRange --> Timestamp
+```
+
+---
+
+### GetUserRequest
+
+<a name="getuserrequest"></a>
+
+GetUserRequest retrieves a user.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.GetUserRequest` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+
+#### Proto Definition
+
+```protobuf
+message GetUserRequest {
+  // User ID. (Must be a non-empty identifier)
+  optional string user_id = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetUserRequest {
+        +string user_id
+    }
+```
+
+---
+
+### UserUpdateEvent
+
+<a name="userupdateevent"></a>
+
+UserUpdateEvent represents a user update event.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `users.v1.UserUpdateEvent` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `event_type` | [`UpdateEventType`](#updateeventtype) | optional | Event type. |
+| 2 | `user` | [`User`](#user) | optional | User that was updated. |
+| 3 | `event_time` | [`Timestamp`](#timestamp) | optional | Timestamp of event. |
+| 4 | `changed_fields` | string | repeated | Changed fields. |
+
+#### Proto Definition
+
+```protobuf
+message UserUpdateEvent {
+  // Event type.
+  optional UpdateEventType event_type = 1;
+  // User that was updated.
+  optional User user = 2;
+  // Timestamp of event.
+  optional Timestamp event_time = 3;
+  // Changed fields.
+  repeated string changed_fields = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UserUpdateEvent {
+        +UpdateEventType event_type
+        +User user
+        +Timestamp event_time
+        +string[] changed_fields
+    }
+    UserUpdateEvent --> UpdateEventType
+    UserUpdateEvent --> User
+    UserUpdateEvent --> Timestamp
+```
+
+---
+
 ## 🔢 Enumerations
 
 <a name="enumerations"></a>
 
 This service defines **7 enumeration types**:
 
-### Gender
-
-<a name="gender"></a>
-
-Gender represents user gender
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `GENDER_UNSPECIFIED` | 0 | - |
-| `GENDER_MALE` | 1 | - |
-| `GENDER_FEMALE` | 2 | - |
-| `GENDER_NON_BINARY` | 3 | - |
-| `GENDER_PREFER_NOT_TO_SAY` | 4 | - |
-
-#### Proto Definition
-
-```protobuf
-enum Gender {
-  GENDER_UNSPECIFIED = 0;
-  GENDER_MALE = 1;
-  GENDER_FEMALE = 2;
-  GENDER_NON_BINARY = 3;
-  GENDER_PREFER_NOT_TO_SAY = 4;
-}
-```
-
----
-
 ### Theme
 
 <a name="theme"></a>
 
-Theme represents UI theme preference
+Theme represents UI theme preference.
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `THEME_UNSPECIFIED` | 0 | - |
-| `THEME_LIGHT` | 1 | - |
-| `THEME_DARK` | 2 | - |
-| `THEME_AUTO` | 3 | - |
+| `THEME_UNSPECIFIED` | 0 | THEME_UNSPECIFIED value. |
+| `THEME_LIGHT` | 1 | THEME_LIGHT value. |
+| `THEME_DARK` | 2 | THEME_DARK value. |
+| `THEME_AUTO` | 3 | THEME_AUTO value. |
 
 #### Proto Definition
 
 ```protobuf
 enum Theme {
+  // THEME_UNSPECIFIED value.
   THEME_UNSPECIFIED = 0;
+  // THEME_LIGHT value.
   THEME_LIGHT = 1;
+  // THEME_DARK value.
   THEME_DARK = 2;
+  // THEME_AUTO value.
   THEME_AUTO = 3;
 }
 ```
@@ -2380,26 +2356,32 @@ enum Theme {
 
 <a name="notificationtype"></a>
 
-NotificationType represents types of notifications
+NotificationType represents types of notifications.
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `NOTIFICATION_TYPE_UNSPECIFIED` | 0 | - |
-| `NOTIFICATION_TYPE_ACCOUNT` | 1 | - |
-| `NOTIFICATION_TYPE_SECURITY` | 2 | - |
-| `NOTIFICATION_TYPE_MARKETING` | 3 | - |
-| `NOTIFICATION_TYPE_SOCIAL` | 4 | - |
-| `NOTIFICATION_TYPE_TRANSACTION` | 5 | - |
+| `NOTIFICATION_TYPE_UNSPECIFIED` | 0 | NOTIFICATION_TYPE_UNSPECIFIED value. |
+| `NOTIFICATION_TYPE_ACCOUNT` | 1 | NOTIFICATION_TYPE_ACCOUNT value. |
+| `NOTIFICATION_TYPE_SECURITY` | 2 | NOTIFICATION_TYPE_SECURITY value. |
+| `NOTIFICATION_TYPE_MARKETING` | 3 | NOTIFICATION_TYPE_MARKETING value. |
+| `NOTIFICATION_TYPE_SOCIAL` | 4 | NOTIFICATION_TYPE_SOCIAL value. |
+| `NOTIFICATION_TYPE_TRANSACTION` | 5 | NOTIFICATION_TYPE_TRANSACTION value. |
 
 #### Proto Definition
 
 ```protobuf
 enum NotificationType {
+  // NOTIFICATION_TYPE_UNSPECIFIED value.
   NOTIFICATION_TYPE_UNSPECIFIED = 0;
+  // NOTIFICATION_TYPE_ACCOUNT value.
   NOTIFICATION_TYPE_ACCOUNT = 1;
+  // NOTIFICATION_TYPE_SECURITY value.
   NOTIFICATION_TYPE_SECURITY = 2;
+  // NOTIFICATION_TYPE_MARKETING value.
   NOTIFICATION_TYPE_MARKETING = 3;
+  // NOTIFICATION_TYPE_SOCIAL value.
   NOTIFICATION_TYPE_SOCIAL = 4;
+  // NOTIFICATION_TYPE_TRANSACTION value.
   NOTIFICATION_TYPE_TRANSACTION = 5;
 }
 ```
@@ -2410,22 +2392,26 @@ enum NotificationType {
 
 <a name="visibility"></a>
 
-Visibility represents visibility levels
+Visibility represents visibility levels.
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `VISIBILITY_UNSPECIFIED` | 0 | - |
-| `VISIBILITY_PUBLIC` | 1 | - |
-| `VISIBILITY_FRIENDS` | 2 | - |
-| `VISIBILITY_PRIVATE` | 3 | - |
+| `VISIBILITY_UNSPECIFIED` | 0 | VISIBILITY_UNSPECIFIED value. |
+| `VISIBILITY_PUBLIC` | 1 | VISIBILITY_PUBLIC value. |
+| `VISIBILITY_FRIENDS` | 2 | VISIBILITY_FRIENDS value. |
+| `VISIBILITY_PRIVATE` | 3 | VISIBILITY_PRIVATE value. |
 
 #### Proto Definition
 
 ```protobuf
 enum Visibility {
+  // VISIBILITY_UNSPECIFIED value.
   VISIBILITY_UNSPECIFIED = 0;
+  // VISIBILITY_PUBLIC value.
   VISIBILITY_PUBLIC = 1;
+  // VISIBILITY_FRIENDS value.
   VISIBILITY_FRIENDS = 2;
+  // VISIBILITY_PRIVATE value.
   VISIBILITY_PRIVATE = 3;
 }
 ```
@@ -2436,24 +2422,29 @@ enum Visibility {
 
 <a name="updateeventtype"></a>
 
-UpdateEventType represents types of update events
+UpdateEventType represents types of update events.
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `UPDATE_EVENT_TYPE_UNSPECIFIED` | 0 | - |
-| `UPDATE_EVENT_TYPE_CREATED` | 1 | - |
-| `UPDATE_EVENT_TYPE_UPDATED` | 2 | - |
-| `UPDATE_EVENT_TYPE_DELETED` | 3 | - |
-| `UPDATE_EVENT_TYPE_STATUS_CHANGED` | 4 | - |
+| `UPDATE_EVENT_TYPE_UNSPECIFIED` | 0 | UPDATE_EVENT_TYPE_UNSPECIFIED value. |
+| `UPDATE_EVENT_TYPE_CREATED` | 1 | UPDATE_EVENT_TYPE_CREATED value. |
+| `UPDATE_EVENT_TYPE_UPDATED` | 2 | UPDATE_EVENT_TYPE_UPDATED value. |
+| `UPDATE_EVENT_TYPE_DELETED` | 3 | UPDATE_EVENT_TYPE_DELETED value. |
+| `UPDATE_EVENT_TYPE_STATUS_CHANGED` | 4 | UPDATE_EVENT_TYPE_STATUS_CHANGED value. |
 
 #### Proto Definition
 
 ```protobuf
 enum UpdateEventType {
+  // UPDATE_EVENT_TYPE_UNSPECIFIED value.
   UPDATE_EVENT_TYPE_UNSPECIFIED = 0;
+  // UPDATE_EVENT_TYPE_CREATED value.
   UPDATE_EVENT_TYPE_CREATED = 1;
+  // UPDATE_EVENT_TYPE_UPDATED value.
   UPDATE_EVENT_TYPE_UPDATED = 2;
+  // UPDATE_EVENT_TYPE_DELETED value.
   UPDATE_EVENT_TYPE_DELETED = 3;
+  // UPDATE_EVENT_TYPE_STATUS_CHANGED value.
   UPDATE_EVENT_TYPE_STATUS_CHANGED = 4;
 }
 ```
@@ -2464,26 +2455,32 @@ enum UpdateEventType {
 
 <a name="userrole"></a>
 
-UserRole represents user roles in the system
+UserRole represents user roles in the system.
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `USER_ROLE_UNSPECIFIED` | 0 | - |
-| `USER_ROLE_GUEST` | 1 | - |
-| `USER_ROLE_USER` | 2 | - |
-| `USER_ROLE_MODERATOR` | 3 | - |
-| `USER_ROLE_ADMIN` | 4 | - |
-| `USER_ROLE_SUPER_ADMIN` | 5 | - |
+| `USER_ROLE_UNSPECIFIED` | 0 | USER_ROLE_UNSPECIFIED value. |
+| `USER_ROLE_GUEST` | 1 | USER_ROLE_GUEST value. |
+| `USER_ROLE_USER` | 2 | USER_ROLE_USER value. |
+| `USER_ROLE_MODERATOR` | 3 | USER_ROLE_MODERATOR value. |
+| `USER_ROLE_ADMIN` | 4 | USER_ROLE_ADMIN value. |
+| `USER_ROLE_SUPER_ADMIN` | 5 | USER_ROLE_SUPER_ADMIN value. |
 
 #### Proto Definition
 
 ```protobuf
 enum UserRole {
+  // USER_ROLE_UNSPECIFIED value.
   USER_ROLE_UNSPECIFIED = 0;
+  // USER_ROLE_GUEST value.
   USER_ROLE_GUEST = 1;
+  // USER_ROLE_USER value.
   USER_ROLE_USER = 2;
+  // USER_ROLE_MODERATOR value.
   USER_ROLE_MODERATOR = 3;
+  // USER_ROLE_ADMIN value.
   USER_ROLE_ADMIN = 4;
+  // USER_ROLE_SUPER_ADMIN value.
   USER_ROLE_SUPER_ADMIN = 5;
 }
 ```
@@ -2494,27 +2491,66 @@ enum UserRole {
 
 <a name="userstatus"></a>
 
-UserStatus represents user account status
+UserStatus represents user account status.
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `USER_STATUS_UNSPECIFIED` | 0 | - |
-| `USER_STATUS_PENDING_VERIFICATION` | 1 | - |
-| `USER_STATUS_ACTIVE` | 2 | - |
-| `USER_STATUS_SUSPENDED` | 3 | - |
-| `USER_STATUS_BANNED` | 4 | - |
-| `USER_STATUS_DELETED` | 5 | - |
+| `USER_STATUS_UNSPECIFIED` | 0 | USER_STATUS_UNSPECIFIED value. |
+| `USER_STATUS_PENDING_VERIFICATION` | 1 | USER_STATUS_PENDING_VERIFICATION value. |
+| `USER_STATUS_ACTIVE` | 2 | USER_STATUS_ACTIVE value. |
+| `USER_STATUS_SUSPENDED` | 3 | USER_STATUS_SUSPENDED value. |
+| `USER_STATUS_BANNED` | 4 | USER_STATUS_BANNED value. |
+| `USER_STATUS_DELETED` | 5 | USER_STATUS_DELETED value. |
 
 #### Proto Definition
 
 ```protobuf
 enum UserStatus {
+  // USER_STATUS_UNSPECIFIED value.
   USER_STATUS_UNSPECIFIED = 0;
+  // USER_STATUS_PENDING_VERIFICATION value.
   USER_STATUS_PENDING_VERIFICATION = 1;
+  // USER_STATUS_ACTIVE value.
   USER_STATUS_ACTIVE = 2;
+  // USER_STATUS_SUSPENDED value.
   USER_STATUS_SUSPENDED = 3;
+  // USER_STATUS_BANNED value.
   USER_STATUS_BANNED = 4;
+  // USER_STATUS_DELETED value.
   USER_STATUS_DELETED = 5;
+}
+```
+
+---
+
+### Gender
+
+<a name="gender"></a>
+
+Gender represents user gender.
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `GENDER_UNSPECIFIED` | 0 | GENDER_UNSPECIFIED value. |
+| `GENDER_MALE` | 1 | GENDER_MALE value. |
+| `GENDER_FEMALE` | 2 | GENDER_FEMALE value. |
+| `GENDER_NON_BINARY` | 3 | GENDER_NON_BINARY value. |
+| `GENDER_PREFER_NOT_TO_SAY` | 4 | GENDER_PREFER_NOT_TO_SAY value. |
+
+#### Proto Definition
+
+```protobuf
+enum Gender {
+  // GENDER_UNSPECIFIED value.
+  GENDER_UNSPECIFIED = 0;
+  // GENDER_MALE value.
+  GENDER_MALE = 1;
+  // GENDER_FEMALE value.
+  GENDER_FEMALE = 2;
+  // GENDER_NON_BINARY value.
+  GENDER_NON_BINARY = 3;
+  // GENDER_PREFER_NOT_TO_SAY value.
+  GENDER_PREFER_NOT_TO_SAY = 4;
 }
 ```
 
