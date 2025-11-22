@@ -5,10 +5,20 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/errors"
 )
 
 // ImprovedArchitectAgent with LLM integration
 func (a *ArchitectAgent) ThinkWithLLM(ctx context.Context, input *AgentInput) (*AgentResponse, error) {
+	// Validate input
+	if input == nil {
+		return nil, errors.New(errors.ErrorTypeValidation, "agent input cannot be nil")
+	}
+	if input.Docs == nil {
+		return nil, errors.New(errors.ErrorTypeValidation, "consolidated docs cannot be nil")
+	}
+
 	var content string
 	var tokensUsed int
 	var confidence float64
@@ -24,7 +34,11 @@ func (a *ArchitectAgent) ThinkWithLLM(ctx context.Context, input *AgentInput) (*
 			tokensUsed = resp.TokensUsed
 			confidence = resp.Confidence
 		} else {
-			// LLM failed, fallback to static generation
+			// Check if error is retryable
+			if errors.IsRetryable(err) {
+				return nil, errors.Wrap(err, errors.ErrorTypeRetryable, "LLM call failed (retryable)")
+			}
+			// LLM failed with non-retryable error, fallback to static generation
 			content = a.generateArchitecture(input)
 			tokensUsed = 2500
 			confidence = 0.75 // Lower confidence for static content

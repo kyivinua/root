@@ -3,9 +3,11 @@ package hldgen
 import (
 	"context"
 	"fmt"
+	"runtime/debug"
 	"sync"
 	"time"
 
+	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/ratelimit"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/semaphore"
 )
@@ -19,6 +21,7 @@ type Orchestrator struct {
 	merger          *ResponseMerger
 	contextEngine   *ContextEngine
 	llmRouter       *LLMRouter
+	llmLimiter      *ratelimit.AdaptiveLimiter
 	enrichedContext *EnrichedContext
 	logger          zerolog.Logger
 }
@@ -92,6 +95,10 @@ func NewOrchestrator(cfg Config, logger zerolog.Logger) (*Orchestrator, error) {
 	// Initialize refinement loop
 	refinementLoop := NewRefinementLoop(cfg.Refinement, critic, merger, logger)
 
+	// Initialize adaptive rate limiter for LLM calls
+	// Start conservative (1 req/sec) and adapt up to 10 req/sec based on success
+	llmLimiter := ratelimit.NewAdaptiveLimiter(1, 10, time.Second)
+
 	logger.Info().
 		Int("agents", len(agentMap)).
 		Bool("context_enabled", cfg.Context.Enabled).
@@ -106,6 +113,7 @@ func NewOrchestrator(cfg Config, logger zerolog.Logger) (*Orchestrator, error) {
 		merger:         merger,
 		contextEngine:  contextEngine,
 		llmRouter:      llmRouter,
+		llmLimiter:     llmLimiter,
 		logger:         logger,
 	}, nil
 }
@@ -198,6 +206,27 @@ func (o *Orchestrator) ParallelThink(
 		go func(r AgentRole, a Agent) {
 			defer wg.Done()
 
+			// Add panic recovery to prevent agent crashes from bringing down orchestrator
+			defer func() {
+				if panicErr := recover(); panicErr != nil {
+					o.logger.Error().
+						Str("agent", string(r)).
+						Interface("panic", panicErr).
+						Str("stack", string(debug.Stack())).
+						Msg("Agent panicked - recovered")
+
+					// Store error response so orchestrator can continue
+					mu.Lock()
+					responses[string(r)] = &AgentResponse{
+						Role:       r,
+						Content:    fmt.Sprintf("Agent panicked: %v", panicErr),
+						Confidence: 0.0,
+						TokensUsed: 0,
+					}
+					mu.Unlock()
+				}
+			}()
+
 			if err := sem.Acquire(ctx, 1); err != nil {
 				o.logger.Error().Err(err).Str("agent", string(r)).Msg("Semaphore acquire failed")
 				return
@@ -212,11 +241,18 @@ func (o *Orchestrator) ParallelThink(
 				Int("round", input.Round).
 				Msg("Agent thinking")
 
+			// Apply rate limiting before agent thinks (LLM call)
+			o.llmLimiter.Wait()
+
 			resp, err := a.Think(agentCtx, input)
 			if err != nil {
 				o.logger.Warn().Err(err).Str("agent", string(r)).Msg("Agent failed")
+				o.llmLimiter.RecordFailure()
 				return
 			}
+
+			// Record success for adaptive rate adjustment
+			o.llmLimiter.RecordSuccess()
 
 			mu.Lock()
 			responses[string(r)] = resp

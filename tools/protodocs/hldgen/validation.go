@@ -3,6 +3,8 @@ package hldgen
 import (
 	"fmt"
 	"strings"
+
+	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/validation"
 )
 
 // ValidationError represents a validation error
@@ -122,7 +124,7 @@ func ValidateConfig(cfg *Config) error {
 	return nil
 }
 
-// ValidateConsolidatedDocs validates the consolidated docs
+// ValidateConsolidatedDocs validates and sanitizes the consolidated docs
 func ValidateConsolidatedDocs(docs *ConsolidatedDocs) error {
 	ve := &ValidationErrors{}
 
@@ -130,40 +132,59 @@ func ValidateConsolidatedDocs(docs *ConsolidatedDocs) error {
 		return fmt.Errorf("consolidated docs is nil")
 	}
 
+	// Sanitize module name to prevent injection attacks
+	docs.ModuleName = validation.SanitizeString(docs.ModuleName)
 	if docs.ModuleName == "" {
 		ve.Add("module_name", "cannot be empty")
 	}
+
+	// Sanitize source commit
+	docs.SourceCommit = validation.SanitizeString(docs.SourceCommit)
 
 	if len(docs.Services) == 0 && len(docs.Messages) == 0 {
 		ve.Add("services/messages", "at least one service or message must be present")
 	}
 
-	// Validate services
-	for i, svc := range docs.Services {
-		if svc.Name == "" {
+	// Validate and sanitize services
+	for i := range docs.Services {
+		// Sanitize service names to prevent injection
+		docs.Services[i].Name = validation.SanitizeString(docs.Services[i].Name)
+		docs.Services[i].Description = validation.SanitizeString(docs.Services[i].Description)
+
+		if docs.Services[i].Name == "" {
 			ve.Add(fmt.Sprintf("services[%d].name", i), "cannot be empty")
 		}
-		if len(svc.Methods) == 0 {
+		if len(docs.Services[i].Methods) == 0 {
 			ve.Add(fmt.Sprintf("services[%d].methods", i), "service must have at least one method")
 		}
 
-		// Validate methods
-		for j, method := range svc.Methods {
-			if method.Name == "" {
+		// Validate and sanitize methods
+		for j := range docs.Services[i].Methods {
+			// Sanitize method fields
+			docs.Services[i].Methods[j].Name = validation.SanitizeString(docs.Services[i].Methods[j].Name)
+			docs.Services[i].Methods[j].Description = validation.SanitizeString(docs.Services[i].Methods[j].Description)
+			docs.Services[i].Methods[j].InputType = validation.SanitizeString(docs.Services[i].Methods[j].InputType)
+			docs.Services[i].Methods[j].OutputType = validation.SanitizeString(docs.Services[i].Methods[j].OutputType)
+
+			if docs.Services[i].Methods[j].Name == "" {
 				ve.Add(fmt.Sprintf("services[%d].methods[%d].name", i, j), "cannot be empty")
 			}
-			if method.InputType == "" {
+			if docs.Services[i].Methods[j].InputType == "" {
 				ve.Add(fmt.Sprintf("services[%d].methods[%d].input_type", i, j), "cannot be empty")
 			}
-			if method.OutputType == "" {
+			if docs.Services[i].Methods[j].OutputType == "" {
 				ve.Add(fmt.Sprintf("services[%d].methods[%d].output_type", i, j), "cannot be empty")
 			}
 		}
 	}
 
-	// Validate messages
-	for i, msg := range docs.Messages {
-		if msg.Name == "" {
+	// Validate and sanitize messages
+	for i := range docs.Messages {
+		// Sanitize message fields
+		docs.Messages[i].Name = validation.SanitizeString(docs.Messages[i].Name)
+		docs.Messages[i].Description = validation.SanitizeString(docs.Messages[i].Description)
+
+		if docs.Messages[i].Name == "" {
 			ve.Add(fmt.Sprintf("messages[%d].name", i), "cannot be empty")
 		}
 		// Fields can be empty for empty messages
