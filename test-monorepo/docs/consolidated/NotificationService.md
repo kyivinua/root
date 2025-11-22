@@ -16,6 +16,8 @@ NotificationService manages notifications.
 
 - [Overview](#overview)
 - [Architecture](#architecture)
+- [gRPC Service Interactions](#service-interaction)
+- [Message Type Diagrams](#class-diagram)
 - [Methods](#methods)
   - [SendNotification](#sendnotification)
   - [SendBulkNotifications](#sendbulknotifications)
@@ -27,33 +29,33 @@ NotificationService manages notifications.
   - [GetPreferences](#getpreferences)
   - [UpdatePreferences](#updatepreferences)
 - [Messages](#messages)
-  - [UpdatePreferencesRequest](#updatepreferencesrequest)
-  - [UpdatePreferencesResponse](#updatepreferencesresponse)
-  - [DateRangeFilter](#daterangefilter)
-  - [NotificationPreferences](#notificationpreferences)
-  - [UTMParameters](#utmparameters)
-  - [SendBulkRequest](#sendbulkrequest)
-  - [GetNotificationRequest](#getnotificationrequest)
-  - [GetNotificationResponse](#getnotificationresponse)
-  - [ListNotificationsRequest](#listnotificationsrequest)
-  - [ListNotificationsResponse](#listnotificationsresponse)
-  - [NotificationEvent](#notificationevent)
-  - [Action](#action)
-  - [Notification](#notification)
-  - [SendNotificationRequest](#sendnotificationrequest)
-  - [MarkAsReadRequest](#markasreadrequest)
-  - [StreamNotificationsRequest](#streamnotificationsrequest)
-  - [GetPreferencesRequest](#getpreferencesrequest)
-  - [Attachment](#attachment)
-  - [TrackingData](#trackingdata)
-  - [QuietHours](#quiethours)
   - [BulkSendResult](#bulksendresult)
-  - [GetPreferencesResponse](#getpreferencesresponse)
-  - [RichContent](#richcontent)
+  - [NotificationEvent](#notificationevent)
   - [NotificationTemplate](#notificationtemplate)
+  - [NotificationPreferences](#notificationpreferences)
+  - [TrackingData](#trackingdata)
+  - [GetNotificationRequest](#getnotificationrequest)
+  - [MarkAsReadRequest](#markasreadrequest)
+  - [UpdatePreferencesRequest](#updatepreferencesrequest)
+  - [RichContent](#richcontent)
+  - [Notification](#notification)
   - [DigestSettings](#digestsettings)
   - [SendNotificationResponse](#sendnotificationresponse)
+  - [GetNotificationResponse](#getnotificationresponse)
   - [DeleteNotificationRequest](#deletenotificationrequest)
+  - [GetPreferencesRequest](#getpreferencesrequest)
+  - [UpdatePreferencesResponse](#updatepreferencesresponse)
+  - [QuietHours](#quiethours)
+  - [UTMParameters](#utmparameters)
+  - [ListNotificationsRequest](#listnotificationsrequest)
+  - [ListNotificationsResponse](#listnotificationsresponse)
+  - [StreamNotificationsRequest](#streamnotificationsrequest)
+  - [Action](#action)
+  - [DateRangeFilter](#daterangefilter)
+  - [Attachment](#attachment)
+  - [GetPreferencesResponse](#getpreferencesresponse)
+  - [SendNotificationRequest](#sendnotificationrequest)
+  - [SendBulkRequest](#sendbulkrequest)
 - [Enumerations](#enumerations)
 - [Error Codes](#error-codes)
 - [Examples](#examples)
@@ -152,6 +154,337 @@ graph TB
     UpdatePreferences_out[📤 UpdatePreferencesResponse]:::messageClass
     UpdatePreferences_in -.->|input| UpdatePreferences
     UpdatePreferences -.->|output| UpdatePreferences_out
+```
+
+---
+
+## 🔄 gRPC Service Interactions
+
+<a name="service-interaction"></a>
+
+This diagram shows the interactions between the service methods and message types.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant NotificationService
+    Client->>+NotificationService: SendNotification
+    Note right of NotificationService: SendNotificationRequest
+    NotificationService->>-Client: SendNotificationResponse
+    Client->>+NotificationService: SendBulkNotifications
+    Note right of NotificationService: SendBulkRequest
+    NotificationService->>-Client: Stream of BulkSendResult
+    Client->>+NotificationService: GetNotification
+    Note right of NotificationService: GetNotificationRequest
+    NotificationService->>-Client: GetNotificationResponse
+    Client->>+NotificationService: ListNotifications
+    Note right of NotificationService: ListNotificationsRequest
+    NotificationService->>-Client: ListNotificationsResponse
+    Client->>+NotificationService: MarkAsRead
+    Note right of NotificationService: MarkAsReadRequest
+    NotificationService->>-Client: Empty
+    Client->>+NotificationService: DeleteNotification
+    Note right of NotificationService: DeleteNotificationRequest
+    NotificationService->>-Client: Empty
+    Client->>+NotificationService: StreamNotifications
+    Note right of NotificationService: StreamNotificationsRequest
+    NotificationService->>-Client: Stream of NotificationEvent
+    Client->>+NotificationService: GetPreferences
+    Note right of NotificationService: GetPreferencesRequest
+    NotificationService->>-Client: GetPreferencesResponse
+    Client->>+NotificationService: UpdatePreferences
+    Note right of NotificationService: UpdatePreferencesRequest
+    NotificationService->>-Client: UpdatePreferencesResponse
+```
+
+---
+
+## 📦 Message Type Diagrams
+
+<a name="class-diagram"></a>
+
+UML class diagrams showing the structure of message types.
+
+```mermaid
+classDiagram
+    class NotificationService {
+        <<service>>
+        +BulkSendResult()
+        +NotificationEvent()
+        +NotificationTemplate()
+        +NotificationPreferences()
+        +TrackingData()
+        +GetNotificationRequest()
+        +MarkAsReadRequest()
+        +UpdatePreferencesRequest()
+        +RichContent()
+        +Notification()
+        +DigestSettings()
+        +SendNotificationResponse()
+        +GetNotificationResponse()
+        +DeleteNotificationRequest()
+        +GetPreferencesRequest()
+        +UpdatePreferencesResponse()
+        +QuietHours()
+        +UTMParameters()
+        +ListNotificationsRequest()
+        +ListNotificationsResponse()
+        +StreamNotificationsRequest()
+        +Action()
+        +DateRangeFilter()
+        +Attachment()
+        +GetPreferencesResponse()
+        +SendNotificationRequest()
+        +SendBulkRequest()
+    }
+
+    class BulkSendResult {
+        +string recipient_id
+        +bool success
+        +Notification notification
+        +Error error
+    }
+
+    BulkSendResult "1" --> "1" Notification
+    BulkSendResult "1" --> "1" Error
+    class NotificationEvent {
+        +EventType event_type
+        +Notification notification
+        +Timestamp event_time
+    }
+
+    NotificationEvent "1" --> "1" EventType
+    NotificationEvent "1" --> "1" Notification
+    class NotificationTemplate {
+        +string template_id
+        +NotificationType type
+        +Priority priority
+        +string title
+        +string message
+        +Channel channels[]
+        +map<string, string> default_data
+    }
+
+    NotificationTemplate "1" --> "1" NotificationType
+    NotificationTemplate "1" --> "1" Priority
+    NotificationTemplate "1" --> "*" Channel
+    class NotificationPreferences {
+        +string user_id
+        +bool enabled
+        +map<string, ChannelPreference> channels
+        +map<string, TypePreference> types
+        +QuietHours quiet_hours
+        +DigestSettings digest
+    }
+
+    NotificationPreferences "1" --> "1" QuietHours
+    NotificationPreferences "1" --> "1" DigestSettings
+    class TrackingData {
+        +bool impression_tracked
+        +Timestamp impression_at
+        +bool click_tracked
+        +Timestamp clicked_at
+        +bool conversion_tracked
+        +Timestamp converted_at
+        +UTMParameters utm
+    }
+
+    TrackingData "1" --> "1" UTMParameters
+    class GetNotificationRequest {
+        +string notification_id
+    }
+
+    class MarkAsReadRequest {
+        +string notification_ids[]
+        +string user_id
+        +bool all
+    }
+
+    class UpdatePreferencesRequest {
+        +string user_id
+        +NotificationPreferences preferences
+    }
+
+    UpdatePreferencesRequest "1" --> "1" NotificationPreferences
+    class RichContent {
+        +string html
+        +string markdown
+        +Struct structured_data
+        +Attachment attachments[]
+    }
+
+    RichContent "1" --> "*" Attachment
+    class Notification {
+        +Metadata metadata
+        +string recipient_id
+        +string sender_id
+        +NotificationType type
+        +Priority priority
+        +string title
+        +string message
+        +RichContent content
+        +Channel channels[]
+        +map<string, DeliveryDetails> deliveries
+        +Action actions[]
+        +string deep_link
+        +string image_url
+        +string icon_url
+        +string sound
+        +int32 badge
+        +bool read
+        +Timestamp read_at
+        +Timestamp expires_at
+        +string category
+        +string tags[]
+        +map<string, string> data
+        +TrackingData tracking
+    }
+
+    Notification "1" --> "1" Metadata
+    Notification "1" --> "1" NotificationType
+    Notification "1" --> "1" Priority
+    Notification "1" --> "1" RichContent
+    Notification "1" --> "*" Channel
+    Notification "1" --> "*" Action
+    Notification "1" --> "1" TrackingData
+    class DigestSettings {
+        +bool enabled
+        +DigestFrequency frequency
+        +string delivery_time
+        +int32 days[]
+    }
+
+    DigestSettings "1" --> "1" DigestFrequency
+    class SendNotificationResponse {
+        +Notification notification
+        +bool scheduled
+    }
+
+    SendNotificationResponse "1" --> "1" Notification
+    class GetNotificationResponse {
+        +Notification notification
+    }
+
+    GetNotificationResponse "1" --> "1" Notification
+    class DeleteNotificationRequest {
+        +string notification_id
+        +string user_id
+    }
+
+    class GetPreferencesRequest {
+        +string user_id
+    }
+
+    class UpdatePreferencesResponse {
+        +NotificationPreferences preferences
+    }
+
+    UpdatePreferencesResponse "1" --> "1" NotificationPreferences
+    class QuietHours {
+        +bool enabled
+        +string start_time
+        +string end_time
+        +int32 days[]
+        +string timezone
+    }
+
+    class UTMParameters {
+        +string source
+        +string medium
+        +string campaign
+        +string term
+        +string content
+    }
+
+    class ListNotificationsRequest {
+        +string user_id
+        +PaginationRequest pagination
+        +bool read
+        +NotificationType types[]
+        +Channel channels[]
+        +string categories[]
+        +string tags[]
+        +DateRangeFilter date_range
+    }
+
+    ListNotificationsRequest "1" --> "1" PaginationRequest
+    ListNotificationsRequest "1" --> "*" NotificationType
+    ListNotificationsRequest "1" --> "*" Channel
+    ListNotificationsRequest "1" --> "1" DateRangeFilter
+    class ListNotificationsResponse {
+        +Notification notifications[]
+        +PaginationResponse pagination
+        +int64 unread_count
+    }
+
+    ListNotificationsResponse "1" --> "*" Notification
+    ListNotificationsResponse "1" --> "1" PaginationResponse
+    class StreamNotificationsRequest {
+        +string user_id
+        +NotificationType types[]
+        +Channel channels[]
+    }
+
+    StreamNotificationsRequest "1" --> "*" NotificationType
+    StreamNotificationsRequest "1" --> "*" Channel
+    class Action {
+        +string id
+        +string label
+        +string url
+        +ActionType type
+        +bool primary
+    }
+
+    Action "1" --> "1" ActionType
+    class DateRangeFilter {
+        +Timestamp start
+        +Timestamp end
+    }
+
+    class Attachment {
+        +AttachmentType type
+        +string url
+        +string filename
+        +int64 size
+        +string mime_type
+    }
+
+    Attachment "1" --> "1" AttachmentType
+    class GetPreferencesResponse {
+        +NotificationPreferences preferences
+    }
+
+    GetPreferencesResponse "1" --> "1" NotificationPreferences
+    class SendNotificationRequest {
+        +string recipient_id
+        +NotificationType type
+        +Priority priority
+        +string title
+        +string message
+        +RichContent content
+        +Channel channels[]
+        +Action actions[]
+        +string deep_link
+        +string image_url
+        +map<string, string> data
+        +Timestamp scheduled_at
+        +Timestamp expires_at
+        +string idempotency_key
+    }
+
+    SendNotificationRequest "1" --> "1" NotificationType
+    SendNotificationRequest "1" --> "1" Priority
+    SendNotificationRequest "1" --> "1" RichContent
+    SendNotificationRequest "1" --> "*" Channel
+    SendNotificationRequest "1" --> "*" Action
+    class SendBulkRequest {
+        +string recipient_ids[]
+        +NotificationTemplate template
+        +map<string, Struct> personalizations
+        +Timestamp scheduled_at
+    }
+
+    SendBulkRequest "1" --> "1" NotificationTemplate
 ```
 
 ---
@@ -507,32 +840,38 @@ sequenceDiagram
 
 This service defines **27 message types**:
 
-### UpdatePreferencesRequest
+### BulkSendResult
 
-<a name="updatepreferencesrequest"></a>
+<a name="bulksendresult"></a>
 
-UpdatePreferencesRequest updates preferences.
+BulkSendResult streams results.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.UpdatePreferencesRequest` |
-| **Field Count** | 2 |
+| **Full Name** | `notifications.v1.BulkSendResult` |
+| **Field Count** | 4 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
-| 2 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | Updated preferences. |
+| 1 | `recipient_id` | string | optional | Recipient ID. (Must be a non-empty identifier) |
+| 2 | `success` | bool | optional | Success. |
+| 3 | `notification` | [`Notification`](#notification) | optional | Notification. |
+| 4 | `error` | [`Error`](#error) | optional | Error. |
 
 #### Proto Definition
 
 ```protobuf
-message UpdatePreferencesRequest {
-  // User ID. (Must be a non-empty identifier)
-  optional string user_id = 1;
-  // Updated preferences.
-  optional NotificationPreferences preferences = 2;
+message BulkSendResult {
+  // Recipient ID. (Must be a non-empty identifier)
+  optional string recipient_id = 1;
+  // Success.
+  optional bool success = 2;
+  // Notification.
+  optional Notification notification = 3;
+  // Error.
+  optional Error error = 4;
 }
 ```
 
@@ -540,38 +879,47 @@ message UpdatePreferencesRequest {
 
 ```mermaid
 classDiagram
-    class UpdatePreferencesRequest {
-        +string user_id
-        +NotificationPreferences preferences
+    class BulkSendResult {
+        +string recipient_id
+        +bool success
+        +Notification notification
+        +Error error
     }
-    UpdatePreferencesRequest --> NotificationPreferences
+    BulkSendResult --> Notification
+    BulkSendResult --> Error
 ```
 
 ---
 
-### UpdatePreferencesResponse
+### NotificationEvent
 
-<a name="updatepreferencesresponse"></a>
+<a name="notificationevent"></a>
 
-UpdatePreferencesResponse confirms update.
+NotificationEvent represents real-time event.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.UpdatePreferencesResponse` |
-| **Field Count** | 1 |
+| **Full Name** | `notifications.v1.NotificationEvent` |
+| **Field Count** | 3 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | Updated preferences. |
+| 1 | `event_type` | [`EventType`](#eventtype) | optional | Event type. |
+| 2 | `notification` | [`Notification`](#notification) | optional | Notification. |
+| 3 | `event_time` | [`Timestamp`](#timestamp) | optional | Event timestamp. |
 
 #### Proto Definition
 
 ```protobuf
-message UpdatePreferencesResponse {
-  // Updated preferences.
-  optional NotificationPreferences preferences = 1;
+message NotificationEvent {
+  // Event type.
+  optional EventType event_type = 1;
+  // Notification.
+  optional Notification notification = 2;
+  // Event timestamp.
+  optional Timestamp event_time = 3;
 }
 ```
 
@@ -579,40 +927,60 @@ message UpdatePreferencesResponse {
 
 ```mermaid
 classDiagram
-    class UpdatePreferencesResponse {
-        +NotificationPreferences preferences
+    class NotificationEvent {
+        +EventType event_type
+        +Notification notification
+        +Timestamp event_time
     }
-    UpdatePreferencesResponse --> NotificationPreferences
+    NotificationEvent --> EventType
+    NotificationEvent --> Notification
+    NotificationEvent --> Timestamp
 ```
 
 ---
 
-### DateRangeFilter
+### NotificationTemplate
 
-<a name="daterangefilter"></a>
+<a name="notificationtemplate"></a>
 
-DateRangeFilter filters by date.
+NotificationTemplate defines reusable template.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.DateRangeFilter` |
-| **Field Count** | 2 |
+| **Full Name** | `notifications.v1.NotificationTemplate` |
+| **Field Count** | 7 |
+| **Nested Types** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `start` | [`Timestamp`](#timestamp) | optional | Start date. |
-| 2 | `end` | [`Timestamp`](#timestamp) | optional | End date. |
+| 1 | `template_id` | string | optional | Template ID. (Must be a non-empty identifier) |
+| 2 | `type` | [`NotificationType`](#notificationtype) | optional | Type. |
+| 3 | `priority` | [`Priority`](#priority) | optional | Priority Higher values indicate higher priority. |
+| 4 | `title` | string | optional | Title template. |
+| 5 | `message` | string | optional | Message template. |
+| 6 | `channels` | [`Channel`](#channel) | repeated | Channels. |
+| 7 | `default_data` | map<string, string> |  | Default data. |
 
 #### Proto Definition
 
 ```protobuf
-message DateRangeFilter {
-  // Start date.
-  optional Timestamp start = 1;
-  // End date.
-  optional Timestamp end = 2;
+message NotificationTemplate {
+  // Template ID. (Must be a non-empty identifier)
+  optional string template_id = 1;
+  // Type.
+  optional NotificationType type = 2;
+  // Priority Higher values indicate higher priority.
+  optional Priority priority = 3;
+  // Title template.
+  optional string title = 4;
+  // Message template.
+  optional string message = 5;
+  // Channels.
+  repeated Channel channels = 6;
+  // Default data.
+   map<string, string> default_data = 7;
 }
 ```
 
@@ -620,12 +988,18 @@ message DateRangeFilter {
 
 ```mermaid
 classDiagram
-    class DateRangeFilter {
-        +Timestamp start
-        +Timestamp end
+    class NotificationTemplate {
+        +string template_id
+        +NotificationType type
+        +Priority priority
+        +string title
+        +string message
+        +Channel[] channels
+        +map<string, string> default_data
     }
-    DateRangeFilter --> Timestamp
-    DateRangeFilter --> Timestamp
+    NotificationTemplate --> NotificationType
+    NotificationTemplate --> Priority
+    NotificationTemplate "1" --> "*" Channel
 ```
 
 ---
@@ -690,41 +1064,47 @@ classDiagram
 
 ---
 
-### UTMParameters
+### TrackingData
 
-<a name="utmparameters"></a>
+<a name="trackingdata"></a>
 
-UTMParameters for tracking.
+TrackingData contains tracking information.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.UTMParameters` |
-| **Field Count** | 5 |
+| **Full Name** | `notifications.v1.TrackingData` |
+| **Field Count** | 7 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `source` | string | optional | Source. |
-| 2 | `medium` | string | optional | Medium. |
-| 3 | `campaign` | string | optional | Campaign. |
-| 4 | `term` | string | optional | Term. |
-| 5 | `content` | string | optional | Content. |
+| 1 | `impression_tracked` | bool | optional | Impression tracked. |
+| 2 | `impression_at` | [`Timestamp`](#timestamp) | optional | Impression timestamp. (RFC 3339 timestamp format) |
+| 3 | `click_tracked` | bool | optional | Click tracked. |
+| 4 | `clicked_at` | [`Timestamp`](#timestamp) | optional | Click timestamp. (RFC 3339 timestamp format) |
+| 5 | `conversion_tracked` | bool | optional | Conversion tracked. |
+| 6 | `converted_at` | [`Timestamp`](#timestamp) | optional | Conversion timestamp. (RFC 3339 timestamp format) |
+| 7 | `utm` | [`UTMParameters`](#utmparameters) | optional | UTM parameters. |
 
 #### Proto Definition
 
 ```protobuf
-message UTMParameters {
-  // Source.
-  optional string source = 1;
-  // Medium.
-  optional string medium = 2;
-  // Campaign.
-  optional string campaign = 3;
-  // Term.
-  optional string term = 4;
-  // Content.
-  optional string content = 5;
+message TrackingData {
+  // Impression tracked.
+  optional bool impression_tracked = 1;
+  // Impression timestamp. (RFC 3339 timestamp format)
+  optional Timestamp impression_at = 2;
+  // Click tracked.
+  optional bool click_tracked = 3;
+  // Click timestamp. (RFC 3339 timestamp format)
+  optional Timestamp clicked_at = 4;
+  // Conversion tracked.
+  optional bool conversion_tracked = 5;
+  // Conversion timestamp. (RFC 3339 timestamp format)
+  optional Timestamp converted_at = 6;
+  // UTM parameters.
+  optional UTMParameters utm = 7;
 }
 ```
 
@@ -732,65 +1112,19 @@ message UTMParameters {
 
 ```mermaid
 classDiagram
-    class UTMParameters {
-        +string source
-        +string medium
-        +string campaign
-        +string term
-        +string content
+    class TrackingData {
+        +bool impression_tracked
+        +Timestamp impression_at
+        +bool click_tracked
+        +Timestamp clicked_at
+        +bool conversion_tracked
+        +Timestamp converted_at
+        +UTMParameters utm
     }
-```
-
----
-
-### SendBulkRequest
-
-<a name="sendbulkrequest"></a>
-
-SendBulkRequest sends to multiple recipients.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.SendBulkRequest` |
-| **Field Count** | 4 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `recipient_ids` | string | repeated | Recipient IDs. |
-| 2 | `template` | [`NotificationTemplate`](#notificationtemplate) | optional | Notification template. |
-| 3 | `personalizations` | map<string, Struct> |  | Personalization data per recipient. |
-| 4 | `scheduled_at` | [`Timestamp`](#timestamp) | optional | Schedule for later. (RFC 3339 timestamp format) |
-
-#### Proto Definition
-
-```protobuf
-message SendBulkRequest {
-  // Recipient IDs.
-  repeated string recipient_ids = 1;
-  // Notification template.
-  optional NotificationTemplate template = 2;
-  // Personalization data per recipient.
-   map<string, Struct> personalizations = 3;
-  // Schedule for later. (RFC 3339 timestamp format)
-  optional Timestamp scheduled_at = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class SendBulkRequest {
-        +string[] recipient_ids
-        +NotificationTemplate template
-        +map<string, Struct> personalizations
-        +Timestamp scheduled_at
-    }
-    SendBulkRequest --> NotificationTemplate
-    SendBulkRequest --> Timestamp
+    TrackingData --> Timestamp
+    TrackingData --> Timestamp
+    TrackingData --> Timestamp
+    TrackingData --> UTMParameters
 ```
 
 ---
@@ -832,29 +1166,35 @@ classDiagram
 
 ---
 
-### GetNotificationResponse
+### MarkAsReadRequest
 
-<a name="getnotificationresponse"></a>
+<a name="markasreadrequest"></a>
 
-GetNotificationResponse returns notification.
+MarkAsReadRequest marks as read.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.GetNotificationResponse` |
-| **Field Count** | 1 |
+| **Full Name** | `notifications.v1.MarkAsReadRequest` |
+| **Field Count** | 3 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `notification` | [`Notification`](#notification) | optional | Notification. |
+| 1 | `notification_ids` | string | repeated | Notification IDs. |
+| 2 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+| 3 | `all` | bool | optional | Mark all as read. |
 
 #### Proto Definition
 
 ```protobuf
-message GetNotificationResponse {
-  // Notification.
-  optional Notification notification = 1;
+message MarkAsReadRequest {
+  // Notification IDs.
+  repeated string notification_ids = 1;
+  // User ID. (Must be a non-empty identifier)
+  optional string user_id = 2;
+  // Mark all as read.
+  optional bool all = 3;
 }
 ```
 
@@ -862,61 +1202,41 @@ message GetNotificationResponse {
 
 ```mermaid
 classDiagram
-    class GetNotificationResponse {
-        +Notification notification
+    class MarkAsReadRequest {
+        +string[] notification_ids
+        +string user_id
+        +bool all
     }
-    GetNotificationResponse --> Notification
 ```
 
 ---
 
-### ListNotificationsRequest
+### UpdatePreferencesRequest
 
-<a name="listnotificationsrequest"></a>
+<a name="updatepreferencesrequest"></a>
 
-ListNotificationsRequest lists notifications.
+UpdatePreferencesRequest updates preferences.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.ListNotificationsRequest` |
-| **Field Count** | 8 |
+| **Full Name** | `notifications.v1.UpdatePreferencesRequest` |
+| **Field Count** | 2 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
 | 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
-| 2 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination. |
-| 3 | `read` | bool | oneof `_read` | Filter by read status. |
-| 4 | `types` | [`NotificationType`](#notificationtype) | repeated | Filter by type. |
-| 5 | `channels` | [`Channel`](#channel) | repeated | Filter by channel. |
-| 6 | `categories` | string | repeated | Filter by category. |
-| 7 | `tags` | string | repeated | Filter by tags. |
-| 8 | `date_range` | [`DateRangeFilter`](#daterangefilter) | optional | Date range. |
+| 2 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | Updated preferences. |
 
 #### Proto Definition
 
 ```protobuf
-message ListNotificationsRequest {
+message UpdatePreferencesRequest {
   // User ID. (Must be a non-empty identifier)
   optional string user_id = 1;
-  // Pagination.
-  optional PaginationRequest pagination = 2;
-  // Filter by type.
-  repeated NotificationType types = 4;
-  // Filter by channel.
-  repeated Channel channels = 5;
-  // Filter by category.
-  repeated string categories = 6;
-  // Filter by tags.
-  repeated string tags = 7;
-  // Date range.
-  optional DateRangeFilter date_range = 8;
-
-  oneof _read {
-    // Filter by read status.
-    bool read = 3;
-  }
+  // Updated preferences.
+  optional NotificationPreferences preferences = 2;
 }
 ```
 
@@ -924,53 +1244,47 @@ message ListNotificationsRequest {
 
 ```mermaid
 classDiagram
-    class ListNotificationsRequest {
+    class UpdatePreferencesRequest {
         +string user_id
-        +PaginationRequest pagination
-        +bool read
-        +NotificationType[] types
-        +Channel[] channels
-        +string[] categories
-        +string[] tags
-        +DateRangeFilter date_range
+        +NotificationPreferences preferences
     }
-    ListNotificationsRequest --> PaginationRequest
-    ListNotificationsRequest "1" --> "*" NotificationType
-    ListNotificationsRequest "1" --> "*" Channel
-    ListNotificationsRequest --> DateRangeFilter
+    UpdatePreferencesRequest --> NotificationPreferences
 ```
 
 ---
 
-### ListNotificationsResponse
+### RichContent
 
-<a name="listnotificationsresponse"></a>
+<a name="richcontent"></a>
 
-ListNotificationsResponse returns notifications.
+RichContent contains rich notification content.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.ListNotificationsResponse` |
-| **Field Count** | 3 |
+| **Full Name** | `notifications.v1.RichContent` |
+| **Field Count** | 4 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `notifications` | [`Notification`](#notification) | repeated | Notifications. |
-| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination. |
-| 3 | `unread_count` | int64 | optional | Unread count Must be >= 0. |
+| 1 | `html` | string | optional | HTML content. |
+| 2 | `markdown` | string | optional | Markdown content. |
+| 3 | `structured_data` | [`Struct`](#struct) | optional | Structured data. |
+| 4 | `attachments` | [`Attachment`](#attachment) | repeated | Attachments. |
 
 #### Proto Definition
 
 ```protobuf
-message ListNotificationsResponse {
-  // Notifications.
-  repeated Notification notifications = 1;
-  // Pagination.
-  optional PaginationResponse pagination = 2;
-  // Unread count Must be >= 0.
-  optional int64 unread_count = 3;
+message RichContent {
+  // HTML content.
+  optional string html = 1;
+  // Markdown content.
+  optional string markdown = 2;
+  // Structured data.
+  optional Struct structured_data = 3;
+  // Attachments.
+  repeated Attachment attachments = 4;
 }
 ```
 
@@ -978,115 +1292,14 @@ message ListNotificationsResponse {
 
 ```mermaid
 classDiagram
-    class ListNotificationsResponse {
-        +Notification[] notifications
-        +PaginationResponse pagination
-        +int64 unread_count
+    class RichContent {
+        +string html
+        +string markdown
+        +Struct structured_data
+        +Attachment[] attachments
     }
-    ListNotificationsResponse "1" --> "*" Notification
-    ListNotificationsResponse --> PaginationResponse
-```
-
----
-
-### NotificationEvent
-
-<a name="notificationevent"></a>
-
-NotificationEvent represents real-time event.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.NotificationEvent` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `event_type` | [`EventType`](#eventtype) | optional | Event type. |
-| 2 | `notification` | [`Notification`](#notification) | optional | Notification. |
-| 3 | `event_time` | [`Timestamp`](#timestamp) | optional | Event timestamp. |
-
-#### Proto Definition
-
-```protobuf
-message NotificationEvent {
-  // Event type.
-  optional EventType event_type = 1;
-  // Notification.
-  optional Notification notification = 2;
-  // Event timestamp.
-  optional Timestamp event_time = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class NotificationEvent {
-        +EventType event_type
-        +Notification notification
-        +Timestamp event_time
-    }
-    NotificationEvent --> EventType
-    NotificationEvent --> Notification
-    NotificationEvent --> Timestamp
-```
-
----
-
-### Action
-
-<a name="action"></a>
-
-Action represents a notification action button.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.Action` |
-| **Field Count** | 5 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `id` | string | optional | Action ID. (Must be a non-empty identifier) |
-| 2 | `label` | string | optional | Button label. |
-| 3 | `url` | string | optional | Action URL. (Must be a valid URL) |
-| 4 | `type` | [`ActionType`](#actiontype) | optional | Action type. |
-| 5 | `primary` | bool | optional | Is primary action. |
-
-#### Proto Definition
-
-```protobuf
-message Action {
-  // Action ID. (Must be a non-empty identifier)
-  optional string id = 1;
-  // Button label.
-  optional string label = 2;
-  // Action URL. (Must be a valid URL)
-  optional string url = 3;
-  // Action type.
-  optional ActionType type = 4;
-  // Is primary action.
-  optional bool primary = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class Action {
-        +string id
-        +string label
-        +string url
-        +ActionType type
-        +bool primary
-    }
-    Action --> ActionType
+    RichContent --> Struct
+    RichContent "1" --> "*" Attachment
 ```
 
 ---
@@ -1226,6 +1439,713 @@ classDiagram
 
 ---
 
+### DigestSettings
+
+<a name="digestsettings"></a>
+
+DigestSettings for notification digests.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.DigestSettings` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `enabled` | bool | optional | Enabled. |
+| 2 | `frequency` | [`DigestFrequency`](#digestfrequency) | optional | Frequency. |
+| 3 | `delivery_time` | string | optional | Delivery time (HH:MM). |
+| 4 | `days` | int32 | repeated | Days for weekly digest. |
+
+#### Proto Definition
+
+```protobuf
+message DigestSettings {
+  // Enabled.
+  optional bool enabled = 1;
+  // Frequency.
+  optional DigestFrequency frequency = 2;
+  // Delivery time (HH:MM).
+  optional string delivery_time = 3;
+  // Days for weekly digest.
+  repeated int32 days = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class DigestSettings {
+        +bool enabled
+        +DigestFrequency frequency
+        +string delivery_time
+        +int32[] days
+    }
+    DigestSettings --> DigestFrequency
+```
+
+---
+
+### SendNotificationResponse
+
+<a name="sendnotificationresponse"></a>
+
+SendNotificationResponse confirms sending.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.SendNotificationResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `notification` | [`Notification`](#notification) | optional | Created notification. |
+| 2 | `scheduled` | bool | optional | Scheduled. |
+
+#### Proto Definition
+
+```protobuf
+message SendNotificationResponse {
+  // Created notification.
+  optional Notification notification = 1;
+  // Scheduled.
+  optional bool scheduled = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class SendNotificationResponse {
+        +Notification notification
+        +bool scheduled
+    }
+    SendNotificationResponse --> Notification
+```
+
+---
+
+### GetNotificationResponse
+
+<a name="getnotificationresponse"></a>
+
+GetNotificationResponse returns notification.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.GetNotificationResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `notification` | [`Notification`](#notification) | optional | Notification. |
+
+#### Proto Definition
+
+```protobuf
+message GetNotificationResponse {
+  // Notification.
+  optional Notification notification = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetNotificationResponse {
+        +Notification notification
+    }
+    GetNotificationResponse --> Notification
+```
+
+---
+
+### DeleteNotificationRequest
+
+<a name="deletenotificationrequest"></a>
+
+DeleteNotificationRequest deletes notification.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.DeleteNotificationRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `notification_id` | string | optional | Notification ID. (Must be a non-empty identifier) |
+| 2 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+
+#### Proto Definition
+
+```protobuf
+message DeleteNotificationRequest {
+  // Notification ID. (Must be a non-empty identifier)
+  optional string notification_id = 1;
+  // User ID. (Must be a non-empty identifier)
+  optional string user_id = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class DeleteNotificationRequest {
+        +string notification_id
+        +string user_id
+    }
+```
+
+---
+
+### GetPreferencesRequest
+
+<a name="getpreferencesrequest"></a>
+
+GetPreferencesRequest gets preferences.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.GetPreferencesRequest` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+
+#### Proto Definition
+
+```protobuf
+message GetPreferencesRequest {
+  // User ID. (Must be a non-empty identifier)
+  optional string user_id = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetPreferencesRequest {
+        +string user_id
+    }
+```
+
+---
+
+### UpdatePreferencesResponse
+
+<a name="updatepreferencesresponse"></a>
+
+UpdatePreferencesResponse confirms update.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.UpdatePreferencesResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | Updated preferences. |
+
+#### Proto Definition
+
+```protobuf
+message UpdatePreferencesResponse {
+  // Updated preferences.
+  optional NotificationPreferences preferences = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UpdatePreferencesResponse {
+        +NotificationPreferences preferences
+    }
+    UpdatePreferencesResponse --> NotificationPreferences
+```
+
+---
+
+### QuietHours
+
+<a name="quiethours"></a>
+
+QuietHours defines silent periods.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.QuietHours` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `enabled` | bool | optional | Enabled. |
+| 2 | `start_time` | string | optional | Start time (HH:MM). |
+| 3 | `end_time` | string | optional | End time (HH:MM). |
+| 4 | `days` | int32 | repeated | Days (0=Sunday, 6=Saturday). |
+| 5 | `timezone` | string | optional | Timezone. |
+
+#### Proto Definition
+
+```protobuf
+message QuietHours {
+  // Enabled.
+  optional bool enabled = 1;
+  // Start time (HH:MM).
+  optional string start_time = 2;
+  // End time (HH:MM).
+  optional string end_time = 3;
+  // Days (0=Sunday, 6=Saturday).
+  repeated int32 days = 4;
+  // Timezone.
+  optional string timezone = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class QuietHours {
+        +bool enabled
+        +string start_time
+        +string end_time
+        +int32[] days
+        +string timezone
+    }
+```
+
+---
+
+### UTMParameters
+
+<a name="utmparameters"></a>
+
+UTMParameters for tracking.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.UTMParameters` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `source` | string | optional | Source. |
+| 2 | `medium` | string | optional | Medium. |
+| 3 | `campaign` | string | optional | Campaign. |
+| 4 | `term` | string | optional | Term. |
+| 5 | `content` | string | optional | Content. |
+
+#### Proto Definition
+
+```protobuf
+message UTMParameters {
+  // Source.
+  optional string source = 1;
+  // Medium.
+  optional string medium = 2;
+  // Campaign.
+  optional string campaign = 3;
+  // Term.
+  optional string term = 4;
+  // Content.
+  optional string content = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class UTMParameters {
+        +string source
+        +string medium
+        +string campaign
+        +string term
+        +string content
+    }
+```
+
+---
+
+### ListNotificationsRequest
+
+<a name="listnotificationsrequest"></a>
+
+ListNotificationsRequest lists notifications.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.ListNotificationsRequest` |
+| **Field Count** | 8 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+| 2 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination. |
+| 3 | `read` | bool | oneof `_read` | Filter by read status. |
+| 4 | `types` | [`NotificationType`](#notificationtype) | repeated | Filter by type. |
+| 5 | `channels` | [`Channel`](#channel) | repeated | Filter by channel. |
+| 6 | `categories` | string | repeated | Filter by category. |
+| 7 | `tags` | string | repeated | Filter by tags. |
+| 8 | `date_range` | [`DateRangeFilter`](#daterangefilter) | optional | Date range. |
+
+#### Proto Definition
+
+```protobuf
+message ListNotificationsRequest {
+  // User ID. (Must be a non-empty identifier)
+  optional string user_id = 1;
+  // Pagination.
+  optional PaginationRequest pagination = 2;
+  // Filter by type.
+  repeated NotificationType types = 4;
+  // Filter by channel.
+  repeated Channel channels = 5;
+  // Filter by category.
+  repeated string categories = 6;
+  // Filter by tags.
+  repeated string tags = 7;
+  // Date range.
+  optional DateRangeFilter date_range = 8;
+
+  oneof _read {
+    // Filter by read status.
+    bool read = 3;
+  }
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class ListNotificationsRequest {
+        +string user_id
+        +PaginationRequest pagination
+        +bool read
+        +NotificationType[] types
+        +Channel[] channels
+        +string[] categories
+        +string[] tags
+        +DateRangeFilter date_range
+    }
+    ListNotificationsRequest --> PaginationRequest
+    ListNotificationsRequest "1" --> "*" NotificationType
+    ListNotificationsRequest "1" --> "*" Channel
+    ListNotificationsRequest --> DateRangeFilter
+```
+
+---
+
+### ListNotificationsResponse
+
+<a name="listnotificationsresponse"></a>
+
+ListNotificationsResponse returns notifications.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.ListNotificationsResponse` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `notifications` | [`Notification`](#notification) | repeated | Notifications. |
+| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination. |
+| 3 | `unread_count` | int64 | optional | Unread count Must be >= 0. |
+
+#### Proto Definition
+
+```protobuf
+message ListNotificationsResponse {
+  // Notifications.
+  repeated Notification notifications = 1;
+  // Pagination.
+  optional PaginationResponse pagination = 2;
+  // Unread count Must be >= 0.
+  optional int64 unread_count = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class ListNotificationsResponse {
+        +Notification[] notifications
+        +PaginationResponse pagination
+        +int64 unread_count
+    }
+    ListNotificationsResponse "1" --> "*" Notification
+    ListNotificationsResponse --> PaginationResponse
+```
+
+---
+
+### StreamNotificationsRequest
+
+<a name="streamnotificationsrequest"></a>
+
+StreamNotificationsRequest subscribes to stream.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.StreamNotificationsRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+| 2 | `types` | [`NotificationType`](#notificationtype) | repeated | Filter by types. |
+| 3 | `channels` | [`Channel`](#channel) | repeated | Filter by channels. |
+
+#### Proto Definition
+
+```protobuf
+message StreamNotificationsRequest {
+  // User ID. (Must be a non-empty identifier)
+  optional string user_id = 1;
+  // Filter by types.
+  repeated NotificationType types = 2;
+  // Filter by channels.
+  repeated Channel channels = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class StreamNotificationsRequest {
+        +string user_id
+        +NotificationType[] types
+        +Channel[] channels
+    }
+    StreamNotificationsRequest "1" --> "*" NotificationType
+    StreamNotificationsRequest "1" --> "*" Channel
+```
+
+---
+
+### Action
+
+<a name="action"></a>
+
+Action represents a notification action button.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.Action` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `id` | string | optional | Action ID. (Must be a non-empty identifier) |
+| 2 | `label` | string | optional | Button label. |
+| 3 | `url` | string | optional | Action URL. (Must be a valid URL) |
+| 4 | `type` | [`ActionType`](#actiontype) | optional | Action type. |
+| 5 | `primary` | bool | optional | Is primary action. |
+
+#### Proto Definition
+
+```protobuf
+message Action {
+  // Action ID. (Must be a non-empty identifier)
+  optional string id = 1;
+  // Button label.
+  optional string label = 2;
+  // Action URL. (Must be a valid URL)
+  optional string url = 3;
+  // Action type.
+  optional ActionType type = 4;
+  // Is primary action.
+  optional bool primary = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class Action {
+        +string id
+        +string label
+        +string url
+        +ActionType type
+        +bool primary
+    }
+    Action --> ActionType
+```
+
+---
+
+### DateRangeFilter
+
+<a name="daterangefilter"></a>
+
+DateRangeFilter filters by date.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.DateRangeFilter` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `start` | [`Timestamp`](#timestamp) | optional | Start date. |
+| 2 | `end` | [`Timestamp`](#timestamp) | optional | End date. |
+
+#### Proto Definition
+
+```protobuf
+message DateRangeFilter {
+  // Start date.
+  optional Timestamp start = 1;
+  // End date.
+  optional Timestamp end = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class DateRangeFilter {
+        +Timestamp start
+        +Timestamp end
+    }
+    DateRangeFilter --> Timestamp
+    DateRangeFilter --> Timestamp
+```
+
+---
+
+### Attachment
+
+<a name="attachment"></a>
+
+Attachment represents a file attachment.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.Attachment` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `type` | [`AttachmentType`](#attachmenttype) | optional | Attachment type. |
+| 2 | `url` | string | optional | File URL. (Must be a valid URL) |
+| 3 | `filename` | string | optional | File name. |
+| 4 | `size` | int64 | optional | File size in bytes. |
+| 5 | `mime_type` | string | optional | MIME type. |
+
+#### Proto Definition
+
+```protobuf
+message Attachment {
+  // Attachment type.
+  optional AttachmentType type = 1;
+  // File URL. (Must be a valid URL)
+  optional string url = 2;
+  // File name.
+  optional string filename = 3;
+  // File size in bytes.
+  optional int64 size = 4;
+  // MIME type.
+  optional string mime_type = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class Attachment {
+        +AttachmentType type
+        +string url
+        +string filename
+        +int64 size
+        +string mime_type
+    }
+    Attachment --> AttachmentType
+```
+
+---
+
+### GetPreferencesResponse
+
+<a name="getpreferencesresponse"></a>
+
+GetPreferencesResponse returns preferences.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `notifications.v1.GetPreferencesResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | Preferences. |
+
+#### Proto Definition
+
+```protobuf
+message GetPreferencesResponse {
+  // Preferences.
+  optional NotificationPreferences preferences = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+classDiagram
+    class GetPreferencesResponse {
+        +NotificationPreferences preferences
+    }
+    GetPreferencesResponse --> NotificationPreferences
+```
+
+---
+
 ### SendNotificationRequest
 
 <a name="sendnotificationrequest"></a>
@@ -1323,489 +2243,39 @@ classDiagram
 
 ---
 
-### MarkAsReadRequest
+### SendBulkRequest
 
-<a name="markasreadrequest"></a>
+<a name="sendbulkrequest"></a>
 
-MarkAsReadRequest marks as read.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.MarkAsReadRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `notification_ids` | string | repeated | Notification IDs. |
-| 2 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
-| 3 | `all` | bool | optional | Mark all as read. |
-
-#### Proto Definition
-
-```protobuf
-message MarkAsReadRequest {
-  // Notification IDs.
-  repeated string notification_ids = 1;
-  // User ID. (Must be a non-empty identifier)
-  optional string user_id = 2;
-  // Mark all as read.
-  optional bool all = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class MarkAsReadRequest {
-        +string[] notification_ids
-        +string user_id
-        +bool all
-    }
-```
-
----
-
-### StreamNotificationsRequest
-
-<a name="streamnotificationsrequest"></a>
-
-StreamNotificationsRequest subscribes to stream.
+SendBulkRequest sends to multiple recipients.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `notifications.v1.StreamNotificationsRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
-| 2 | `types` | [`NotificationType`](#notificationtype) | repeated | Filter by types. |
-| 3 | `channels` | [`Channel`](#channel) | repeated | Filter by channels. |
-
-#### Proto Definition
-
-```protobuf
-message StreamNotificationsRequest {
-  // User ID. (Must be a non-empty identifier)
-  optional string user_id = 1;
-  // Filter by types.
-  repeated NotificationType types = 2;
-  // Filter by channels.
-  repeated Channel channels = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class StreamNotificationsRequest {
-        +string user_id
-        +NotificationType[] types
-        +Channel[] channels
-    }
-    StreamNotificationsRequest "1" --> "*" NotificationType
-    StreamNotificationsRequest "1" --> "*" Channel
-```
-
----
-
-### GetPreferencesRequest
-
-<a name="getpreferencesrequest"></a>
-
-GetPreferencesRequest gets preferences.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.GetPreferencesRequest` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
-
-#### Proto Definition
-
-```protobuf
-message GetPreferencesRequest {
-  // User ID. (Must be a non-empty identifier)
-  optional string user_id = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetPreferencesRequest {
-        +string user_id
-    }
-```
-
----
-
-### Attachment
-
-<a name="attachment"></a>
-
-Attachment represents a file attachment.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.Attachment` |
-| **Field Count** | 5 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `type` | [`AttachmentType`](#attachmenttype) | optional | Attachment type. |
-| 2 | `url` | string | optional | File URL. (Must be a valid URL) |
-| 3 | `filename` | string | optional | File name. |
-| 4 | `size` | int64 | optional | File size in bytes. |
-| 5 | `mime_type` | string | optional | MIME type. |
-
-#### Proto Definition
-
-```protobuf
-message Attachment {
-  // Attachment type.
-  optional AttachmentType type = 1;
-  // File URL. (Must be a valid URL)
-  optional string url = 2;
-  // File name.
-  optional string filename = 3;
-  // File size in bytes.
-  optional int64 size = 4;
-  // MIME type.
-  optional string mime_type = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class Attachment {
-        +AttachmentType type
-        +string url
-        +string filename
-        +int64 size
-        +string mime_type
-    }
-    Attachment --> AttachmentType
-```
-
----
-
-### TrackingData
-
-<a name="trackingdata"></a>
-
-TrackingData contains tracking information.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.TrackingData` |
-| **Field Count** | 7 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `impression_tracked` | bool | optional | Impression tracked. |
-| 2 | `impression_at` | [`Timestamp`](#timestamp) | optional | Impression timestamp. (RFC 3339 timestamp format) |
-| 3 | `click_tracked` | bool | optional | Click tracked. |
-| 4 | `clicked_at` | [`Timestamp`](#timestamp) | optional | Click timestamp. (RFC 3339 timestamp format) |
-| 5 | `conversion_tracked` | bool | optional | Conversion tracked. |
-| 6 | `converted_at` | [`Timestamp`](#timestamp) | optional | Conversion timestamp. (RFC 3339 timestamp format) |
-| 7 | `utm` | [`UTMParameters`](#utmparameters) | optional | UTM parameters. |
-
-#### Proto Definition
-
-```protobuf
-message TrackingData {
-  // Impression tracked.
-  optional bool impression_tracked = 1;
-  // Impression timestamp. (RFC 3339 timestamp format)
-  optional Timestamp impression_at = 2;
-  // Click tracked.
-  optional bool click_tracked = 3;
-  // Click timestamp. (RFC 3339 timestamp format)
-  optional Timestamp clicked_at = 4;
-  // Conversion tracked.
-  optional bool conversion_tracked = 5;
-  // Conversion timestamp. (RFC 3339 timestamp format)
-  optional Timestamp converted_at = 6;
-  // UTM parameters.
-  optional UTMParameters utm = 7;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class TrackingData {
-        +bool impression_tracked
-        +Timestamp impression_at
-        +bool click_tracked
-        +Timestamp clicked_at
-        +bool conversion_tracked
-        +Timestamp converted_at
-        +UTMParameters utm
-    }
-    TrackingData --> Timestamp
-    TrackingData --> Timestamp
-    TrackingData --> Timestamp
-    TrackingData --> UTMParameters
-```
-
----
-
-### QuietHours
-
-<a name="quiethours"></a>
-
-QuietHours defines silent periods.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.QuietHours` |
-| **Field Count** | 5 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `enabled` | bool | optional | Enabled. |
-| 2 | `start_time` | string | optional | Start time (HH:MM). |
-| 3 | `end_time` | string | optional | End time (HH:MM). |
-| 4 | `days` | int32 | repeated | Days (0=Sunday, 6=Saturday). |
-| 5 | `timezone` | string | optional | Timezone. |
-
-#### Proto Definition
-
-```protobuf
-message QuietHours {
-  // Enabled.
-  optional bool enabled = 1;
-  // Start time (HH:MM).
-  optional string start_time = 2;
-  // End time (HH:MM).
-  optional string end_time = 3;
-  // Days (0=Sunday, 6=Saturday).
-  repeated int32 days = 4;
-  // Timezone.
-  optional string timezone = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class QuietHours {
-        +bool enabled
-        +string start_time
-        +string end_time
-        +int32[] days
-        +string timezone
-    }
-```
-
----
-
-### BulkSendResult
-
-<a name="bulksendresult"></a>
-
-BulkSendResult streams results.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.BulkSendResult` |
+| **Full Name** | `notifications.v1.SendBulkRequest` |
 | **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `recipient_id` | string | optional | Recipient ID. (Must be a non-empty identifier) |
-| 2 | `success` | bool | optional | Success. |
-| 3 | `notification` | [`Notification`](#notification) | optional | Notification. |
-| 4 | `error` | [`Error`](#error) | optional | Error. |
-
-#### Proto Definition
-
-```protobuf
-message BulkSendResult {
-  // Recipient ID. (Must be a non-empty identifier)
-  optional string recipient_id = 1;
-  // Success.
-  optional bool success = 2;
-  // Notification.
-  optional Notification notification = 3;
-  // Error.
-  optional Error error = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class BulkSendResult {
-        +string recipient_id
-        +bool success
-        +Notification notification
-        +Error error
-    }
-    BulkSendResult --> Notification
-    BulkSendResult --> Error
-```
-
----
-
-### GetPreferencesResponse
-
-<a name="getpreferencesresponse"></a>
-
-GetPreferencesResponse returns preferences.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.GetPreferencesResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `preferences` | [`NotificationPreferences`](#notificationpreferences) | optional | Preferences. |
-
-#### Proto Definition
-
-```protobuf
-message GetPreferencesResponse {
-  // Preferences.
-  optional NotificationPreferences preferences = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class GetPreferencesResponse {
-        +NotificationPreferences preferences
-    }
-    GetPreferencesResponse --> NotificationPreferences
-```
-
----
-
-### RichContent
-
-<a name="richcontent"></a>
-
-RichContent contains rich notification content.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.RichContent` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `html` | string | optional | HTML content. |
-| 2 | `markdown` | string | optional | Markdown content. |
-| 3 | `structured_data` | [`Struct`](#struct) | optional | Structured data. |
-| 4 | `attachments` | [`Attachment`](#attachment) | repeated | Attachments. |
-
-#### Proto Definition
-
-```protobuf
-message RichContent {
-  // HTML content.
-  optional string html = 1;
-  // Markdown content.
-  optional string markdown = 2;
-  // Structured data.
-  optional Struct structured_data = 3;
-  // Attachments.
-  repeated Attachment attachments = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class RichContent {
-        +string html
-        +string markdown
-        +Struct structured_data
-        +Attachment[] attachments
-    }
-    RichContent --> Struct
-    RichContent "1" --> "*" Attachment
-```
-
----
-
-### NotificationTemplate
-
-<a name="notificationtemplate"></a>
-
-NotificationTemplate defines reusable template.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.NotificationTemplate` |
-| **Field Count** | 7 |
 | **Nested Types** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `template_id` | string | optional | Template ID. (Must be a non-empty identifier) |
-| 2 | `type` | [`NotificationType`](#notificationtype) | optional | Type. |
-| 3 | `priority` | [`Priority`](#priority) | optional | Priority Higher values indicate higher priority. |
-| 4 | `title` | string | optional | Title template. |
-| 5 | `message` | string | optional | Message template. |
-| 6 | `channels` | [`Channel`](#channel) | repeated | Channels. |
-| 7 | `default_data` | map<string, string> |  | Default data. |
+| 1 | `recipient_ids` | string | repeated | Recipient IDs. |
+| 2 | `template` | [`NotificationTemplate`](#notificationtemplate) | optional | Notification template. |
+| 3 | `personalizations` | map<string, Struct> |  | Personalization data per recipient. |
+| 4 | `scheduled_at` | [`Timestamp`](#timestamp) | optional | Schedule for later. (RFC 3339 timestamp format) |
 
 #### Proto Definition
 
 ```protobuf
-message NotificationTemplate {
-  // Template ID. (Must be a non-empty identifier)
-  optional string template_id = 1;
-  // Type.
-  optional NotificationType type = 2;
-  // Priority Higher values indicate higher priority.
-  optional Priority priority = 3;
-  // Title template.
-  optional string title = 4;
-  // Message template.
-  optional string message = 5;
-  // Channels.
-  repeated Channel channels = 6;
-  // Default data.
-   map<string, string> default_data = 7;
+message SendBulkRequest {
+  // Recipient IDs.
+  repeated string recipient_ids = 1;
+  // Notification template.
+  optional NotificationTemplate template = 2;
+  // Personalization data per recipient.
+   map<string, Struct> personalizations = 3;
+  // Schedule for later. (RFC 3339 timestamp format)
+  optional Timestamp scheduled_at = 4;
 }
 ```
 
@@ -1813,151 +2283,14 @@ message NotificationTemplate {
 
 ```mermaid
 classDiagram
-    class NotificationTemplate {
-        +string template_id
-        +NotificationType type
-        +Priority priority
-        +string title
-        +string message
-        +Channel[] channels
-        +map<string, string> default_data
+    class SendBulkRequest {
+        +string[] recipient_ids
+        +NotificationTemplate template
+        +map<string, Struct> personalizations
+        +Timestamp scheduled_at
     }
-    NotificationTemplate --> NotificationType
-    NotificationTemplate --> Priority
-    NotificationTemplate "1" --> "*" Channel
-```
-
----
-
-### DigestSettings
-
-<a name="digestsettings"></a>
-
-DigestSettings for notification digests.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.DigestSettings` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `enabled` | bool | optional | Enabled. |
-| 2 | `frequency` | [`DigestFrequency`](#digestfrequency) | optional | Frequency. |
-| 3 | `delivery_time` | string | optional | Delivery time (HH:MM). |
-| 4 | `days` | int32 | repeated | Days for weekly digest. |
-
-#### Proto Definition
-
-```protobuf
-message DigestSettings {
-  // Enabled.
-  optional bool enabled = 1;
-  // Frequency.
-  optional DigestFrequency frequency = 2;
-  // Delivery time (HH:MM).
-  optional string delivery_time = 3;
-  // Days for weekly digest.
-  repeated int32 days = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class DigestSettings {
-        +bool enabled
-        +DigestFrequency frequency
-        +string delivery_time
-        +int32[] days
-    }
-    DigestSettings --> DigestFrequency
-```
-
----
-
-### SendNotificationResponse
-
-<a name="sendnotificationresponse"></a>
-
-SendNotificationResponse confirms sending.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.SendNotificationResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `notification` | [`Notification`](#notification) | optional | Created notification. |
-| 2 | `scheduled` | bool | optional | Scheduled. |
-
-#### Proto Definition
-
-```protobuf
-message SendNotificationResponse {
-  // Created notification.
-  optional Notification notification = 1;
-  // Scheduled.
-  optional bool scheduled = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class SendNotificationResponse {
-        +Notification notification
-        +bool scheduled
-    }
-    SendNotificationResponse --> Notification
-```
-
----
-
-### DeleteNotificationRequest
-
-<a name="deletenotificationrequest"></a>
-
-DeleteNotificationRequest deletes notification.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `notifications.v1.DeleteNotificationRequest` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `notification_id` | string | optional | Notification ID. (Must be a non-empty identifier) |
-| 2 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
-
-#### Proto Definition
-
-```protobuf
-message DeleteNotificationRequest {
-  // Notification ID. (Must be a non-empty identifier)
-  optional string notification_id = 1;
-  // User ID. (Must be a non-empty identifier)
-  optional string user_id = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-classDiagram
-    class DeleteNotificationRequest {
-        +string notification_id
-        +string user_id
-    }
+    SendBulkRequest --> NotificationTemplate
+    SendBulkRequest --> Timestamp
 ```
 
 ---
@@ -1967,42 +2300,6 @@ classDiagram
 <a name="enumerations"></a>
 
 This service defines **7 enumeration types**:
-
-### AttachmentType
-
-<a name="attachmenttype"></a>
-
-AttachmentType represents attachment types.
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `ATTACHMENT_TYPE_UNSPECIFIED` | 0 | ATTACHMENT_TYPE_UNSPECIFIED value. |
-| `ATTACHMENT_TYPE_IMAGE` | 1 | ATTACHMENT_TYPE_IMAGE value. |
-| `ATTACHMENT_TYPE_VIDEO` | 2 | ATTACHMENT_TYPE_VIDEO value. |
-| `ATTACHMENT_TYPE_AUDIO` | 3 | ATTACHMENT_TYPE_AUDIO value. |
-| `ATTACHMENT_TYPE_DOCUMENT` | 4 | ATTACHMENT_TYPE_DOCUMENT value. |
-| `ATTACHMENT_TYPE_FILE` | 5 | ATTACHMENT_TYPE_FILE value. |
-
-#### Proto Definition
-
-```protobuf
-enum AttachmentType {
-  // ATTACHMENT_TYPE_UNSPECIFIED value.
-  ATTACHMENT_TYPE_UNSPECIFIED = 0;
-  // ATTACHMENT_TYPE_IMAGE value.
-  ATTACHMENT_TYPE_IMAGE = 1;
-  // ATTACHMENT_TYPE_VIDEO value.
-  ATTACHMENT_TYPE_VIDEO = 2;
-  // ATTACHMENT_TYPE_AUDIO value.
-  ATTACHMENT_TYPE_AUDIO = 3;
-  // ATTACHMENT_TYPE_DOCUMENT value.
-  ATTACHMENT_TYPE_DOCUMENT = 4;
-  // ATTACHMENT_TYPE_FILE value.
-  ATTACHMENT_TYPE_FILE = 5;
-}
-```
-
----
 
 ### ActionType
 
@@ -2237,6 +2534,301 @@ enum DeliveryStatus {
   // DELIVERY_STATUS_CLICKED value.
   DELIVERY_STATUS_CLICKED = 8;
 }
+```
+
+---
+
+### AttachmentType
+
+<a name="attachmenttype"></a>
+
+AttachmentType represents attachment types.
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `ATTACHMENT_TYPE_UNSPECIFIED` | 0 | ATTACHMENT_TYPE_UNSPECIFIED value. |
+| `ATTACHMENT_TYPE_IMAGE` | 1 | ATTACHMENT_TYPE_IMAGE value. |
+| `ATTACHMENT_TYPE_VIDEO` | 2 | ATTACHMENT_TYPE_VIDEO value. |
+| `ATTACHMENT_TYPE_AUDIO` | 3 | ATTACHMENT_TYPE_AUDIO value. |
+| `ATTACHMENT_TYPE_DOCUMENT` | 4 | ATTACHMENT_TYPE_DOCUMENT value. |
+| `ATTACHMENT_TYPE_FILE` | 5 | ATTACHMENT_TYPE_FILE value. |
+
+#### Proto Definition
+
+```protobuf
+enum AttachmentType {
+  // ATTACHMENT_TYPE_UNSPECIFIED value.
+  ATTACHMENT_TYPE_UNSPECIFIED = 0;
+  // ATTACHMENT_TYPE_IMAGE value.
+  ATTACHMENT_TYPE_IMAGE = 1;
+  // ATTACHMENT_TYPE_VIDEO value.
+  ATTACHMENT_TYPE_VIDEO = 2;
+  // ATTACHMENT_TYPE_AUDIO value.
+  ATTACHMENT_TYPE_AUDIO = 3;
+  // ATTACHMENT_TYPE_DOCUMENT value.
+  ATTACHMENT_TYPE_DOCUMENT = 4;
+  // ATTACHMENT_TYPE_FILE value.
+  ATTACHMENT_TYPE_FILE = 5;
+}
+```
+
+---
+
+## 🗄️ Data Model (ERD)
+
+<a name="erd"></a>
+
+Entity-Relationship diagram showing the data model.
+
+```mermaid
+erDiagram
+    BulkSendResult {
+        string recipient_id
+        bool success
+        Notification notification
+        Error error
+    }
+
+    BulkSendResult ||--|| Notification : has
+    BulkSendResult ||--|| Error : has
+    NotificationEvent {
+        EventType event_type
+        Notification notification
+        Timestamp event_time
+    }
+
+    NotificationEvent ||--|| EventType : has
+    NotificationEvent ||--|| Notification : has
+    NotificationTemplate {
+        string template_id
+        NotificationType type
+        Priority priority
+        string title
+        string message
+        Channel channels
+        map<string, string> default_data
+    }
+
+    NotificationTemplate ||--|| NotificationType : has
+    NotificationTemplate ||--|| Priority : has
+    NotificationTemplate ||--o{ Channel : has
+    NotificationPreferences {
+        string user_id
+        bool enabled
+        map<string, ChannelPreference> channels
+        map<string, TypePreference> types
+        QuietHours quiet_hours
+        DigestSettings digest
+    }
+
+    NotificationPreferences ||--|| QuietHours : has
+    NotificationPreferences ||--|| DigestSettings : has
+    TrackingData {
+        bool impression_tracked
+        Timestamp impression_at
+        bool click_tracked
+        Timestamp clicked_at
+        bool conversion_tracked
+        Timestamp converted_at
+        UTMParameters utm
+    }
+
+    TrackingData ||--|| UTMParameters : has
+    GetNotificationRequest {
+        string notification_id
+    }
+
+    MarkAsReadRequest {
+        string notification_ids
+        string user_id
+        bool all
+    }
+
+    UpdatePreferencesRequest {
+        string user_id
+        NotificationPreferences preferences
+    }
+
+    UpdatePreferencesRequest ||--|| NotificationPreferences : has
+    RichContent {
+        string html
+        string markdown
+        Struct structured_data
+        Attachment attachments
+    }
+
+    RichContent ||--o{ Attachment : has
+    Notification {
+        Metadata metadata
+        string recipient_id
+        string sender_id
+        NotificationType type
+        Priority priority
+        string title
+        string message
+        RichContent content
+        Channel channels
+        map<string, DeliveryDetails> deliveries
+        Action actions
+        string deep_link
+        string image_url
+        string icon_url
+        string sound
+        int32 badge
+        bool read
+        Timestamp read_at
+        Timestamp expires_at
+        string category
+        string tags
+        map<string, string> data
+        TrackingData tracking
+    }
+
+    Notification ||--|| Metadata : has
+    Notification ||--|| NotificationType : has
+    Notification ||--|| Priority : has
+    Notification ||--|| RichContent : has
+    Notification ||--o{ Channel : has
+    Notification ||--o{ Action : has
+    Notification ||--|| TrackingData : has
+    DigestSettings {
+        bool enabled
+        DigestFrequency frequency
+        string delivery_time
+        int32 days
+    }
+
+    DigestSettings ||--|| DigestFrequency : has
+    SendNotificationResponse {
+        Notification notification
+        bool scheduled
+    }
+
+    SendNotificationResponse ||--|| Notification : has
+    GetNotificationResponse {
+        Notification notification
+    }
+
+    GetNotificationResponse ||--|| Notification : has
+    DeleteNotificationRequest {
+        string notification_id
+        string user_id
+    }
+
+    GetPreferencesRequest {
+        string user_id
+    }
+
+    UpdatePreferencesResponse {
+        NotificationPreferences preferences
+    }
+
+    UpdatePreferencesResponse ||--|| NotificationPreferences : has
+    QuietHours {
+        bool enabled
+        string start_time
+        string end_time
+        int32 days
+        string timezone
+    }
+
+    UTMParameters {
+        string source
+        string medium
+        string campaign
+        string term
+        string content
+    }
+
+    ListNotificationsRequest {
+        string user_id
+        PaginationRequest pagination
+        bool read
+        NotificationType types
+        Channel channels
+        string categories
+        string tags
+        DateRangeFilter date_range
+    }
+
+    ListNotificationsRequest ||--|| PaginationRequest : has
+    ListNotificationsRequest ||--o{ NotificationType : has
+    ListNotificationsRequest ||--o{ Channel : has
+    ListNotificationsRequest ||--|| DateRangeFilter : has
+    ListNotificationsResponse {
+        Notification notifications
+        PaginationResponse pagination
+        int64 unread_count
+    }
+
+    ListNotificationsResponse ||--o{ Notification : has
+    ListNotificationsResponse ||--|| PaginationResponse : has
+    StreamNotificationsRequest {
+        string user_id
+        NotificationType types
+        Channel channels
+    }
+
+    StreamNotificationsRequest ||--o{ NotificationType : has
+    StreamNotificationsRequest ||--o{ Channel : has
+    Action {
+        string id
+        string label
+        string url
+        ActionType type
+        bool primary
+    }
+
+    Action ||--|| ActionType : has
+    DateRangeFilter {
+        Timestamp start
+        Timestamp end
+    }
+
+    Attachment {
+        AttachmentType type
+        string url
+        string filename
+        int64 size
+        string mime_type
+    }
+
+    Attachment ||--|| AttachmentType : has
+    GetPreferencesResponse {
+        NotificationPreferences preferences
+    }
+
+    GetPreferencesResponse ||--|| NotificationPreferences : has
+    SendNotificationRequest {
+        string recipient_id
+        NotificationType type
+        Priority priority
+        string title
+        string message
+        RichContent content
+        Channel channels
+        Action actions
+        string deep_link
+        string image_url
+        map<string, string> data
+        Timestamp scheduled_at
+        Timestamp expires_at
+        string idempotency_key
+    }
+
+    SendNotificationRequest ||--|| NotificationType : has
+    SendNotificationRequest ||--|| Priority : has
+    SendNotificationRequest ||--|| RichContent : has
+    SendNotificationRequest ||--o{ Channel : has
+    SendNotificationRequest ||--o{ Action : has
+    SendBulkRequest {
+        string recipient_ids
+        NotificationTemplate template
+        map<string, Struct> personalizations
+        Timestamp scheduled_at
+    }
+
+    SendBulkRequest ||--|| NotificationTemplate : has
 ```
 
 ---
