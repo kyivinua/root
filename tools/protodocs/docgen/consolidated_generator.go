@@ -34,6 +34,11 @@ type ConsolidatedConfig struct {
 	IncludeErrorCodes     bool
 	IncludeChangelog      bool
 
+	// Example languages
+	IncludeGoExamples         bool
+	IncludePythonExamples     bool
+	IncludeJavaScriptExamples bool
+
 	// Formatting
 	UseEmojis             bool
 	CodeHighlighting      string // "protobuf", "json", "yaml"
@@ -58,6 +63,9 @@ func DefaultConsolidatedConfig() ConsolidatedConfig {
 		IncludeExamples:       true,
 		IncludeErrorCodes:     true,
 		IncludeChangelog:      false,
+		IncludeGoExamples:         true,
+		IncludePythonExamples:     false, // Excluded per user request
+		IncludeJavaScriptExamples: true,
 		UseEmojis:             true,
 		CodeHighlighting:      "protobuf",
 		DiagramTheme:          "default",

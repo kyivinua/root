@@ -106,6 +106,9 @@ func main() {
 		IncludeExamples:       !*noExamples,
 		IncludeErrorCodes:     true,
 		IncludeChangelog:      false,
+		IncludeGoExamples:         !*noExamples, // Go examples enabled by default
+		IncludePythonExamples:     false,        // Python examples excluded
+		IncludeJavaScriptExamples: !*noExamples, // JavaScript examples enabled by default
 		UseEmojis:             !*noEmoji,
 		CodeHighlighting:      "protobuf",
 		DiagramTheme:          *themeName,

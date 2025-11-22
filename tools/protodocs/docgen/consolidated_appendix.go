@@ -78,9 +78,15 @@ func (g *ConsolidatedDocGenerator) writeExamplesSection(sb *strings.Builder, doc
 	}
 
 	// Generate basic examples for common languages
-	g.writeGoExample(sb, doc)
-	g.writePythonExample(sb, doc)
-	g.writeJavaScriptExample(sb, doc)
+	if g.config.IncludeGoExamples {
+		g.writeGoExample(sb, doc)
+	}
+	if g.config.IncludePythonExamples {
+		g.writePythonExample(sb, doc)
+	}
+	if g.config.IncludeJavaScriptExamples {
+		g.writeJavaScriptExample(sb, doc)
+	}
 
 	sb.WriteString("---\n\n")
 }
