@@ -7,6 +7,10 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/errors"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/ratelimit"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/validation"
 )
 
 const (
@@ -21,10 +25,29 @@ type Client struct {
 	username   string
 	apiToken   string
 	httpClient *http.Client
+	limiter    *ratelimit.Limiter
 }
 
 // NewClient creates a new Confluence API client.
-func NewClient(baseURL, username, apiToken string) *Client {
+func NewClient(baseURL, username, apiToken string) (*Client, error) {
+	// Validate URL
+	if err := validation.ValidateURL(baseURL); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid base URL")
+	}
+
+	// Validate API token
+	if err := validation.ValidateAPIKey(apiToken); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid API token")
+	}
+
+	// Validate username (basic email/username format)
+	if username == "" {
+		return nil, errors.New(errors.ErrorTypeValidation, "username cannot be empty")
+	}
+
+	// Create rate limiter (10 requests per second per Confluence API limits)
+	limiter := ratelimit.NewLimiter(10, time.Second)
+
 	return &Client{
 		baseURL:  baseURL,
 		username: username,
@@ -32,7 +55,8 @@ func NewClient(baseURL, username, apiToken string) *Client {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-	}
+		limiter: limiter,
+	}, nil
 }
 
 // Page represents a Confluence page.
@@ -86,31 +110,51 @@ type PageResponse struct {
 func (c *Client) CreatePage(page *Page) (*Page, error) {
 	body, err := json.Marshal(page)
 	if err != nil {
-		return nil, fmt.Errorf("marshal page: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to marshal page")
 	}
 
 	req, err := http.NewRequest("POST", c.baseURL+"/rest/api/content", bytes.NewReader(body))
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
 	}
 
 	req.SetBasicAuth(c.username, c.apiToken)
 	req.Header.Set("Content-Type", "application/json")
 
+	// Apply rate limiting
+	c.limiter.Wait()
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("execute request: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(bodyBytes))
+
+		// Categorize by status code
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+		case http.StatusForbidden:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+		case http.StatusNotFound:
+			return nil, errors.New(errors.ErrorTypeNotFound, fmt.Sprintf("resource not found: %s", string(bodyBytes)))
+		case http.StatusConflict:
+			return nil, errors.New(errors.ErrorTypeAPI, fmt.Sprintf("conflict: %s", string(bodyBytes)))
+		case http.StatusTooManyRequests:
+			return nil, errors.New(errors.ErrorTypeRetryable, fmt.Sprintf("rate limited: %s", string(bodyBytes)))
+		case http.StatusServiceUnavailable, http.StatusBadGateway, http.StatusGatewayTimeout:
+			return nil, errors.New(errors.ErrorTypeRetryable, fmt.Sprintf("service unavailable (status %d): %s", resp.StatusCode, string(bodyBytes)))
+		default:
+			return nil, errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+		}
 	}
 
 	var created Page
 	if err := json.NewDecoder(resp.Body).Decode(&created); err != nil {
-		return nil, fmt.Errorf("decode response: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
 	}
 
 	return &created, nil
@@ -118,33 +162,57 @@ func (c *Client) CreatePage(page *Page) (*Page, error) {
 
 // UpdatePage updates an existing Confluence page.
 func (c *Client) UpdatePage(pageID string, page *Page) (*Page, error) {
+	// Validate page ID
+	if err := validation.ValidatePageID(pageID); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
 	body, err := json.Marshal(page)
 	if err != nil {
-		return nil, fmt.Errorf("marshal page: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to marshal page")
 	}
 
 	req, err := http.NewRequest("PUT", c.baseURL+"/rest/api/content/"+pageID, bytes.NewReader(body))
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
 	}
 
 	req.SetBasicAuth(c.username, c.apiToken)
 	req.Header.Set("Content-Type", "application/json")
 
+	// Apply rate limiting
+	c.limiter.Wait()
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("execute request: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(bodyBytes))
+
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+		case http.StatusForbidden:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+		case http.StatusNotFound:
+			return nil, errors.New(errors.ErrorTypeNotFound, fmt.Sprintf("page not found: %s", string(bodyBytes)))
+		case http.StatusConflict:
+			return nil, errors.New(errors.ErrorTypeAPI, fmt.Sprintf("conflict (version mismatch): %s", string(bodyBytes)))
+		case http.StatusTooManyRequests:
+			return nil, errors.New(errors.ErrorTypeRetryable, fmt.Sprintf("rate limited: %s", string(bodyBytes)))
+		case http.StatusServiceUnavailable, http.StatusBadGateway, http.StatusGatewayTimeout:
+			return nil, errors.New(errors.ErrorTypeRetryable, fmt.Sprintf("service unavailable (status %d): %s", resp.StatusCode, string(bodyBytes)))
+		default:
+			return nil, errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+		}
 	}
 
 	var updated Page
 	if err := json.NewDecoder(resp.Body).Decode(&updated); err != nil {
-		return nil, fmt.Errorf("decode response: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
 	}
 
 	return &updated, nil
@@ -152,16 +220,24 @@ func (c *Client) UpdatePage(pageID string, page *Page) (*Page, error) {
 
 // GetPage retrieves a page by ID.
 func (c *Client) GetPage(pageID string) (*Page, error) {
+	// Validate page ID
+	if err := validation.ValidatePageID(pageID); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
 	req, err := http.NewRequest("GET", c.baseURL+"/rest/api/content/"+pageID+"?expand=body.storage,version", nil)
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
 	}
 
 	req.SetBasicAuth(c.username, c.apiToken)
 
+	// Apply rate limiting
+	c.limiter.Wait()
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("execute request: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
 	defer resp.Body.Close()
 
@@ -171,12 +247,20 @@ func (c *Client) GetPage(pageID string) (*Page, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(bodyBytes))
+
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+		case http.StatusForbidden:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+		default:
+			return nil, errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+		}
 	}
 
 	var page Page
 	if err := json.NewDecoder(resp.Body).Decode(&page); err != nil {
-		return nil, fmt.Errorf("decode response: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
 	}
 
 	return &page, nil
@@ -184,30 +268,52 @@ func (c *Client) GetPage(pageID string) (*Page, error) {
 
 // FindPageByTitle finds a page by title in a space.
 func (c *Client) FindPageByTitle(spaceKey, title string) (*Page, error) {
+	// Validate space key
+	if err := validation.ValidateSpaceKey(spaceKey); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid space key")
+	}
+
+	// Sanitize title
+	title = validation.SanitizeString(title)
+	if title == "" {
+		return nil, errors.New(errors.ErrorTypeValidation, "title cannot be empty")
+	}
+
 	url := fmt.Sprintf("%s/rest/api/content?spaceKey=%s&title=%s&expand=body.storage,version",
 		c.baseURL, spaceKey, title)
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("create request: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
 	}
 
 	req.SetBasicAuth(c.username, c.apiToken)
 
+	// Apply rate limiting
+	c.limiter.Wait()
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("execute request: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(bodyBytes))
+
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+		case http.StatusForbidden:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+		default:
+			return nil, errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+		}
 	}
 
 	var pageResp PageResponse
 	if err := json.NewDecoder(resp.Body).Decode(&pageResp); err != nil {
-		return nil, fmt.Errorf("decode response: %w", err)
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
 	}
 
 	if pageResp.Size == 0 {
@@ -219,22 +325,40 @@ func (c *Client) FindPageByTitle(spaceKey, title string) (*Page, error) {
 
 // DeletePage deletes a page by ID.
 func (c *Client) DeletePage(pageID string) error {
+	// Validate page ID
+	if err := validation.ValidatePageID(pageID); err != nil {
+		return errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
 	req, err := http.NewRequest("DELETE", c.baseURL+"/rest/api/content/"+pageID, nil)
 	if err != nil {
-		return fmt.Errorf("create request: %w", err)
+		return errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
 	}
 
 	req.SetBasicAuth(c.username, c.apiToken)
 
+	// Apply rate limiting
+	c.limiter.Wait()
+
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("execute request: %w", err)
+		return errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(bodyBytes))
+
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+		case http.StatusForbidden:
+			return errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+		case http.StatusNotFound:
+			return errors.New(errors.ErrorTypeNotFound, fmt.Sprintf("page not found: %s", string(bodyBytes)))
+		default:
+			return errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+		}
 	}
 
 	return nil

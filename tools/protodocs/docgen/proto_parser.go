@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/validation"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
@@ -18,12 +19,32 @@ type ProtoParser struct {
 }
 
 // NewProtoParser creates a new proto parser
-func NewProtoParser(protoFiles, importPaths []string) *ProtoParser {
-	return &ProtoParser{
-		protoFiles:  protoFiles,
-		importPaths: importPaths,
-		descGen:     NewDescriptionGenerator(),
+func NewProtoParser(protoFiles, importPaths []string) (*ProtoParser, error) {
+	// Validate all proto files
+	validatedProtoFiles := make([]string, 0, len(protoFiles))
+	for _, protoFile := range protoFiles {
+		validPath, err := validation.ValidateProtoFile(protoFile)
+		if err != nil {
+			return nil, fmt.Errorf("invalid proto file %q: %w", protoFile, err)
+		}
+		validatedProtoFiles = append(validatedProtoFiles, validPath)
 	}
+
+	// Validate all import paths
+	validatedImportPaths := make([]string, 0, len(importPaths))
+	for _, importPath := range importPaths {
+		validPath, err := validation.ValidateDirectory(importPath)
+		if err != nil {
+			return nil, fmt.Errorf("invalid import path %q: %w", importPath, err)
+		}
+		validatedImportPaths = append(validatedImportPaths, validPath)
+	}
+
+	return &ProtoParser{
+		protoFiles:  validatedProtoFiles,
+		importPaths: validatedImportPaths,
+		descGen:     NewDescriptionGenerator(),
+	}, nil
 }
 
 // Parse parses proto files and returns service documentation

@@ -36,7 +36,7 @@ type Publisher struct {
 }
 
 // NewPublisher creates a new Confluence publisher.
-func NewPublisher(config *PublisherConfig) *Publisher {
+func NewPublisher(config *PublisherConfig) (*Publisher, error) {
 	// Override with environment variables if set
 	if envUsername := os.Getenv("CONFLUENCE_USERNAME"); envUsername != "" {
 		config.Username = envUsername
@@ -45,12 +45,18 @@ func NewPublisher(config *PublisherConfig) *Publisher {
 		config.APIToken = envToken
 	}
 
+	// Create client with validation
+	client, err := NewClient(config.BaseURL, config.Username, config.APIToken)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Confluence client: %w", err)
+	}
+
 	return &Publisher{
 		config:    config,
-		client:    NewClient(config.BaseURL, config.Username, config.APIToken),
+		client:    client,
 		formatter: NewFormatter(config.IncludeDiagrams),
 		logger:    log.New(os.Stdout, "[confluence] ", log.LstdFlags),
-	}
+	}, nil
 }
 
 // PublishResult holds the result of publishing.

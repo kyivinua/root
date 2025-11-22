@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/kyivinua/docgen-tool/tools/protodocs/docgen"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/validation"
 )
 
 func main() {
@@ -32,14 +33,28 @@ func main() {
 		fmt.Println()
 	}
 
+	// Validate and sanitize proto directory path
+	validatedProtoDir, err := validation.ValidateFilePath(*protoDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Invalid proto directory path: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Validate and sanitize output directory path
+	validatedOutputDir, err := validation.ValidateFilePath(*outputDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Invalid output directory path: %v\n", err)
+		os.Exit(1)
+	}
+
 	// Ensure output directory exists
-	if err := os.MkdirAll(*outputDir, 0755); err != nil {
+	if err := os.MkdirAll(validatedOutputDir, 0755); err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating output directory: %v\n", err)
 		os.Exit(1)
 	}
 
 	// Find all proto files
-	protoFiles, err := findProtoFiles(*protoDir)
+	protoFiles, err := findProtoFiles(validatedProtoDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error finding proto files: %v\n", err)
 		os.Exit(1)
@@ -61,16 +76,20 @@ func main() {
 	// Determine import paths
 	importPaths := []string{
 		"/usr/include",  // For google protobuf well-known types
-		*protoDir,
-		filepath.Join(*protoDir, "common"),
-		filepath.Join(*protoDir, "users"),
-		filepath.Join(*protoDir, "payments"),
-		filepath.Join(*protoDir, "notifications"),
-		filepath.Join(*protoDir, "analytics"),
+		validatedProtoDir,
+		filepath.Join(validatedProtoDir, "common"),
+		filepath.Join(validatedProtoDir, "users"),
+		filepath.Join(validatedProtoDir, "payments"),
+		filepath.Join(validatedProtoDir, "notifications"),
+		filepath.Join(validatedProtoDir, "analytics"),
 	}
 
 	// Create parser
-	parser := docgen.NewProtoParser(protoFiles, importPaths)
+	parser, err := docgen.NewProtoParser(protoFiles, importPaths)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error creating parser: %v\n", err)
+		os.Exit(1)
+	}
 
 	// Parse proto files
 	fmt.Println("Parsing proto files...")
@@ -145,7 +164,7 @@ func main() {
 		markdown := generator.GenerateConsolidatedDoc(doc)
 
 		// Write to file
-		filename := filepath.Join(*outputDir, fmt.Sprintf("%s.md", doc.Service.Name))
+		filename := filepath.Join(validatedOutputDir, fmt.Sprintf("%s.md", doc.Service.Name))
 		if err := os.WriteFile(filename, []byte(markdown), 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Error writing %s: %v\n", filename, err)
 			continue
@@ -157,7 +176,7 @@ func main() {
 	// Generate index file
 	fmt.Println("\nGenerating index...")
 	indexContent := generateIndex(docs, config)
-	indexFile := filepath.Join(*outputDir, "README.md")
+	indexFile := filepath.Join(validatedOutputDir, "README.md")
 	if err := os.WriteFile(indexFile, []byte(indexContent), 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing index: %v\n", err)
 	} else {
@@ -174,7 +193,7 @@ func main() {
 	fmt.Printf("  Messages:    %d\n", totalMessages)
 	fmt.Printf("  Enumerations: %d\n", totalEnums)
 	fmt.Printf("\nOutput:\n")
-	fmt.Printf("  Directory:   %s\n", *outputDir)
+	fmt.Printf("  Directory:   %s\n", validatedOutputDir)
 	fmt.Printf("  Files:       %d service docs + 1 index\n", len(docs))
 	fmt.Println()
 }

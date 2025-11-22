@@ -877,11 +877,13 @@ func (p *Pipeline) runConfluencePublishing() error {
 		VisibilityFilter:     cfg.VisibilityFilter,
 	}
 
-	publisher := confluence.NewPublisher(publisherCfg)
+	publisher, err := confluence.NewPublisher(publisherCfg)
+	if err != nil {
+		return fmt.Errorf("create confluence publisher: %w", err)
+	}
 
 	// Publish documentation
 	var result *confluence.PublishResult
-	var err error
 
 	if cfg.CreatePagePerService {
 		// Publish separate pages for each service
