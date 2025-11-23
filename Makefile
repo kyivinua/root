@@ -1,4 +1,4 @@
-.PHONY: help build install test test-coverage test-race lint fmt clean run release proto-lint proto-breaking proto-build proto-docs proto-ci build-proto-docs build-runtime build-enricher run-runtime run-enricher test-protoctx test-pipeline test-enricher
+.PHONY: help build install test test-coverage test-race lint fmt clean run release proto-lint proto-breaking proto-build proto-docs proto-ci build-proto-docs build-runtime build-enricher run-runtime run-enricher test-protoctx test-pipeline test-enricher build-consolidated-docgen descriptor docs-from-proto docs-from-descriptor docs-clean docs-all
 
 # Variables
 BINARY_NAME=docgen
@@ -9,6 +9,13 @@ MAIN_PATH=./cmd/docgen
 PROTO_DOCS_BIN=$(BUILD_DIR)/proto-docs
 RUNTIME_BIN=$(BUILD_DIR)/runtime
 ENRICHER_BIN=$(BUILD_DIR)/protodocs-enricher
+
+# Consolidated documentation variables
+CONSOLIDATED_DOCGEN_BIN=$(BUILD_DIR)/consolidated-docgen
+PROTO_DIR=./test-monorepo/proto
+DESCRIPTOR_FILE=./api-docs/descriptors/test-monorepo.pb
+DOCS_OUTPUT_DIR=./docs/api
+DOCS_THEME=forest
 
 # Colors for output
 COLOR_RESET=\033[0m
@@ -165,5 +172,62 @@ test-enricher: ## Run Enricher tests
 	@go test -v ./tools/protodocs/enricher
 	@go test -v ./tools/protodocs/enricher/adapters
 	@echo '$(COLOR_GREEN)✓ Enricher tests complete$(COLOR_RESET)'
+
+# Consolidated Documentation Generation Targets
+
+build-consolidated-docgen: ## Build consolidated-docgen CLI tool
+	@echo '$(COLOR_BOLD)Building consolidated-docgen...$(COLOR_RESET)'
+	@mkdir -p $(BUILD_DIR)
+	@go build -o $(CONSOLIDATED_DOCGEN_BIN) ./tools/protodocs/cmd/consolidated-docgen
+	@echo '$(COLOR_GREEN)✓ consolidated-docgen built: $(CONSOLIDATED_DOCGEN_BIN)$(COLOR_RESET)'
+
+descriptor: ## Create proto descriptor file from test-monorepo
+	@echo '$(COLOR_BOLD)Creating proto descriptor file...$(COLOR_RESET)'
+	@mkdir -p $(dir $(DESCRIPTOR_FILE))
+	@protoc \
+		--descriptor_set_out=$(DESCRIPTOR_FILE) \
+		--include_imports \
+		--include_source_info \
+		--proto_path=$(PROTO_DIR) \
+		--proto_path=/usr/include \
+		$(PROTO_DIR)/analytics/analytics.proto \
+		$(PROTO_DIR)/common/common.proto \
+		$(PROTO_DIR)/notifications/notifications.proto \
+		$(PROTO_DIR)/payments/payments.proto \
+		$(PROTO_DIR)/users/users.proto
+	@ls -lh $(DESCRIPTOR_FILE)
+	@echo '$(COLOR_GREEN)✓ Descriptor created: $(DESCRIPTOR_FILE)$(COLOR_RESET)'
+
+docs-from-proto: build-consolidated-docgen ## Generate docs from proto files (requires protoc)
+	@echo '$(COLOR_BOLD)Generating documentation from proto files...$(COLOR_RESET)'
+	@mkdir -p $(DOCS_OUTPUT_DIR)
+	@$(CONSOLIDATED_DOCGEN_BIN) \
+		--proto-dir=$(PROTO_DIR) \
+		--output-dir=$(DOCS_OUTPUT_DIR) \
+		--theme=$(DOCS_THEME) \
+		--verbose
+	@echo '$(COLOR_GREEN)✓ Documentation generated: $(DOCS_OUTPUT_DIR)$(COLOR_RESET)'
+
+docs-from-descriptor: build-consolidated-docgen descriptor ## Generate docs from descriptor file (faster, no protoc needed)
+	@echo '$(COLOR_BOLD)Generating documentation from descriptor file...$(COLOR_RESET)'
+	@mkdir -p $(DOCS_OUTPUT_DIR)
+	@$(CONSOLIDATED_DOCGEN_BIN) \
+		--descriptor=$(DESCRIPTOR_FILE) \
+		--output-dir=$(DOCS_OUTPUT_DIR) \
+		--theme=$(DOCS_THEME) \
+		--verbose
+	@echo '$(COLOR_GREEN)✓ Documentation generated: $(DOCS_OUTPUT_DIR)$(COLOR_RESET)'
+	@echo ''
+	@echo '$(COLOR_BOLD)Generated files:$(COLOR_RESET)'
+	@ls -lh $(DOCS_OUTPUT_DIR)/*.md | awk '{print "  " $$9 " (" $$5 ")"}'
+
+docs-clean: ## Clean generated documentation
+	@echo '$(COLOR_BOLD)Cleaning generated documentation...$(COLOR_RESET)'
+	@rm -rf $(DOCS_OUTPUT_DIR)
+	@rm -f $(DESCRIPTOR_FILE)
+	@echo '$(COLOR_GREEN)✓ Documentation cleaned$(COLOR_RESET)'
+
+docs-all: docs-clean docs-from-descriptor ## Clean and regenerate all documentation from descriptor
+	@echo '$(COLOR_GREEN)✓ Complete documentation regeneration finished$(COLOR_RESET)'
 
 .DEFAULT_GOAL := help
