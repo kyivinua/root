@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Build binaries for multiple platforms
+        run: |
+          mkdir -p dist
+
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/proto-docs-linux-amd64 ./cmd/proto-docs
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/protodocs-enricher-linux-amd64 ./cmd/protodocs-enricher
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/protodocs-hld-linux-amd64 ./cmd/protodocs-hld
+
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/proto-docs-linux-arm64 ./cmd/proto-docs
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/protodocs-enricher-linux-arm64 ./cmd/protodocs-enricher
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/protodocs-hld-linux-arm64 ./cmd/protodocs-hld
+
+          # macOS AMD64
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/proto-docs-darwin-amd64 ./cmd/proto-docs
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/protodocs-enricher-darwin-amd64 ./cmd/protodocs-enricher
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/protodocs-hld-darwin-amd64 ./cmd/protodocs-hld
+
+          # macOS ARM64 (Apple Silicon)
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/proto-docs-darwin-arm64 ./cmd/proto-docs
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/protodocs-enricher-darwin-arm64 ./cmd/protodocs-enricher
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/protodocs-hld-darwin-arm64 ./cmd/protodocs-hld
+
+          # Windows AMD64
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/proto-docs-windows-amd64.exe ./cmd/proto-docs
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/protodocs-enricher-windows-amd64.exe ./cmd/protodocs-enricher
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/protodocs-hld-windows-amd64.exe ./cmd/protodocs-hld
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

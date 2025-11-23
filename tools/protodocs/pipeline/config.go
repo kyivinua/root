@@ -296,3 +296,14 @@ func DefaultConfig() *PipelineConfig {
 		},
 	}
 }
+
+// Validate validates the pipeline configuration.
+func (c *PipelineConfig) Validate() error {
+	if c.ProtoRoot == "" {
+		return fmt.Errorf("proto_root is required")
+	}
+	if c.Docs.OutputDir == "" {
+		return fmt.Errorf("docs.output_dir is required")
+	}
+	return nil
+}
