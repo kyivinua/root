@@ -169,12 +169,38 @@ func (p *Pipeline) RunAll() error {
 func (p *Pipeline) runDiscovery() (*Scope, error) {
 	p.logger.Println("Stage 0: Discovery")
 
-	// For now, always discover all proto files
-	// TODO: Implement incremental discovery based on git diff
-	scope, err := DiscoverAllProto(p.config.ProtoRoot)
+	var scope *Scope
+	var err error
+
+	// Use incremental discovery if enabled
+	if p.config.Discovery.Incremental {
+		baseRef := p.config.Discovery.BaseRef
+		if baseRef == "" {
+			baseRef = "main"
+		}
+
+		headRef := p.config.Discovery.HeadRef
+		if headRef == "" {
+			headRef = "HEAD"
+		}
+
+		p.logger.Printf("Using incremental discovery: %s..%s", baseRef, headRef)
+		scope, err = DiscoverChangedProto(p.config.ProtoRoot, baseRef, headRef)
+		if err != nil {
+			p.logger.Printf("Warning: Incremental discovery failed, falling back to full discovery: %v", err)
+			scope, err = DiscoverAllProto(p.config.ProtoRoot)
+		}
+	} else {
+		// Full discovery
+		p.logger.Println("Using full discovery")
+		scope, err = DiscoverAllProto(p.config.ProtoRoot)
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
+	p.logger.Printf("Discovered %d proto files in %d packages", len(scope.ProtoFiles), len(scope.ProtoPackages))
 
 	return scope, nil
 }
@@ -1012,4 +1038,41 @@ func (p *Pipeline) uploadDiagramAttachments(result *confluence.PublishResult, pu
 	}
 
 	return nil
+}
+
+// RunLint executes only the linting stage
+func (p *Pipeline) RunLint() error {
+	p.logger.Println("Running lint stage only")
+	return p.runLint()
+}
+
+// RunBreaking executes only the breaking change detection stage
+func (p *Pipeline) RunBreaking() error {
+	p.logger.Println("Running breaking check stage only")
+	return p.runBreaking()
+}
+
+// RunDescriptorBuild executes only the descriptor build stage
+func (p *Pipeline) RunDescriptorBuild() (string, error) {
+	p.logger.Println("Running descriptor build stage only")
+	return p.runDescriptorBuild()
+}
+
+// RunDocModelBuild executes descriptor build and doc model build stages
+func (p *Pipeline) RunDocModelBuild() (*ApiDocModel, error) {
+	p.logger.Println("Running doc model build stages")
+
+	// Build descriptor first
+	descPath, err := p.runDescriptorBuild()
+	if err != nil {
+		return nil, fmt.Errorf("descriptor build: %w", err)
+	}
+
+	// Then build doc model
+	model, err := p.runDocModelBuild(descPath)
+	if err != nil {
+		return nil, fmt.Errorf("doc model build: %w", err)
+	}
+
+	return model, nil
 }

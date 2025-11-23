@@ -12,6 +12,7 @@ type PipelineConfig struct {
 	ProtoRoot string `yaml:"proto_root"`
 	UseBuf    bool   `yaml:"use_buf"`
 
+	Discovery     DiscoveryConfig     `yaml:"discovery"`
 	Lint          LintConfig          `yaml:"lint"`
 	Breaking      BreakingConfig      `yaml:"breaking"`
 	Enrichment    EnrichmentConfig    `yaml:"enrichment"`
@@ -24,6 +25,13 @@ type PipelineConfig struct {
 	Diagrams    DiagramsConfig    `yaml:"diagrams"`
 	Site        SiteConfig        `yaml:"site"`
 	Publishers  PublishersConfig  `yaml:"publishers"`
+}
+
+// DiscoveryConfig holds discovery configuration for incremental builds.
+type DiscoveryConfig struct {
+	Incremental bool   `yaml:"incremental"` // Enable incremental discovery via git diff
+	BaseRef     string `yaml:"base_ref"`    // Base git ref for comparison (e.g., "main", "origin/main")
+	HeadRef     string `yaml:"head_ref"`    // Head git ref (default: "HEAD")
 }
 
 // LintConfig holds lint configuration.

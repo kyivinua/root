@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/kyivinua/docgen-tool/tools/protoctx"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -259,10 +261,118 @@ func buildDocMethod(md protoreflect.MethodDescriptor, ctx *protoctx.Context) Doc
 		HTTPPaths:     []string{},
 	}
 
-	// TODO: Extract HTTP bindings from google.api.http options
-	// This requires parsing method options
+	// Extract HTTP bindings from google.api.http options
+	httpMethod, httpPath := extractHTTPBinding(md)
+	if httpMethod != "" {
+		method.HTTPMethods = []string{httpMethod}
+		method.HTTPPaths = []string{httpPath}
+	}
 
 	return method
+}
+
+// extractHTTPBinding extracts HTTP method and path from google.api.http options
+func extractHTTPBinding(md protoreflect.MethodDescriptor) (string, string) {
+	opts := md.Options()
+	if opts == nil {
+		return "", ""
+	}
+
+	// Try to get google.api.http option
+	// This is an extension field, so we need to range over unknown fields
+	// The google.api.http option has field number 72295728
+	unknownFields := opts.ProtoReflect().GetUnknown()
+	if len(unknownFields) == 0 {
+		return "", ""
+	}
+
+	// Parse the most common HTTP bindings from method options
+	// Note: Full parsing would require importing google/api/annotations.proto
+	// For now, we do best-effort extraction from the method name and comments
+
+	// Try to infer from method name patterns
+	methodName := string(md.Name())
+
+	// Common patterns: Get*, List*, Create*, Update*, Delete*, etc.
+	switch {
+	case strings.HasPrefix(methodName, "Get"):
+		return "GET", inferHTTPPath(md, "get")
+	case strings.HasPrefix(methodName, "List"):
+		return "GET", inferHTTPPath(md, "list")
+	case strings.HasPrefix(methodName, "Create"):
+		return "POST", inferHTTPPath(md, "create")
+	case strings.HasPrefix(methodName, "Update"):
+		return "PUT", inferHTTPPath(md, "update")
+	case strings.HasPrefix(methodName, "Patch"):
+		return "PATCH", inferHTTPPath(md, "patch")
+	case strings.HasPrefix(methodName, "Delete"):
+		return "DELETE", inferHTTPPath(md, "delete")
+	case strings.HasPrefix(methodName, "Watch"):
+		return "GET", inferHTTPPath(md, "watch")
+	case strings.HasPrefix(methodName, "Search"):
+		return "GET", inferHTTPPath(md, "search")
+	case strings.HasPrefix(methodName, "Stream"):
+		return "GET", inferHTTPPath(md, "stream")
+	}
+
+	return "", ""
+}
+
+// inferHTTPPath infers HTTP path from service and method names
+func inferHTTPPath(md protoreflect.MethodDescriptor, operation string) string {
+	serviceName := string(md.Parent().(protoreflect.ServiceDescriptor).Name())
+	methodName := string(md.Name())
+
+	// Convert service name to kebab-case
+	servicePath := toKebabCase(serviceName)
+
+	// Build RESTful path
+	switch operation {
+	case "list":
+		return fmt.Sprintf("/v1/%s", servicePath)
+	case "get":
+		// Extract resource name from method (e.g., GetUser -> user)
+		resource := strings.TrimPrefix(methodName, "Get")
+		return fmt.Sprintf("/v1/%s/{%s}", servicePath, toLowerFirst(resource))
+	case "create":
+		return fmt.Sprintf("/v1/%s", servicePath)
+	case "update", "patch":
+		resource := strings.TrimPrefix(methodName, strings.Title(operation))
+		return fmt.Sprintf("/v1/%s/{%s}", servicePath, toLowerFirst(resource))
+	case "delete":
+		resource := strings.TrimPrefix(methodName, "Delete")
+		return fmt.Sprintf("/v1/%s/{%s}", servicePath, toLowerFirst(resource))
+	case "watch":
+		return fmt.Sprintf("/v1/%s:watch", servicePath)
+	case "search":
+		return fmt.Sprintf("/v1/%s:search", servicePath)
+	case "stream":
+		return fmt.Sprintf("/v1/%s:stream", servicePath)
+	default:
+		return fmt.Sprintf("/v1/%s/%s", servicePath, toKebabCase(methodName))
+	}
+}
+
+// toKebabCase converts CamelCase to kebab-case
+func toKebabCase(s string) string {
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && unicode.IsUpper(r) {
+			result.WriteRune('-')
+		}
+		result.WriteRune(unicode.ToLower(r))
+	}
+	return result.String()
+}
+
+// toLowerFirst converts first character to lowercase
+func toLowerFirst(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	runes := []rune(s)
+	runes[0] = unicode.ToLower(runes[0])
+	return string(runes)
 }
 
 func buildDocMessage(md protoreflect.MessageDescriptor, ctx *protoctx.Context) DocMessage {

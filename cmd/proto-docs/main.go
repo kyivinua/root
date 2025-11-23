@@ -88,7 +88,7 @@ func runLint(cmd *cobra.Command, args []string) error {
 	}
 
 	p := pipeline.NewPipeline(cfg)
-	return p.RunAll() // TODO: Implement individual stage methods
+	return p.RunLint()
 }
 
 func runBreaking(cmd *cobra.Command, args []string) error {
@@ -98,7 +98,7 @@ func runBreaking(cmd *cobra.Command, args []string) error {
 	}
 
 	p := pipeline.NewPipeline(cfg)
-	return p.RunAll() // TODO: Implement individual stage methods
+	return p.RunBreaking()
 }
 
 func runBuildDesc(cmd *cobra.Command, args []string) error {
@@ -108,7 +108,13 @@ func runBuildDesc(cmd *cobra.Command, args []string) error {
 	}
 
 	p := pipeline.NewPipeline(cfg)
-	return p.RunAll() // TODO: Implement individual stage methods
+	descPath, err := p.RunDescriptorBuild()
+	if err != nil {
+		return err
+	}
+
+	log.Printf("✓ Descriptor built successfully: %s\n", descPath)
+	return nil
 }
 
 func runModel(cmd *cobra.Command, args []string) error {
@@ -118,7 +124,16 @@ func runModel(cmd *cobra.Command, args []string) error {
 	}
 
 	p := pipeline.NewPipeline(cfg)
-	return p.RunAll() // TODO: Implement individual stage methods
+	model, err := p.RunDocModelBuild()
+	if err != nil {
+		return err
+	}
+
+	log.Printf("✓ Doc model built successfully: %d modules, %d services, %d messages\n",
+		len(model.Modules),
+		model.Statistics["total_services"],
+		model.Statistics["total_messages"])
+	return nil
 }
 
 func loadConfig() (*pipeline.PipelineConfig, error) {
