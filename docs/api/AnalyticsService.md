@@ -6,7 +6,7 @@
 | **Package** | `analytics.v1` |
 | **Version** | v1 |
 | **Proto File** | `analytics/analytics.proto` |
-| **Generated** | 2025-11-23T00:27:00Z |
+| **Generated** | 2025-11-23T00:35:25Z |
 
 AnalyticsService provides analytics and reporting.
 
@@ -28,46 +28,46 @@ AnalyticsService provides analytics and reporting.
   - [CreateDashboard](#createdashboard)
   - [GetDashboard](#getdashboard)
 - [Messages](#messages)
-  - [LocationContext](#locationcontext)
-  - [MetricUpdate](#metricupdate)
-  - [TimeRange](#timerange)
-  - [Report](#report)
-  - [Column](#column)
-  - [Position](#position)
   - [DataPoint](#datapoint)
-  - [MetricSummary](#metricsummary)
-  - [Layout](#layout)
-  - [Resolution](#resolution)
-  - [TrackEventResponse](#trackeventresponse)
-  - [GetReportRequest](#getreportrequest)
-  - [CreateDashboardRequest](#createdashboardrequest)
-  - [Chart](#chart)
+  - [GetReportResponse](#getreportresponse)
+  - [QueryResponse](#queryresponse)
+  - [GetDashboardResponse](#getdashboardresponse)
+  - [DataTable](#datatable)
+  - [Dimension](#dimension)
   - [Row](#row)
+  - [Position](#position)
+  - [CreateDashboardRequest](#createdashboardrequest)
+  - [Metric](#metric)
+  - [Dashboard](#dashboard)
+  - [DeviceContext](#devicecontext)
+  - [LocationContext](#locationcontext)
+  - [UTMContext](#utmcontext)
   - [Widget](#widget)
+  - [Layout](#layout)
+  - [TrackEventResponse](#trackeventresponse)
+  - [QueryRequest](#queryrequest)
+  - [MetricSummary](#metricsummary)
+  - [DimensionValue](#dimensionvalue)
   - [GetMetricsResponse](#getmetricsresponse)
   - [StreamMetricsRequest](#streammetricsrequest)
+  - [MetricUpdate](#metricupdate)
   - [CreateDashboardResponse](#createdashboardresponse)
-  - [GetDashboardRequest](#getdashboardrequest)
-  - [DataTable](#datatable)
+  - [TimeRange](#timerange)
+  - [Resolution](#resolution)
   - [Size](#size)
-  - [DeviceContext](#devicecontext)
-  - [GetReportResponse](#getreportresponse)
-  - [Metric](#metric)
-  - [UserContext](#usercontext)
   - [SessionContext](#sessioncontext)
-  - [Dimension](#dimension)
+  - [BatchTrackResponse](#batchtrackresponse)
+  - [GetDashboardRequest](#getdashboardrequest)
+  - [Event](#event)
+  - [Report](#report)
+  - [Column](#column)
+  - [GetReportRequest](#getreportrequest)
+  - [UserContext](#usercontext)
+  - [GetMetricsRequest](#getmetricsrequest)
+  - [MetricSeries](#metricseries)
   - [Cell](#cell)
   - [TrackEventRequest](#trackeventrequest)
-  - [GetMetricsRequest](#getmetricsrequest)
-  - [QueryResponse](#queryresponse)
-  - [Dashboard](#dashboard)
-  - [Event](#event)
-  - [DimensionValue](#dimensionvalue)
-  - [UTMContext](#utmcontext)
-  - [BatchTrackResponse](#batchtrackresponse)
-  - [QueryRequest](#queryrequest)
-  - [GetDashboardResponse](#getdashboardresponse)
-  - [MetricSeries](#metricseries)
+  - [Chart](#chart)
 - [Enumerations](#enumerations)
 - [Error Codes](#error-codes)
 - [Examples](#examples)
@@ -215,48 +215,140 @@ UML class diagrams showing the structure of message types.
 classDiagram
     class AnalyticsService {
         <<service>>
-        +LocationContext()
-        +MetricUpdate()
-        +TimeRange()
-        +Report()
-        +Column()
-        +Position()
         +DataPoint()
-        +MetricSummary()
-        +Layout()
-        +Resolution()
-        +TrackEventResponse()
-        +GetReportRequest()
-        +CreateDashboardRequest()
-        +Chart()
+        +GetReportResponse()
+        +QueryResponse()
+        +GetDashboardResponse()
+        +DataTable()
+        +Dimension()
         +Row()
+        +Position()
+        +CreateDashboardRequest()
+        +Metric()
+        +Dashboard()
+        +DeviceContext()
+        +LocationContext()
+        +UTMContext()
         +Widget()
+        +Layout()
+        +TrackEventResponse()
+        +QueryRequest()
+        +MetricSummary()
+        +DimensionValue()
         +GetMetricsResponse()
         +StreamMetricsRequest()
+        +MetricUpdate()
         +CreateDashboardResponse()
-        +GetDashboardRequest()
-        +DataTable()
+        +TimeRange()
+        +Resolution()
         +Size()
-        +DeviceContext()
-        +GetReportResponse()
-        +Metric()
-        +UserContext()
         +SessionContext()
-        +Dimension()
+        +BatchTrackResponse()
+        +GetDashboardRequest()
+        +Event()
+        +Report()
+        +Column()
+        +GetReportRequest()
+        +UserContext()
+        +GetMetricsRequest()
+        +MetricSeries()
         +Cell()
         +TrackEventRequest()
-        +GetMetricsRequest()
-        +QueryResponse()
-        +Dashboard()
-        +Event()
-        +DimensionValue()
-        +UTMContext()
-        +BatchTrackResponse()
-        +QueryRequest()
-        +GetDashboardResponse()
-        +MetricSeries()
+        +Chart()
     }
 
+    class DataPoint {
+        +Timestamp timestamp
+        +double value
+        +map<string, string> labels
+    }
+
+    class GetReportResponse {
+        +Report report
+    }
+
+    GetReportResponse "1" --> "1" Report
+    class QueryResponse {
+        +DataTable result
+        +Duration execution_time
+    }
+
+    QueryResponse "1" --> "1" DataTable
+    class GetDashboardResponse {
+        +Dashboard dashboard
+        +map<string, WidgetData> widget_data
+    }
+
+    GetDashboardResponse "1" --> "1" Dashboard
+    class DataTable {
+        +string name
+        +Column columns[]
+        +Row rows[]
+        +int64 total_count
+    }
+
+    DataTable "1" --> "*" Column
+    DataTable "1" --> "*" Row
+    class Dimension {
+        +string name
+        +DimensionValue values[]
+        +int64 total_count
+    }
+
+    Dimension "1" --> "*" DimensionValue
+    class Row {
+        +Cell cells[]
+    }
+
+    Row "1" --> "*" Cell
+    class Position {
+        +int32 x
+        +int32 y
+    }
+
+    class CreateDashboardRequest {
+        +Dashboard dashboard
+    }
+
+    CreateDashboardRequest "1" --> "1" Dashboard
+    class Metric {
+        +string name
+        +MetricType type
+        +Timestamp timestamp
+        +double value
+        +map<string, string> tags
+        +string unit
+    }
+
+    Metric "1" --> "1" MetricType
+    class Dashboard {
+        +string dashboard_id
+        +string name
+        +string description
+        +string owner_id
+        +Widget widgets[]
+        +Layout layout
+        +Duration refresh_interval
+        +Timestamp created_at
+        +Timestamp updated_at
+    }
+
+    Dashboard "1" --> "*" Widget
+    Dashboard "1" --> "1" Layout
+    class DeviceContext {
+        +DeviceType device_type
+        +string os
+        +string os_version
+        +string browser
+        +string browser_version
+        +string brand
+        +string model
+        +Resolution screen
+        +string user_agent
+    }
+
+    DeviceContext "1" --> "1" DeviceType
+    DeviceContext "1" --> "1" Resolution
     class LocationContext {
         +string ip
         +string country
@@ -268,12 +360,85 @@ classDiagram
         +string timezone
     }
 
+    class UTMContext {
+        +string source
+        +string medium
+        +string campaign
+        +string term
+        +string content
+    }
+
+    class Widget {
+        +string widget_id
+        +WidgetType type
+        +string title
+        +Position position
+        +Size size
+        +map<string, string> config
+        +QueryRequest query
+    }
+
+    Widget "1" --> "1" WidgetType
+    Widget "1" --> "1" Position
+    Widget "1" --> "1" Size
+    Widget "1" --> "1" QueryRequest
+    class Layout {
+        +int32 columns
+        +int32 rows
+        +int32 grid_size
+    }
+
+    class TrackEventResponse {
+        +string event_id
+        +bool success
+    }
+
+    class QueryRequest {
+        +string query
+        +map<string, string> parameters
+        +int32 limit
+        +int32 offset
+    }
+
+    class MetricSummary {
+        +string name
+        +double current_value
+        +double previous_value
+        +double change_percent
+        +Trend trend
+        +AggregationType aggregation
+    }
+
+    MetricSummary "1" --> "1" Trend
+    MetricSummary "1" --> "1" AggregationType
+    class DimensionValue {
+        +string value
+        +int64 count
+        +double percentage
+        +map<string, double> metrics
+    }
+
+    class GetMetricsResponse {
+        +MetricSeries metrics[]
+    }
+
+    GetMetricsResponse "1" --> "*" MetricSeries
+    class StreamMetricsRequest {
+        +string metric_names[]
+        +Duration interval
+    }
+
     class MetricUpdate {
         +Metric metric
         +Timestamp timestamp
     }
 
     MetricUpdate "1" --> "1" Metric
+    class CreateDashboardResponse {
+        +Dashboard dashboard
+    }
+
+    CreateDashboardResponse "1" --> "1" Dashboard
     class TimeRange {
         +Timestamp start
         +Timestamp end
@@ -281,6 +446,56 @@ classDiagram
     }
 
     TimeRange "1" --> "1" TimeGranularity
+    class Resolution {
+        +int32 width
+        +int32 height
+    }
+
+    class Size {
+        +int32 width
+        +int32 height
+    }
+
+    class SessionContext {
+        +string session_id
+        +Timestamp started_at
+        +Duration duration
+        +int32 page_views
+        +int32 event_count
+    }
+
+    class BatchTrackResponse {
+        +int32 events_tracked
+        +int32 failed_count
+    }
+
+    class GetDashboardRequest {
+        +string dashboard_id
+    }
+
+    class Event {
+        +string event_id
+        +EventType event_type
+        +string event_name
+        +Timestamp timestamp
+        +UserContext user
+        +SessionContext session
+        +DeviceContext device
+        +LocationContext location
+        +map<string, string> properties
+        +double value
+        +string currency
+        +UTMContext utm
+        +string referrer
+        +map<string, string> dimensions
+    }
+
+    Event "1" --> "1" EventType
+    Event "1" --> "1" UserContext
+    Event "1" --> "1" SessionContext
+    Event "1" --> "1" DeviceContext
+    Event "1" --> "1" LocationContext
+    Event "1" --> "1" UTMContext
     class Report {
         +string report_id
         +string name
@@ -306,44 +521,6 @@ classDiagram
     }
 
     Column "1" --> "1" DataType
-    class Position {
-        +int32 x
-        +int32 y
-    }
-
-    class DataPoint {
-        +Timestamp timestamp
-        +double value
-        +map<string, string> labels
-    }
-
-    class MetricSummary {
-        +string name
-        +double current_value
-        +double previous_value
-        +double change_percent
-        +Trend trend
-        +AggregationType aggregation
-    }
-
-    MetricSummary "1" --> "1" Trend
-    MetricSummary "1" --> "1" AggregationType
-    class Layout {
-        +int32 columns
-        +int32 rows
-        +int32 grid_size
-    }
-
-    class Resolution {
-        +int32 width
-        +int32 height
-    }
-
-    class TrackEventResponse {
-        +string event_id
-        +bool success
-    }
-
     class GetReportRequest {
         +ReportType type
         +TimeRange time_range
@@ -354,102 +531,6 @@ classDiagram
 
     GetReportRequest "1" --> "1" ReportType
     GetReportRequest "1" --> "1" TimeRange
-    class CreateDashboardRequest {
-        +Dashboard dashboard
-    }
-
-    CreateDashboardRequest "1" --> "1" Dashboard
-    class Chart {
-        +string chart_id
-        +ChartType type
-        +string title
-        +MetricSeries series[]
-        +map<string, string> config
-    }
-
-    Chart "1" --> "1" ChartType
-    Chart "1" --> "*" MetricSeries
-    class Row {
-        +Cell cells[]
-    }
-
-    Row "1" --> "*" Cell
-    class Widget {
-        +string widget_id
-        +WidgetType type
-        +string title
-        +Position position
-        +Size size
-        +map<string, string> config
-        +QueryRequest query
-    }
-
-    Widget "1" --> "1" WidgetType
-    Widget "1" --> "1" Position
-    Widget "1" --> "1" Size
-    Widget "1" --> "1" QueryRequest
-    class GetMetricsResponse {
-        +MetricSeries metrics[]
-    }
-
-    GetMetricsResponse "1" --> "*" MetricSeries
-    class StreamMetricsRequest {
-        +string metric_names[]
-        +Duration interval
-    }
-
-    class CreateDashboardResponse {
-        +Dashboard dashboard
-    }
-
-    CreateDashboardResponse "1" --> "1" Dashboard
-    class GetDashboardRequest {
-        +string dashboard_id
-    }
-
-    class DataTable {
-        +string name
-        +Column columns[]
-        +Row rows[]
-        +int64 total_count
-    }
-
-    DataTable "1" --> "*" Column
-    DataTable "1" --> "*" Row
-    class Size {
-        +int32 width
-        +int32 height
-    }
-
-    class DeviceContext {
-        +DeviceType device_type
-        +string os
-        +string os_version
-        +string browser
-        +string browser_version
-        +string brand
-        +string model
-        +Resolution screen
-        +string user_agent
-    }
-
-    DeviceContext "1" --> "1" DeviceType
-    DeviceContext "1" --> "1" Resolution
-    class GetReportResponse {
-        +Report report
-    }
-
-    GetReportResponse "1" --> "1" Report
-    class Metric {
-        +string name
-        +MetricType type
-        +Timestamp timestamp
-        +double value
-        +map<string, string> tags
-        +string unit
-    }
-
-    Metric "1" --> "1" MetricType
     class UserContext {
         +string user_id
         +string anonymous_id
@@ -457,21 +538,21 @@ classDiagram
         +map<string, string> traits
     }
 
-    class SessionContext {
-        +string session_id
-        +Timestamp started_at
-        +Duration duration
-        +int32 page_views
-        +int32 event_count
+    class GetMetricsRequest {
+        +string metric_names[]
+        +TimeRange time_range
+        +map<string, string> filters
+        +string group_by[]
     }
 
-    class Dimension {
+    GetMetricsRequest "1" --> "1" TimeRange
+    class MetricSeries {
         +string name
-        +DimensionValue values[]
-        +int64 total_count
+        +DataPoint points[]
+        +map<string, string> metadata
     }
 
-    Dimension "1" --> "*" DimensionValue
+    MetricSeries "1" --> "*" DataPoint
     class Cell {
         +string value
         +string formatted_value
@@ -482,97 +563,16 @@ classDiagram
     }
 
     TrackEventRequest "1" --> "1" Event
-    class GetMetricsRequest {
-        +string metric_names[]
-        +TimeRange time_range
-        +map<string, string> filters
-        +string group_by[]
+    class Chart {
+        +string chart_id
+        +ChartType type
+        +string title
+        +MetricSeries series[]
+        +map<string, string> config
     }
 
-    GetMetricsRequest "1" --> "1" TimeRange
-    class QueryResponse {
-        +DataTable result
-        +Duration execution_time
-    }
-
-    QueryResponse "1" --> "1" DataTable
-    class Dashboard {
-        +string dashboard_id
-        +string name
-        +string description
-        +string owner_id
-        +Widget widgets[]
-        +Layout layout
-        +Duration refresh_interval
-        +Timestamp created_at
-        +Timestamp updated_at
-    }
-
-    Dashboard "1" --> "*" Widget
-    Dashboard "1" --> "1" Layout
-    class Event {
-        +string event_id
-        +EventType event_type
-        +string event_name
-        +Timestamp timestamp
-        +UserContext user
-        +SessionContext session
-        +DeviceContext device
-        +LocationContext location
-        +map<string, string> properties
-        +double value
-        +string currency
-        +UTMContext utm
-        +string referrer
-        +map<string, string> dimensions
-    }
-
-    Event "1" --> "1" EventType
-    Event "1" --> "1" UserContext
-    Event "1" --> "1" SessionContext
-    Event "1" --> "1" DeviceContext
-    Event "1" --> "1" LocationContext
-    Event "1" --> "1" UTMContext
-    class DimensionValue {
-        +string value
-        +int64 count
-        +double percentage
-        +map<string, double> metrics
-    }
-
-    class UTMContext {
-        +string source
-        +string medium
-        +string campaign
-        +string term
-        +string content
-    }
-
-    class BatchTrackResponse {
-        +int32 events_tracked
-        +int32 failed_count
-    }
-
-    class QueryRequest {
-        +string query
-        +map<string, string> parameters
-        +int32 limit
-        +int32 offset
-    }
-
-    class GetDashboardResponse {
-        +Dashboard dashboard
-        +map<string, WidgetData> widget_data
-    }
-
-    GetDashboardResponse "1" --> "1" Dashboard
-    class MetricSeries {
-        +string name
-        +DataPoint points[]
-        +map<string, string> metadata
-    }
-
-    MetricSeries "1" --> "*" DataPoint
+    Chart "1" --> "1" ChartType
+    Chart "1" --> "*" MetricSeries
 ```
 
 ---
@@ -898,6 +898,608 @@ sequenceDiagram
 
 This service defines **40 message types**:
 
+### DataPoint
+
+<a name="datapoint"></a>
+
+DataPoint represents a single data point.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.DataPoint` |
+| **Field Count** | 3 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `timestamp` | [`Timestamp`](#timestamp) | optional | Timestamp. (RFC 3339 timestamp format) |
+| 2 | `value` | double | optional | Value. |
+| 3 | `labels` | map<string, string> |  | Labels. |
+
+#### Proto Definition
+
+```protobuf
+message DataPoint {
+  // Timestamp. (RFC 3339 timestamp format)
+  optional Timestamp timestamp = 1;
+  // Value.
+  optional double value = 2;
+  // Labels.
+   map<string, string> labels = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class DataPoint {
+        +Timestamp timestamp
+        +double value
+        +map<string, string> labels
+    }
+    DataPoint --> Timestamp
+```
+
+---
+
+### GetReportResponse
+
+<a name="getreportresponse"></a>
+
+GetReportResponse returns report.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.GetReportResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `report` | [`Report`](#report) | optional | Report. |
+
+#### Proto Definition
+
+```protobuf
+message GetReportResponse {
+  // Report.
+  optional Report report = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class GetReportResponse {
+        +Report report
+    }
+    GetReportResponse --> Report
+```
+
+---
+
+### QueryResponse
+
+<a name="queryresponse"></a>
+
+QueryResponse returns query results.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.QueryResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `result` | [`DataTable`](#datatable) | optional | Result table. |
+| 2 | `execution_time` | [`Duration`](#duration) | optional | Execution time. |
+
+#### Proto Definition
+
+```protobuf
+message QueryResponse {
+  // Result table.
+  optional DataTable result = 1;
+  // Execution time.
+  optional Duration execution_time = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class QueryResponse {
+        +DataTable result
+        +Duration execution_time
+    }
+    QueryResponse --> DataTable
+    QueryResponse --> Duration
+```
+
+---
+
+### GetDashboardResponse
+
+<a name="getdashboardresponse"></a>
+
+GetDashboardResponse returns dashboard.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.GetDashboardResponse` |
+| **Field Count** | 2 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `dashboard` | [`Dashboard`](#dashboard) | optional | Dashboard. |
+| 2 | `widget_data` | map<string, WidgetData> |  | Widget data. |
+
+#### Proto Definition
+
+```protobuf
+message GetDashboardResponse {
+  // Dashboard.
+  optional Dashboard dashboard = 1;
+  // Widget data.
+   map<string, WidgetData> widget_data = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class GetDashboardResponse {
+        +Dashboard dashboard
+        +map<string, WidgetData> widget_data
+    }
+    GetDashboardResponse --> Dashboard
+```
+
+---
+
+### DataTable
+
+<a name="datatable"></a>
+
+DataTable represents tabular data.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.DataTable` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `name` | string | optional | Table name. |
+| 2 | `columns` | [`Column`](#column) | repeated | Columns. |
+| 3 | `rows` | [`Row`](#row) | repeated | Rows. |
+| 4 | `total_count` | int64 | optional | Total count Must be >= 0. |
+
+#### Proto Definition
+
+```protobuf
+message DataTable {
+  // Table name.
+  optional string name = 1;
+  // Columns.
+  repeated Column columns = 2;
+  // Rows.
+  repeated Row rows = 3;
+  // Total count Must be >= 0.
+  optional int64 total_count = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class DataTable {
+        +string name
+        +Column[] columns
+        +Row[] rows
+        +int64 total_count
+    }
+    DataTable "1" --> "*" Column
+    DataTable "1" --> "*" Row
+```
+
+---
+
+### Dimension
+
+<a name="dimension"></a>
+
+Dimension represents a data dimension.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.Dimension` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `name` | string | optional | Dimension name. |
+| 2 | `values` | [`DimensionValue`](#dimensionvalue) | repeated | Values. |
+| 3 | `total_count` | int64 | optional | Total count Must be >= 0. |
+
+#### Proto Definition
+
+```protobuf
+message Dimension {
+  // Dimension name.
+  optional string name = 1;
+  // Values.
+  repeated DimensionValue values = 2;
+  // Total count Must be >= 0.
+  optional int64 total_count = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Dimension {
+        +string name
+        +DimensionValue[] values
+        +int64 total_count
+    }
+    Dimension "1" --> "*" DimensionValue
+```
+
+---
+
+### Row
+
+<a name="row"></a>
+
+Row represents a table row.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.Row` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `cells` | [`Cell`](#cell) | repeated | Cells. |
+
+#### Proto Definition
+
+```protobuf
+message Row {
+  // Cells.
+  repeated Cell cells = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Row {
+        +Cell[] cells
+    }
+    Row "1" --> "*" Cell
+```
+
+---
+
+### Position
+
+<a name="position"></a>
+
+Position represents widget position.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.Position` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `x` | int32 | optional | X coordinate. |
+| 2 | `y` | int32 | optional | Y coordinate. |
+
+#### Proto Definition
+
+```protobuf
+message Position {
+  // X coordinate.
+  optional int32 x = 1;
+  // Y coordinate.
+  optional int32 y = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Position {
+        +int32 x
+        +int32 y
+    }
+```
+
+---
+
+### CreateDashboardRequest
+
+<a name="createdashboardrequest"></a>
+
+CreateDashboardRequest creates dashboard.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.CreateDashboardRequest` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `dashboard` | [`Dashboard`](#dashboard) | optional | Dashboard. |
+
+#### Proto Definition
+
+```protobuf
+message CreateDashboardRequest {
+  // Dashboard.
+  optional Dashboard dashboard = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class CreateDashboardRequest {
+        +Dashboard dashboard
+    }
+    CreateDashboardRequest --> Dashboard
+```
+
+---
+
+### Metric
+
+<a name="metric"></a>
+
+Metric represents a metric data point.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.Metric` |
+| **Field Count** | 6 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `name` | string | optional | Metric name. |
+| 2 | `type` | [`MetricType`](#metrictype) | optional | Metric type. |
+| 3 | `timestamp` | [`Timestamp`](#timestamp) | optional | Timestamp. (RFC 3339 timestamp format) |
+| 4 | `value` | double | optional | Value. |
+| 5 | `tags` | map<string, string> |  | Tags/dimensions. |
+| 6 | `unit` | string | optional | Unit. |
+
+#### Proto Definition
+
+```protobuf
+message Metric {
+  // Metric name.
+  optional string name = 1;
+  // Metric type.
+  optional MetricType type = 2;
+  // Timestamp. (RFC 3339 timestamp format)
+  optional Timestamp timestamp = 3;
+  // Value.
+  optional double value = 4;
+  // Tags/dimensions.
+   map<string, string> tags = 5;
+  // Unit.
+  optional string unit = 6;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Metric {
+        +string name
+        +MetricType type
+        +Timestamp timestamp
+        +double value
+        +map<string, string> tags
+        +string unit
+    }
+    Metric --> MetricType
+    Metric --> Timestamp
+```
+
+---
+
+### Dashboard
+
+<a name="dashboard"></a>
+
+Dashboard represents a custom dashboard.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.Dashboard` |
+| **Field Count** | 9 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `dashboard_id` | string | optional | Dashboard ID. (Must be a non-empty identifier) |
+| 2 | `name` | string | optional | Name. |
+| 3 | `description` | string | optional | Description. |
+| 4 | `owner_id` | string | optional | Owner. (Must be a non-empty identifier) |
+| 5 | `widgets` | [`Widget`](#widget) | repeated | Widgets. |
+| 6 | `layout` | [`Layout`](#layout) | optional | Layout. |
+| 7 | `refresh_interval` | [`Duration`](#duration) | optional | Refresh interval. |
+| 8 | `created_at` | [`Timestamp`](#timestamp) | optional | Created at. (RFC 3339 timestamp format) |
+| 9 | `updated_at` | [`Timestamp`](#timestamp) | optional | Updated at. (RFC 3339 timestamp format) |
+
+#### Proto Definition
+
+```protobuf
+message Dashboard {
+  // Dashboard ID. (Must be a non-empty identifier)
+  optional string dashboard_id = 1;
+  // Name.
+  optional string name = 2;
+  // Description.
+  optional string description = 3;
+  // Owner. (Must be a non-empty identifier)
+  optional string owner_id = 4;
+  // Widgets.
+  repeated Widget widgets = 5;
+  // Layout.
+  optional Layout layout = 6;
+  // Refresh interval.
+  optional Duration refresh_interval = 7;
+  // Created at. (RFC 3339 timestamp format)
+  optional Timestamp created_at = 8;
+  // Updated at. (RFC 3339 timestamp format)
+  optional Timestamp updated_at = 9;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Dashboard {
+        +string dashboard_id
+        +string name
+        +string description
+        +string owner_id
+        +Widget[] widgets
+        +Layout layout
+        +Duration refresh_interval
+        +Timestamp created_at
+        +Timestamp updated_at
+    }
+    Dashboard "1" --> "*" Widget
+    Dashboard --> Layout
+    Dashboard --> Duration
+    Dashboard --> Timestamp
+    Dashboard --> Timestamp
+```
+
+---
+
+### DeviceContext
+
+<a name="devicecontext"></a>
+
+DeviceContext contains device information.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.DeviceContext` |
+| **Field Count** | 9 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `device_type` | [`DeviceType`](#devicetype) | optional | Device type. |
+| 2 | `os` | string | optional | Operating system. |
+| 3 | `os_version` | string | optional | OS version. |
+| 4 | `browser` | string | optional | Browser. |
+| 5 | `browser_version` | string | optional | Browser version. |
+| 6 | `brand` | string | optional | Device brand. |
+| 7 | `model` | string | optional | Device model. |
+| 8 | `screen` | [`Resolution`](#resolution) | optional | Screen resolution. |
+| 9 | `user_agent` | string | optional | User agent. |
+
+#### Proto Definition
+
+```protobuf
+message DeviceContext {
+  // Device type.
+  optional DeviceType device_type = 1;
+  // Operating system.
+  optional string os = 2;
+  // OS version.
+  optional string os_version = 3;
+  // Browser.
+  optional string browser = 4;
+  // Browser version.
+  optional string browser_version = 5;
+  // Device brand.
+  optional string brand = 6;
+  // Device model.
+  optional string model = 7;
+  // Screen resolution.
+  optional Resolution screen = 8;
+  // User agent.
+  optional string user_agent = 9;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class DeviceContext {
+        +DeviceType device_type
+        +string os
+        +string os_version
+        +string browser
+        +string browser_version
+        +string brand
+        +string model
+        +Resolution screen
+        +string user_agent
+    }
+    DeviceContext --> DeviceType
+    DeviceContext --> Resolution
+```
+
+---
+
 ### LocationContext
 
 <a name="locationcontext"></a>
@@ -964,6 +1566,459 @@ classDiagram
 
 ---
 
+### UTMContext
+
+<a name="utmcontext"></a>
+
+UTMContext contains UTM parameters.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.UTMContext` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `source` | string | optional | Source. |
+| 2 | `medium` | string | optional | Medium. |
+| 3 | `campaign` | string | optional | Campaign. |
+| 4 | `term` | string | optional | Term. |
+| 5 | `content` | string | optional | Content. |
+
+#### Proto Definition
+
+```protobuf
+message UTMContext {
+  // Source.
+  optional string source = 1;
+  // Medium.
+  optional string medium = 2;
+  // Campaign.
+  optional string campaign = 3;
+  // Term.
+  optional string term = 4;
+  // Content.
+  optional string content = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class UTMContext {
+        +string source
+        +string medium
+        +string campaign
+        +string term
+        +string content
+    }
+```
+
+---
+
+### Widget
+
+<a name="widget"></a>
+
+Widget represents a dashboard widget.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.Widget` |
+| **Field Count** | 7 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `widget_id` | string | optional | Widget ID. (Must be a non-empty identifier) |
+| 2 | `type` | [`WidgetType`](#widgettype) | optional | Widget type. |
+| 3 | `title` | string | optional | Title. |
+| 4 | `position` | [`Position`](#position) | optional | Position. |
+| 5 | `size` | [`Size`](#size) | optional | Size. |
+| 6 | `config` | map<string, string> |  | Configuration. |
+| 7 | `query` | [`QueryRequest`](#queryrequest) | optional | Data query. |
+
+#### Proto Definition
+
+```protobuf
+message Widget {
+  // Widget ID. (Must be a non-empty identifier)
+  optional string widget_id = 1;
+  // Widget type.
+  optional WidgetType type = 2;
+  // Title.
+  optional string title = 3;
+  // Position.
+  optional Position position = 4;
+  // Size.
+  optional Size size = 5;
+  // Configuration.
+   map<string, string> config = 6;
+  // Data query.
+  optional QueryRequest query = 7;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Widget {
+        +string widget_id
+        +WidgetType type
+        +string title
+        +Position position
+        +Size size
+        +map<string, string> config
+        +QueryRequest query
+    }
+    Widget --> WidgetType
+    Widget --> Position
+    Widget --> Size
+    Widget --> QueryRequest
+```
+
+---
+
+### Layout
+
+<a name="layout"></a>
+
+Layout represents dashboard layout.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.Layout` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `columns` | int32 | optional | Columns. |
+| 2 | `rows` | int32 | optional | Rows. |
+| 3 | `grid_size` | int32 | optional | Grid size. |
+
+#### Proto Definition
+
+```protobuf
+message Layout {
+  // Columns.
+  optional int32 columns = 1;
+  // Rows.
+  optional int32 rows = 2;
+  // Grid size.
+  optional int32 grid_size = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Layout {
+        +int32 columns
+        +int32 rows
+        +int32 grid_size
+    }
+```
+
+---
+
+### TrackEventResponse
+
+<a name="trackeventresponse"></a>
+
+TrackEventResponse confirms tracking.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.TrackEventResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `event_id` | string | optional | Event ID. (Must be a non-empty identifier) |
+| 2 | `success` | bool | optional | Success. |
+
+#### Proto Definition
+
+```protobuf
+message TrackEventResponse {
+  // Event ID. (Must be a non-empty identifier)
+  optional string event_id = 1;
+  // Success.
+  optional bool success = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class TrackEventResponse {
+        +string event_id
+        +bool success
+    }
+```
+
+---
+
+### QueryRequest
+
+<a name="queryrequest"></a>
+
+QueryRequest queries analytics data.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.QueryRequest` |
+| **Field Count** | 4 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `query` | string | optional | SQL-like query. |
+| 2 | `parameters` | map<string, string> |  | Parameters. |
+| 3 | `limit` | int32 | optional | Limit Maximum value may be service-specific. |
+| 4 | `offset` | int32 | optional | Offset Must be >= 0. |
+
+#### Proto Definition
+
+```protobuf
+message QueryRequest {
+  // SQL-like query.
+  optional string query = 1;
+  // Parameters.
+   map<string, string> parameters = 2;
+  // Limit Maximum value may be service-specific.
+  optional int32 limit = 3;
+  // Offset Must be >= 0.
+  optional int32 offset = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class QueryRequest {
+        +string query
+        +map<string, string> parameters
+        +int32 limit
+        +int32 offset
+    }
+```
+
+---
+
+### MetricSummary
+
+<a name="metricsummary"></a>
+
+MetricSummary contains aggregated metric data.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.MetricSummary` |
+| **Field Count** | 6 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `name` | string | optional | Metric name. |
+| 2 | `current_value` | double | optional | Current value. |
+| 3 | `previous_value` | double | optional | Previous value. |
+| 4 | `change_percent` | double | optional | Change percentage Range: 0-100. |
+| 5 | `trend` | [`Trend`](#trend) | optional | Trend. |
+| 6 | `aggregation` | [`AggregationType`](#aggregationtype) | optional | Aggregation type. |
+
+#### Proto Definition
+
+```protobuf
+message MetricSummary {
+  // Metric name.
+  optional string name = 1;
+  // Current value.
+  optional double current_value = 2;
+  // Previous value.
+  optional double previous_value = 3;
+  // Change percentage Range: 0-100.
+  optional double change_percent = 4;
+  // Trend.
+  optional Trend trend = 5;
+  // Aggregation type.
+  optional AggregationType aggregation = 6;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class MetricSummary {
+        +string name
+        +double current_value
+        +double previous_value
+        +double change_percent
+        +Trend trend
+        +AggregationType aggregation
+    }
+    MetricSummary --> Trend
+    MetricSummary --> AggregationType
+```
+
+---
+
+### DimensionValue
+
+<a name="dimensionvalue"></a>
+
+DimensionValue represents dimension breakdown.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.DimensionValue` |
+| **Field Count** | 4 |
+| **Nested Types** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `value` | string | optional | Value. |
+| 2 | `count` | int64 | optional | Count Must be >= 0. |
+| 3 | `percentage` | double | optional | Percentage Range: 0-100. |
+| 4 | `metrics` | map<string, double> |  | Metrics. |
+
+#### Proto Definition
+
+```protobuf
+message DimensionValue {
+  // Value.
+  optional string value = 1;
+  // Count Must be >= 0.
+  optional int64 count = 2;
+  // Percentage Range: 0-100.
+  optional double percentage = 3;
+  // Metrics.
+   map<string, double> metrics = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class DimensionValue {
+        +string value
+        +int64 count
+        +double percentage
+        +map<string, double> metrics
+    }
+```
+
+---
+
+### GetMetricsResponse
+
+<a name="getmetricsresponse"></a>
+
+GetMetricsResponse returns metrics.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.GetMetricsResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `metrics` | [`MetricSeries`](#metricseries) | repeated | Metrics. |
+
+#### Proto Definition
+
+```protobuf
+message GetMetricsResponse {
+  // Metrics.
+  repeated MetricSeries metrics = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class GetMetricsResponse {
+        +MetricSeries[] metrics
+    }
+    GetMetricsResponse "1" --> "*" MetricSeries
+```
+
+---
+
+### StreamMetricsRequest
+
+<a name="streammetricsrequest"></a>
+
+StreamMetricsRequest subscribes to metrics.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.StreamMetricsRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `metric_names` | string | repeated | Metric names. |
+| 2 | `interval` | [`Duration`](#duration) | optional | Update interval. |
+
+#### Proto Definition
+
+```protobuf
+message StreamMetricsRequest {
+  // Metric names.
+  repeated string metric_names = 1;
+  // Update interval.
+  optional Duration interval = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class StreamMetricsRequest {
+        +string[] metric_names
+        +Duration interval
+    }
+    StreamMetricsRequest --> Duration
+```
+
+---
+
 ### MetricUpdate
 
 <a name="metricupdate"></a>
@@ -1004,6 +2059,45 @@ classDiagram
     }
     MetricUpdate --> Metric
     MetricUpdate --> Timestamp
+```
+
+---
+
+### CreateDashboardResponse
+
+<a name="createdashboardresponse"></a>
+
+CreateDashboardResponse confirms creation.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.CreateDashboardResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `dashboard` | [`Dashboard`](#dashboard) | optional | Created dashboard. |
+
+#### Proto Definition
+
+```protobuf
+message CreateDashboardResponse {
+  // Created dashboard.
+  optional Dashboard dashboard = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class CreateDashboardResponse {
+        +Dashboard dashboard
+    }
+    CreateDashboardResponse --> Dashboard
 ```
 
 ---
@@ -1053,6 +2147,324 @@ classDiagram
     TimeRange --> Timestamp
     TimeRange --> Timestamp
     TimeRange --> TimeGranularity
+```
+
+---
+
+### Resolution
+
+<a name="resolution"></a>
+
+Resolution represents screen resolution.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.Resolution` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `width` | int32 | optional | Width. |
+| 2 | `height` | int32 | optional | Height. |
+
+#### Proto Definition
+
+```protobuf
+message Resolution {
+  // Width.
+  optional int32 width = 1;
+  // Height.
+  optional int32 height = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Resolution {
+        +int32 width
+        +int32 height
+    }
+```
+
+---
+
+### Size
+
+<a name="size"></a>
+
+Size represents widget size.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.Size` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `width` | int32 | optional | Width. |
+| 2 | `height` | int32 | optional | Height. |
+
+#### Proto Definition
+
+```protobuf
+message Size {
+  // Width.
+  optional int32 width = 1;
+  // Height.
+  optional int32 height = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Size {
+        +int32 width
+        +int32 height
+    }
+```
+
+---
+
+### SessionContext
+
+<a name="sessioncontext"></a>
+
+SessionContext contains session information.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.SessionContext` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `session_id` | string | optional | Session ID. (Must be a non-empty identifier) |
+| 2 | `started_at` | [`Timestamp`](#timestamp) | optional | Session start time. (RFC 3339 timestamp format) |
+| 3 | `duration` | [`Duration`](#duration) | optional | Session duration. |
+| 4 | `page_views` | int32 | optional | Page views in session. |
+| 5 | `event_count` | int32 | optional | Events in session Must be >= 0. |
+
+#### Proto Definition
+
+```protobuf
+message SessionContext {
+  // Session ID. (Must be a non-empty identifier)
+  optional string session_id = 1;
+  // Session start time. (RFC 3339 timestamp format)
+  optional Timestamp started_at = 2;
+  // Session duration.
+  optional Duration duration = 3;
+  // Page views in session.
+  optional int32 page_views = 4;
+  // Events in session Must be >= 0.
+  optional int32 event_count = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class SessionContext {
+        +string session_id
+        +Timestamp started_at
+        +Duration duration
+        +int32 page_views
+        +int32 event_count
+    }
+    SessionContext --> Timestamp
+    SessionContext --> Duration
+```
+
+---
+
+### BatchTrackResponse
+
+<a name="batchtrackresponse"></a>
+
+BatchTrackResponse confirms batch tracking.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.BatchTrackResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `events_tracked` | int32 | optional | Events tracked. |
+| 2 | `failed_count` | int32 | optional | Failed count Must be >= 0. |
+
+#### Proto Definition
+
+```protobuf
+message BatchTrackResponse {
+  // Events tracked.
+  optional int32 events_tracked = 1;
+  // Failed count Must be >= 0.
+  optional int32 failed_count = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class BatchTrackResponse {
+        +int32 events_tracked
+        +int32 failed_count
+    }
+```
+
+---
+
+### GetDashboardRequest
+
+<a name="getdashboardrequest"></a>
+
+GetDashboardRequest retrieves dashboard.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.GetDashboardRequest` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `dashboard_id` | string | optional | Dashboard ID. (Must be a non-empty identifier) |
+
+#### Proto Definition
+
+```protobuf
+message GetDashboardRequest {
+  // Dashboard ID. (Must be a non-empty identifier)
+  optional string dashboard_id = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class GetDashboardRequest {
+        +string dashboard_id
+    }
+```
+
+---
+
+### Event
+
+<a name="event"></a>
+
+Event represents an analytics event.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `analytics.v1.Event` |
+| **Field Count** | 14 |
+| **Nested Types** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `event_id` | string | optional | Event ID. (Must be a non-empty identifier) |
+| 2 | `event_type` | [`EventType`](#eventtype) | optional | Event type. |
+| 3 | `event_name` | string | optional | Event name. |
+| 4 | `timestamp` | [`Timestamp`](#timestamp) | optional | Timestamp. (RFC 3339 timestamp format) |
+| 5 | `user` | [`UserContext`](#usercontext) | optional | User information. |
+| 6 | `session` | [`SessionContext`](#sessioncontext) | optional | Session information. |
+| 7 | `device` | [`DeviceContext`](#devicecontext) | optional | Device information. |
+| 8 | `location` | [`LocationContext`](#locationcontext) | optional | Location information. |
+| 9 | `properties` | map<string, string> |  | Event properties. |
+| 10 | `value` | double | optional | Event value (for revenue tracking). |
+| 11 | `currency` | string | optional | Currency (for revenue events). |
+| 12 | `utm` | [`UTMContext`](#utmcontext) | optional | UTM parameters. |
+| 13 | `referrer` | string | optional | Referrer. |
+| 14 | `dimensions` | map<string, string> |  | Custom dimensions. |
+
+#### Proto Definition
+
+```protobuf
+message Event {
+  // Event ID. (Must be a non-empty identifier)
+  optional string event_id = 1;
+  // Event type.
+  optional EventType event_type = 2;
+  // Event name.
+  optional string event_name = 3;
+  // Timestamp. (RFC 3339 timestamp format)
+  optional Timestamp timestamp = 4;
+  // User information.
+  optional UserContext user = 5;
+  // Session information.
+  optional SessionContext session = 6;
+  // Device information.
+  optional DeviceContext device = 7;
+  // Location information.
+  optional LocationContext location = 8;
+  // Event properties.
+   map<string, string> properties = 9;
+  // Event value (for revenue tracking).
+  optional double value = 10;
+  // Currency (for revenue events).
+  optional string currency = 11;
+  // UTM parameters.
+  optional UTMContext utm = 12;
+  // Referrer.
+  optional string referrer = 13;
+  // Custom dimensions.
+   map<string, string> dimensions = 14;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Event {
+        +string event_id
+        +EventType event_type
+        +string event_name
+        +Timestamp timestamp
+        +UserContext user
+        +SessionContext session
+        +DeviceContext device
+        +LocationContext location
+        +map<string, string> properties
+        +double value
+        +string currency
+        +UTMContext utm
+        +string referrer
+        +map<string, string> dimensions
+    }
+    Event --> EventType
+    Event --> Timestamp
+    Event --> UserContext
+    Event --> SessionContext
+    Event --> DeviceContext
+    Event --> LocationContext
+    Event --> UTMContext
 ```
 
 ---
@@ -1181,286 +2593,6 @@ classDiagram
 
 ---
 
-### Position
-
-<a name="position"></a>
-
-Position represents widget position.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.Position` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `x` | int32 | optional | X coordinate. |
-| 2 | `y` | int32 | optional | Y coordinate. |
-
-#### Proto Definition
-
-```protobuf
-message Position {
-  // X coordinate.
-  optional int32 x = 1;
-  // Y coordinate.
-  optional int32 y = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Position {
-        +int32 x
-        +int32 y
-    }
-```
-
----
-
-### DataPoint
-
-<a name="datapoint"></a>
-
-DataPoint represents a single data point.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.DataPoint` |
-| **Field Count** | 3 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `timestamp` | [`Timestamp`](#timestamp) | optional | Timestamp. (RFC 3339 timestamp format) |
-| 2 | `value` | double | optional | Value. |
-| 3 | `labels` | map<string, string> |  | Labels. |
-
-#### Proto Definition
-
-```protobuf
-message DataPoint {
-  // Timestamp. (RFC 3339 timestamp format)
-  optional Timestamp timestamp = 1;
-  // Value.
-  optional double value = 2;
-  // Labels.
-   map<string, string> labels = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class DataPoint {
-        +Timestamp timestamp
-        +double value
-        +map<string, string> labels
-    }
-    DataPoint --> Timestamp
-```
-
----
-
-### MetricSummary
-
-<a name="metricsummary"></a>
-
-MetricSummary contains aggregated metric data.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.MetricSummary` |
-| **Field Count** | 6 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `name` | string | optional | Metric name. |
-| 2 | `current_value` | double | optional | Current value. |
-| 3 | `previous_value` | double | optional | Previous value. |
-| 4 | `change_percent` | double | optional | Change percentage Range: 0-100. |
-| 5 | `trend` | [`Trend`](#trend) | optional | Trend. |
-| 6 | `aggregation` | [`AggregationType`](#aggregationtype) | optional | Aggregation type. |
-
-#### Proto Definition
-
-```protobuf
-message MetricSummary {
-  // Metric name.
-  optional string name = 1;
-  // Current value.
-  optional double current_value = 2;
-  // Previous value.
-  optional double previous_value = 3;
-  // Change percentage Range: 0-100.
-  optional double change_percent = 4;
-  // Trend.
-  optional Trend trend = 5;
-  // Aggregation type.
-  optional AggregationType aggregation = 6;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class MetricSummary {
-        +string name
-        +double current_value
-        +double previous_value
-        +double change_percent
-        +Trend trend
-        +AggregationType aggregation
-    }
-    MetricSummary --> Trend
-    MetricSummary --> AggregationType
-```
-
----
-
-### Layout
-
-<a name="layout"></a>
-
-Layout represents dashboard layout.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.Layout` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `columns` | int32 | optional | Columns. |
-| 2 | `rows` | int32 | optional | Rows. |
-| 3 | `grid_size` | int32 | optional | Grid size. |
-
-#### Proto Definition
-
-```protobuf
-message Layout {
-  // Columns.
-  optional int32 columns = 1;
-  // Rows.
-  optional int32 rows = 2;
-  // Grid size.
-  optional int32 grid_size = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Layout {
-        +int32 columns
-        +int32 rows
-        +int32 grid_size
-    }
-```
-
----
-
-### Resolution
-
-<a name="resolution"></a>
-
-Resolution represents screen resolution.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.Resolution` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `width` | int32 | optional | Width. |
-| 2 | `height` | int32 | optional | Height. |
-
-#### Proto Definition
-
-```protobuf
-message Resolution {
-  // Width.
-  optional int32 width = 1;
-  // Height.
-  optional int32 height = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Resolution {
-        +int32 width
-        +int32 height
-    }
-```
-
----
-
-### TrackEventResponse
-
-<a name="trackeventresponse"></a>
-
-TrackEventResponse confirms tracking.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.TrackEventResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `event_id` | string | optional | Event ID. (Must be a non-empty identifier) |
-| 2 | `success` | bool | optional | Success. |
-
-#### Proto Definition
-
-```protobuf
-message TrackEventResponse {
-  // Event ID. (Must be a non-empty identifier)
-  optional string event_id = 1;
-  // Success.
-  optional bool success = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class TrackEventResponse {
-        +string event_id
-        +bool success
-    }
-```
-
----
-
 ### GetReportRequest
 
 <a name="getreportrequest"></a>
@@ -1518,633 +2650,6 @@ classDiagram
 
 ---
 
-### CreateDashboardRequest
-
-<a name="createdashboardrequest"></a>
-
-CreateDashboardRequest creates dashboard.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.CreateDashboardRequest` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `dashboard` | [`Dashboard`](#dashboard) | optional | Dashboard. |
-
-#### Proto Definition
-
-```protobuf
-message CreateDashboardRequest {
-  // Dashboard.
-  optional Dashboard dashboard = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class CreateDashboardRequest {
-        +Dashboard dashboard
-    }
-    CreateDashboardRequest --> Dashboard
-```
-
----
-
-### Chart
-
-<a name="chart"></a>
-
-Chart represents a chart visualization.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.Chart` |
-| **Field Count** | 5 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `chart_id` | string | optional | Chart ID. (Must be a non-empty identifier) |
-| 2 | `type` | [`ChartType`](#charttype) | optional | Chart type. |
-| 3 | `title` | string | optional | Title. |
-| 4 | `series` | [`MetricSeries`](#metricseries) | repeated | Data series. |
-| 5 | `config` | map<string, string> |  | Configuration. |
-
-#### Proto Definition
-
-```protobuf
-message Chart {
-  // Chart ID. (Must be a non-empty identifier)
-  optional string chart_id = 1;
-  // Chart type.
-  optional ChartType type = 2;
-  // Title.
-  optional string title = 3;
-  // Data series.
-  repeated MetricSeries series = 4;
-  // Configuration.
-   map<string, string> config = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Chart {
-        +string chart_id
-        +ChartType type
-        +string title
-        +MetricSeries[] series
-        +map<string, string> config
-    }
-    Chart --> ChartType
-    Chart "1" --> "*" MetricSeries
-```
-
----
-
-### Row
-
-<a name="row"></a>
-
-Row represents a table row.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.Row` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `cells` | [`Cell`](#cell) | repeated | Cells. |
-
-#### Proto Definition
-
-```protobuf
-message Row {
-  // Cells.
-  repeated Cell cells = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Row {
-        +Cell[] cells
-    }
-    Row "1" --> "*" Cell
-```
-
----
-
-### Widget
-
-<a name="widget"></a>
-
-Widget represents a dashboard widget.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.Widget` |
-| **Field Count** | 7 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `widget_id` | string | optional | Widget ID. (Must be a non-empty identifier) |
-| 2 | `type` | [`WidgetType`](#widgettype) | optional | Widget type. |
-| 3 | `title` | string | optional | Title. |
-| 4 | `position` | [`Position`](#position) | optional | Position. |
-| 5 | `size` | [`Size`](#size) | optional | Size. |
-| 6 | `config` | map<string, string> |  | Configuration. |
-| 7 | `query` | [`QueryRequest`](#queryrequest) | optional | Data query. |
-
-#### Proto Definition
-
-```protobuf
-message Widget {
-  // Widget ID. (Must be a non-empty identifier)
-  optional string widget_id = 1;
-  // Widget type.
-  optional WidgetType type = 2;
-  // Title.
-  optional string title = 3;
-  // Position.
-  optional Position position = 4;
-  // Size.
-  optional Size size = 5;
-  // Configuration.
-   map<string, string> config = 6;
-  // Data query.
-  optional QueryRequest query = 7;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Widget {
-        +string widget_id
-        +WidgetType type
-        +string title
-        +Position position
-        +Size size
-        +map<string, string> config
-        +QueryRequest query
-    }
-    Widget --> WidgetType
-    Widget --> Position
-    Widget --> Size
-    Widget --> QueryRequest
-```
-
----
-
-### GetMetricsResponse
-
-<a name="getmetricsresponse"></a>
-
-GetMetricsResponse returns metrics.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.GetMetricsResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `metrics` | [`MetricSeries`](#metricseries) | repeated | Metrics. |
-
-#### Proto Definition
-
-```protobuf
-message GetMetricsResponse {
-  // Metrics.
-  repeated MetricSeries metrics = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class GetMetricsResponse {
-        +MetricSeries[] metrics
-    }
-    GetMetricsResponse "1" --> "*" MetricSeries
-```
-
----
-
-### StreamMetricsRequest
-
-<a name="streammetricsrequest"></a>
-
-StreamMetricsRequest subscribes to metrics.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.StreamMetricsRequest` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `metric_names` | string | repeated | Metric names. |
-| 2 | `interval` | [`Duration`](#duration) | optional | Update interval. |
-
-#### Proto Definition
-
-```protobuf
-message StreamMetricsRequest {
-  // Metric names.
-  repeated string metric_names = 1;
-  // Update interval.
-  optional Duration interval = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class StreamMetricsRequest {
-        +string[] metric_names
-        +Duration interval
-    }
-    StreamMetricsRequest --> Duration
-```
-
----
-
-### CreateDashboardResponse
-
-<a name="createdashboardresponse"></a>
-
-CreateDashboardResponse confirms creation.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.CreateDashboardResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `dashboard` | [`Dashboard`](#dashboard) | optional | Created dashboard. |
-
-#### Proto Definition
-
-```protobuf
-message CreateDashboardResponse {
-  // Created dashboard.
-  optional Dashboard dashboard = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class CreateDashboardResponse {
-        +Dashboard dashboard
-    }
-    CreateDashboardResponse --> Dashboard
-```
-
----
-
-### GetDashboardRequest
-
-<a name="getdashboardrequest"></a>
-
-GetDashboardRequest retrieves dashboard.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.GetDashboardRequest` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `dashboard_id` | string | optional | Dashboard ID. (Must be a non-empty identifier) |
-
-#### Proto Definition
-
-```protobuf
-message GetDashboardRequest {
-  // Dashboard ID. (Must be a non-empty identifier)
-  optional string dashboard_id = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class GetDashboardRequest {
-        +string dashboard_id
-    }
-```
-
----
-
-### DataTable
-
-<a name="datatable"></a>
-
-DataTable represents tabular data.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.DataTable` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `name` | string | optional | Table name. |
-| 2 | `columns` | [`Column`](#column) | repeated | Columns. |
-| 3 | `rows` | [`Row`](#row) | repeated | Rows. |
-| 4 | `total_count` | int64 | optional | Total count Must be >= 0. |
-
-#### Proto Definition
-
-```protobuf
-message DataTable {
-  // Table name.
-  optional string name = 1;
-  // Columns.
-  repeated Column columns = 2;
-  // Rows.
-  repeated Row rows = 3;
-  // Total count Must be >= 0.
-  optional int64 total_count = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class DataTable {
-        +string name
-        +Column[] columns
-        +Row[] rows
-        +int64 total_count
-    }
-    DataTable "1" --> "*" Column
-    DataTable "1" --> "*" Row
-```
-
----
-
-### Size
-
-<a name="size"></a>
-
-Size represents widget size.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.Size` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `width` | int32 | optional | Width. |
-| 2 | `height` | int32 | optional | Height. |
-
-#### Proto Definition
-
-```protobuf
-message Size {
-  // Width.
-  optional int32 width = 1;
-  // Height.
-  optional int32 height = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Size {
-        +int32 width
-        +int32 height
-    }
-```
-
----
-
-### DeviceContext
-
-<a name="devicecontext"></a>
-
-DeviceContext contains device information.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.DeviceContext` |
-| **Field Count** | 9 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `device_type` | [`DeviceType`](#devicetype) | optional | Device type. |
-| 2 | `os` | string | optional | Operating system. |
-| 3 | `os_version` | string | optional | OS version. |
-| 4 | `browser` | string | optional | Browser. |
-| 5 | `browser_version` | string | optional | Browser version. |
-| 6 | `brand` | string | optional | Device brand. |
-| 7 | `model` | string | optional | Device model. |
-| 8 | `screen` | [`Resolution`](#resolution) | optional | Screen resolution. |
-| 9 | `user_agent` | string | optional | User agent. |
-
-#### Proto Definition
-
-```protobuf
-message DeviceContext {
-  // Device type.
-  optional DeviceType device_type = 1;
-  // Operating system.
-  optional string os = 2;
-  // OS version.
-  optional string os_version = 3;
-  // Browser.
-  optional string browser = 4;
-  // Browser version.
-  optional string browser_version = 5;
-  // Device brand.
-  optional string brand = 6;
-  // Device model.
-  optional string model = 7;
-  // Screen resolution.
-  optional Resolution screen = 8;
-  // User agent.
-  optional string user_agent = 9;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class DeviceContext {
-        +DeviceType device_type
-        +string os
-        +string os_version
-        +string browser
-        +string browser_version
-        +string brand
-        +string model
-        +Resolution screen
-        +string user_agent
-    }
-    DeviceContext --> DeviceType
-    DeviceContext --> Resolution
-```
-
----
-
-### GetReportResponse
-
-<a name="getreportresponse"></a>
-
-GetReportResponse returns report.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.GetReportResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `report` | [`Report`](#report) | optional | Report. |
-
-#### Proto Definition
-
-```protobuf
-message GetReportResponse {
-  // Report.
-  optional Report report = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class GetReportResponse {
-        +Report report
-    }
-    GetReportResponse --> Report
-```
-
----
-
-### Metric
-
-<a name="metric"></a>
-
-Metric represents a metric data point.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.Metric` |
-| **Field Count** | 6 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `name` | string | optional | Metric name. |
-| 2 | `type` | [`MetricType`](#metrictype) | optional | Metric type. |
-| 3 | `timestamp` | [`Timestamp`](#timestamp) | optional | Timestamp. (RFC 3339 timestamp format) |
-| 4 | `value` | double | optional | Value. |
-| 5 | `tags` | map<string, string> |  | Tags/dimensions. |
-| 6 | `unit` | string | optional | Unit. |
-
-#### Proto Definition
-
-```protobuf
-message Metric {
-  // Metric name.
-  optional string name = 1;
-  // Metric type.
-  optional MetricType type = 2;
-  // Timestamp. (RFC 3339 timestamp format)
-  optional Timestamp timestamp = 3;
-  // Value.
-  optional double value = 4;
-  // Tags/dimensions.
-   map<string, string> tags = 5;
-  // Unit.
-  optional string unit = 6;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Metric {
-        +string name
-        +MetricType type
-        +Timestamp timestamp
-        +double value
-        +map<string, string> tags
-        +string unit
-    }
-    Metric --> MetricType
-    Metric --> Timestamp
-```
-
----
-
 ### UserContext
 
 <a name="usercontext"></a>
@@ -2196,41 +2701,39 @@ classDiagram
 
 ---
 
-### SessionContext
+### GetMetricsRequest
 
-<a name="sessioncontext"></a>
+<a name="getmetricsrequest"></a>
 
-SessionContext contains session information.
+GetMetricsRequest retrieves metrics.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `analytics.v1.SessionContext` |
-| **Field Count** | 5 |
+| **Full Name** | `analytics.v1.GetMetricsRequest` |
+| **Field Count** | 4 |
+| **Nested Types** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `session_id` | string | optional | Session ID. (Must be a non-empty identifier) |
-| 2 | `started_at` | [`Timestamp`](#timestamp) | optional | Session start time. (RFC 3339 timestamp format) |
-| 3 | `duration` | [`Duration`](#duration) | optional | Session duration. |
-| 4 | `page_views` | int32 | optional | Page views in session. |
-| 5 | `event_count` | int32 | optional | Events in session Must be >= 0. |
+| 1 | `metric_names` | string | repeated | Metric names. |
+| 2 | `time_range` | [`TimeRange`](#timerange) | optional | Time range. |
+| 3 | `filters` | map<string, string> |  | Filters. |
+| 4 | `group_by` | string | repeated | Group by dimensions. |
 
 #### Proto Definition
 
 ```protobuf
-message SessionContext {
-  // Session ID. (Must be a non-empty identifier)
-  optional string session_id = 1;
-  // Session start time. (RFC 3339 timestamp format)
-  optional Timestamp started_at = 2;
-  // Session duration.
-  optional Duration duration = 3;
-  // Page views in session.
-  optional int32 page_views = 4;
-  // Events in session Must be >= 0.
-  optional int32 event_count = 5;
+message GetMetricsRequest {
+  // Metric names.
+  repeated string metric_names = 1;
+  // Time range.
+  optional TimeRange time_range = 2;
+  // Filters.
+   map<string, string> filters = 3;
+  // Group by dimensions.
+  repeated string group_by = 4;
 }
 ```
 
@@ -2239,48 +2742,47 @@ message SessionContext {
 ```mermaid
 %{init: {'theme':'forest'}}%
 classDiagram
-    class SessionContext {
-        +string session_id
-        +Timestamp started_at
-        +Duration duration
-        +int32 page_views
-        +int32 event_count
+    class GetMetricsRequest {
+        +string[] metric_names
+        +TimeRange time_range
+        +map<string, string> filters
+        +string[] group_by
     }
-    SessionContext --> Timestamp
-    SessionContext --> Duration
+    GetMetricsRequest --> TimeRange
 ```
 
 ---
 
-### Dimension
+### MetricSeries
 
-<a name="dimension"></a>
+<a name="metricseries"></a>
 
-Dimension represents a data dimension.
+MetricSeries represents time series data.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `analytics.v1.Dimension` |
+| **Full Name** | `analytics.v1.MetricSeries` |
 | **Field Count** | 3 |
+| **Nested Types** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `name` | string | optional | Dimension name. |
-| 2 | `values` | [`DimensionValue`](#dimensionvalue) | repeated | Values. |
-| 3 | `total_count` | int64 | optional | Total count Must be >= 0. |
+| 1 | `name` | string | optional | Series name. |
+| 2 | `points` | [`DataPoint`](#datapoint) | repeated | Data points. |
+| 3 | `metadata` | map<string, string> |  | Metadata. |
 
 #### Proto Definition
 
 ```protobuf
-message Dimension {
-  // Dimension name.
+message MetricSeries {
+  // Series name.
   optional string name = 1;
-  // Values.
-  repeated DimensionValue values = 2;
-  // Total count Must be >= 0.
-  optional int64 total_count = 3;
+  // Data points.
+  repeated DataPoint points = 2;
+  // Metadata.
+   map<string, string> metadata = 3;
 }
 ```
 
@@ -2289,12 +2791,12 @@ message Dimension {
 ```mermaid
 %{init: {'theme':'forest'}}%
 classDiagram
-    class Dimension {
+    class MetricSeries {
         +string name
-        +DimensionValue[] values
-        +int64 total_count
+        +DataPoint[] points
+        +map<string, string> metadata
     }
-    Dimension "1" --> "*" DimensionValue
+    MetricSeries "1" --> "*" DataPoint
 ```
 
 ---
@@ -2380,455 +2882,42 @@ classDiagram
 
 ---
 
-### GetMetricsRequest
+### Chart
 
-<a name="getmetricsrequest"></a>
+<a name="chart"></a>
 
-GetMetricsRequest retrieves metrics.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.GetMetricsRequest` |
-| **Field Count** | 4 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `metric_names` | string | repeated | Metric names. |
-| 2 | `time_range` | [`TimeRange`](#timerange) | optional | Time range. |
-| 3 | `filters` | map<string, string> |  | Filters. |
-| 4 | `group_by` | string | repeated | Group by dimensions. |
-
-#### Proto Definition
-
-```protobuf
-message GetMetricsRequest {
-  // Metric names.
-  repeated string metric_names = 1;
-  // Time range.
-  optional TimeRange time_range = 2;
-  // Filters.
-   map<string, string> filters = 3;
-  // Group by dimensions.
-  repeated string group_by = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class GetMetricsRequest {
-        +string[] metric_names
-        +TimeRange time_range
-        +map<string, string> filters
-        +string[] group_by
-    }
-    GetMetricsRequest --> TimeRange
-```
-
----
-
-### QueryResponse
-
-<a name="queryresponse"></a>
-
-QueryResponse returns query results.
+Chart represents a chart visualization.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `analytics.v1.QueryResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `result` | [`DataTable`](#datatable) | optional | Result table. |
-| 2 | `execution_time` | [`Duration`](#duration) | optional | Execution time. |
-
-#### Proto Definition
-
-```protobuf
-message QueryResponse {
-  // Result table.
-  optional DataTable result = 1;
-  // Execution time.
-  optional Duration execution_time = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class QueryResponse {
-        +DataTable result
-        +Duration execution_time
-    }
-    QueryResponse --> DataTable
-    QueryResponse --> Duration
-```
-
----
-
-### Dashboard
-
-<a name="dashboard"></a>
-
-Dashboard represents a custom dashboard.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.Dashboard` |
-| **Field Count** | 9 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `dashboard_id` | string | optional | Dashboard ID. (Must be a non-empty identifier) |
-| 2 | `name` | string | optional | Name. |
-| 3 | `description` | string | optional | Description. |
-| 4 | `owner_id` | string | optional | Owner. (Must be a non-empty identifier) |
-| 5 | `widgets` | [`Widget`](#widget) | repeated | Widgets. |
-| 6 | `layout` | [`Layout`](#layout) | optional | Layout. |
-| 7 | `refresh_interval` | [`Duration`](#duration) | optional | Refresh interval. |
-| 8 | `created_at` | [`Timestamp`](#timestamp) | optional | Created at. (RFC 3339 timestamp format) |
-| 9 | `updated_at` | [`Timestamp`](#timestamp) | optional | Updated at. (RFC 3339 timestamp format) |
-
-#### Proto Definition
-
-```protobuf
-message Dashboard {
-  // Dashboard ID. (Must be a non-empty identifier)
-  optional string dashboard_id = 1;
-  // Name.
-  optional string name = 2;
-  // Description.
-  optional string description = 3;
-  // Owner. (Must be a non-empty identifier)
-  optional string owner_id = 4;
-  // Widgets.
-  repeated Widget widgets = 5;
-  // Layout.
-  optional Layout layout = 6;
-  // Refresh interval.
-  optional Duration refresh_interval = 7;
-  // Created at. (RFC 3339 timestamp format)
-  optional Timestamp created_at = 8;
-  // Updated at. (RFC 3339 timestamp format)
-  optional Timestamp updated_at = 9;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Dashboard {
-        +string dashboard_id
-        +string name
-        +string description
-        +string owner_id
-        +Widget[] widgets
-        +Layout layout
-        +Duration refresh_interval
-        +Timestamp created_at
-        +Timestamp updated_at
-    }
-    Dashboard "1" --> "*" Widget
-    Dashboard --> Layout
-    Dashboard --> Duration
-    Dashboard --> Timestamp
-    Dashboard --> Timestamp
-```
-
----
-
-### Event
-
-<a name="event"></a>
-
-Event represents an analytics event.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.Event` |
-| **Field Count** | 14 |
-| **Nested Types** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `event_id` | string | optional | Event ID. (Must be a non-empty identifier) |
-| 2 | `event_type` | [`EventType`](#eventtype) | optional | Event type. |
-| 3 | `event_name` | string | optional | Event name. |
-| 4 | `timestamp` | [`Timestamp`](#timestamp) | optional | Timestamp. (RFC 3339 timestamp format) |
-| 5 | `user` | [`UserContext`](#usercontext) | optional | User information. |
-| 6 | `session` | [`SessionContext`](#sessioncontext) | optional | Session information. |
-| 7 | `device` | [`DeviceContext`](#devicecontext) | optional | Device information. |
-| 8 | `location` | [`LocationContext`](#locationcontext) | optional | Location information. |
-| 9 | `properties` | map<string, string> |  | Event properties. |
-| 10 | `value` | double | optional | Event value (for revenue tracking). |
-| 11 | `currency` | string | optional | Currency (for revenue events). |
-| 12 | `utm` | [`UTMContext`](#utmcontext) | optional | UTM parameters. |
-| 13 | `referrer` | string | optional | Referrer. |
-| 14 | `dimensions` | map<string, string> |  | Custom dimensions. |
-
-#### Proto Definition
-
-```protobuf
-message Event {
-  // Event ID. (Must be a non-empty identifier)
-  optional string event_id = 1;
-  // Event type.
-  optional EventType event_type = 2;
-  // Event name.
-  optional string event_name = 3;
-  // Timestamp. (RFC 3339 timestamp format)
-  optional Timestamp timestamp = 4;
-  // User information.
-  optional UserContext user = 5;
-  // Session information.
-  optional SessionContext session = 6;
-  // Device information.
-  optional DeviceContext device = 7;
-  // Location information.
-  optional LocationContext location = 8;
-  // Event properties.
-   map<string, string> properties = 9;
-  // Event value (for revenue tracking).
-  optional double value = 10;
-  // Currency (for revenue events).
-  optional string currency = 11;
-  // UTM parameters.
-  optional UTMContext utm = 12;
-  // Referrer.
-  optional string referrer = 13;
-  // Custom dimensions.
-   map<string, string> dimensions = 14;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Event {
-        +string event_id
-        +EventType event_type
-        +string event_name
-        +Timestamp timestamp
-        +UserContext user
-        +SessionContext session
-        +DeviceContext device
-        +LocationContext location
-        +map<string, string> properties
-        +double value
-        +string currency
-        +UTMContext utm
-        +string referrer
-        +map<string, string> dimensions
-    }
-    Event --> EventType
-    Event --> Timestamp
-    Event --> UserContext
-    Event --> SessionContext
-    Event --> DeviceContext
-    Event --> LocationContext
-    Event --> UTMContext
-```
-
----
-
-### DimensionValue
-
-<a name="dimensionvalue"></a>
-
-DimensionValue represents dimension breakdown.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.DimensionValue` |
-| **Field Count** | 4 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `value` | string | optional | Value. |
-| 2 | `count` | int64 | optional | Count Must be >= 0. |
-| 3 | `percentage` | double | optional | Percentage Range: 0-100. |
-| 4 | `metrics` | map<string, double> |  | Metrics. |
-
-#### Proto Definition
-
-```protobuf
-message DimensionValue {
-  // Value.
-  optional string value = 1;
-  // Count Must be >= 0.
-  optional int64 count = 2;
-  // Percentage Range: 0-100.
-  optional double percentage = 3;
-  // Metrics.
-   map<string, double> metrics = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class DimensionValue {
-        +string value
-        +int64 count
-        +double percentage
-        +map<string, double> metrics
-    }
-```
-
----
-
-### UTMContext
-
-<a name="utmcontext"></a>
-
-UTMContext contains UTM parameters.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.UTMContext` |
+| **Full Name** | `analytics.v1.Chart` |
 | **Field Count** | 5 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `source` | string | optional | Source. |
-| 2 | `medium` | string | optional | Medium. |
-| 3 | `campaign` | string | optional | Campaign. |
-| 4 | `term` | string | optional | Term. |
-| 5 | `content` | string | optional | Content. |
-
-#### Proto Definition
-
-```protobuf
-message UTMContext {
-  // Source.
-  optional string source = 1;
-  // Medium.
-  optional string medium = 2;
-  // Campaign.
-  optional string campaign = 3;
-  // Term.
-  optional string term = 4;
-  // Content.
-  optional string content = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class UTMContext {
-        +string source
-        +string medium
-        +string campaign
-        +string term
-        +string content
-    }
-```
-
----
-
-### BatchTrackResponse
-
-<a name="batchtrackresponse"></a>
-
-BatchTrackResponse confirms batch tracking.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.BatchTrackResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `events_tracked` | int32 | optional | Events tracked. |
-| 2 | `failed_count` | int32 | optional | Failed count Must be >= 0. |
-
-#### Proto Definition
-
-```protobuf
-message BatchTrackResponse {
-  // Events tracked.
-  optional int32 events_tracked = 1;
-  // Failed count Must be >= 0.
-  optional int32 failed_count = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class BatchTrackResponse {
-        +int32 events_tracked
-        +int32 failed_count
-    }
-```
-
----
-
-### QueryRequest
-
-<a name="queryrequest"></a>
-
-QueryRequest queries analytics data.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.QueryRequest` |
-| **Field Count** | 4 |
 | **Nested Types** | 1 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `query` | string | optional | SQL-like query. |
-| 2 | `parameters` | map<string, string> |  | Parameters. |
-| 3 | `limit` | int32 | optional | Limit Maximum value may be service-specific. |
-| 4 | `offset` | int32 | optional | Offset Must be >= 0. |
+| 1 | `chart_id` | string | optional | Chart ID. (Must be a non-empty identifier) |
+| 2 | `type` | [`ChartType`](#charttype) | optional | Chart type. |
+| 3 | `title` | string | optional | Title. |
+| 4 | `series` | [`MetricSeries`](#metricseries) | repeated | Data series. |
+| 5 | `config` | map<string, string> |  | Configuration. |
 
 #### Proto Definition
 
 ```protobuf
-message QueryRequest {
-  // SQL-like query.
-  optional string query = 1;
-  // Parameters.
-   map<string, string> parameters = 2;
-  // Limit Maximum value may be service-specific.
-  optional int32 limit = 3;
-  // Offset Must be >= 0.
-  optional int32 offset = 4;
+message Chart {
+  // Chart ID. (Must be a non-empty identifier)
+  optional string chart_id = 1;
+  // Chart type.
+  optional ChartType type = 2;
+  // Title.
+  optional string title = 3;
+  // Data series.
+  repeated MetricSeries series = 4;
+  // Configuration.
+   map<string, string> config = 5;
 }
 ```
 
@@ -2837,104 +2926,15 @@ message QueryRequest {
 ```mermaid
 %{init: {'theme':'forest'}}%
 classDiagram
-    class QueryRequest {
-        +string query
-        +map<string, string> parameters
-        +int32 limit
-        +int32 offset
+    class Chart {
+        +string chart_id
+        +ChartType type
+        +string title
+        +MetricSeries[] series
+        +map<string, string> config
     }
-```
-
----
-
-### GetDashboardResponse
-
-<a name="getdashboardresponse"></a>
-
-GetDashboardResponse returns dashboard.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.GetDashboardResponse` |
-| **Field Count** | 2 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `dashboard` | [`Dashboard`](#dashboard) | optional | Dashboard. |
-| 2 | `widget_data` | map<string, WidgetData> |  | Widget data. |
-
-#### Proto Definition
-
-```protobuf
-message GetDashboardResponse {
-  // Dashboard.
-  optional Dashboard dashboard = 1;
-  // Widget data.
-   map<string, WidgetData> widget_data = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class GetDashboardResponse {
-        +Dashboard dashboard
-        +map<string, WidgetData> widget_data
-    }
-    GetDashboardResponse --> Dashboard
-```
-
----
-
-### MetricSeries
-
-<a name="metricseries"></a>
-
-MetricSeries represents time series data.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `analytics.v1.MetricSeries` |
-| **Field Count** | 3 |
-| **Nested Types** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `name` | string | optional | Series name. |
-| 2 | `points` | [`DataPoint`](#datapoint) | repeated | Data points. |
-| 3 | `metadata` | map<string, string> |  | Metadata. |
-
-#### Proto Definition
-
-```protobuf
-message MetricSeries {
-  // Series name.
-  optional string name = 1;
-  // Data points.
-  repeated DataPoint points = 2;
-  // Metadata.
-   map<string, string> metadata = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class MetricSeries {
-        +string name
-        +DataPoint[] points
-        +map<string, string> metadata
-    }
-    MetricSeries "1" --> "*" DataPoint
+    Chart --> ChartType
+    Chart "1" --> "*" MetricSeries
 ```
 
 ---
@@ -2945,124 +2945,40 @@ classDiagram
 
 This service defines **10 enumeration types**:
 
-### EventType
+### AggregationType
 
-<a name="eventtype"></a>
+<a name="aggregationtype"></a>
 
-EventType represents tracked event types.
+AggregationType represents aggregation methods.
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `EVENT_TYPE_UNSPECIFIED` | 0 | EVENT_TYPE_UNSPECIFIED value. |
-| `EVENT_TYPE_PAGE_VIEW` | 1 | EVENT_TYPE_PAGE_VIEW value. |
-| `EVENT_TYPE_CLICK` | 2 | EVENT_TYPE_CLICK value. |
-| `EVENT_TYPE_CONVERSION` | 3 | EVENT_TYPE_CONVERSION value. |
-| `EVENT_TYPE_PURCHASE` | 4 | EVENT_TYPE_PURCHASE value. |
-| `EVENT_TYPE_SIGNUP` | 5 | EVENT_TYPE_SIGNUP value. |
-| `EVENT_TYPE_LOGIN` | 6 | EVENT_TYPE_LOGIN value. |
-| `EVENT_TYPE_LOGOUT` | 7 | EVENT_TYPE_LOGOUT value. |
-| `EVENT_TYPE_SEARCH` | 8 | EVENT_TYPE_SEARCH value. |
-| `EVENT_TYPE_SHARE` | 9 | EVENT_TYPE_SHARE value. |
-| `EVENT_TYPE_CUSTOM` | 100 | EVENT_TYPE_CUSTOM value. |
+| `AGGREGATION_TYPE_UNSPECIFIED` | 0 | AGGREGATION_TYPE_UNSPECIFIED value. |
+| `AGGREGATION_TYPE_SUM` | 1 | AGGREGATION_TYPE_SUM value. |
+| `AGGREGATION_TYPE_AVG` | 2 | AGGREGATION_TYPE_AVG value. |
+| `AGGREGATION_TYPE_MIN` | 3 | AGGREGATION_TYPE_MIN value. |
+| `AGGREGATION_TYPE_MAX` | 4 | AGGREGATION_TYPE_MAX value. |
+| `AGGREGATION_TYPE_COUNT` | 5 | AGGREGATION_TYPE_COUNT value. |
+| `AGGREGATION_TYPE_PERCENTILE` | 6 | AGGREGATION_TYPE_PERCENTILE value. |
 
 #### Proto Definition
 
 ```protobuf
-enum EventType {
-  // EVENT_TYPE_UNSPECIFIED value.
-  EVENT_TYPE_UNSPECIFIED = 0;
-  // EVENT_TYPE_PAGE_VIEW value.
-  EVENT_TYPE_PAGE_VIEW = 1;
-  // EVENT_TYPE_CLICK value.
-  EVENT_TYPE_CLICK = 2;
-  // EVENT_TYPE_CONVERSION value.
-  EVENT_TYPE_CONVERSION = 3;
-  // EVENT_TYPE_PURCHASE value.
-  EVENT_TYPE_PURCHASE = 4;
-  // EVENT_TYPE_SIGNUP value.
-  EVENT_TYPE_SIGNUP = 5;
-  // EVENT_TYPE_LOGIN value.
-  EVENT_TYPE_LOGIN = 6;
-  // EVENT_TYPE_LOGOUT value.
-  EVENT_TYPE_LOGOUT = 7;
-  // EVENT_TYPE_SEARCH value.
-  EVENT_TYPE_SEARCH = 8;
-  // EVENT_TYPE_SHARE value.
-  EVENT_TYPE_SHARE = 9;
-  // EVENT_TYPE_CUSTOM value.
-  EVENT_TYPE_CUSTOM = 100;
-}
-```
-
----
-
-### MetricType
-
-<a name="metrictype"></a>
-
-MetricType represents metric types.
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `METRIC_TYPE_UNSPECIFIED` | 0 | METRIC_TYPE_UNSPECIFIED value. |
-| `METRIC_TYPE_COUNTER` | 1 | METRIC_TYPE_COUNTER value. |
-| `METRIC_TYPE_GAUGE` | 2 | METRIC_TYPE_GAUGE value. |
-| `METRIC_TYPE_HISTOGRAM` | 3 | METRIC_TYPE_HISTOGRAM value. |
-| `METRIC_TYPE_SUMMARY` | 4 | METRIC_TYPE_SUMMARY value. |
-
-#### Proto Definition
-
-```protobuf
-enum MetricType {
-  // METRIC_TYPE_UNSPECIFIED value.
-  METRIC_TYPE_UNSPECIFIED = 0;
-  // METRIC_TYPE_COUNTER value.
-  METRIC_TYPE_COUNTER = 1;
-  // METRIC_TYPE_GAUGE value.
-  METRIC_TYPE_GAUGE = 2;
-  // METRIC_TYPE_HISTOGRAM value.
-  METRIC_TYPE_HISTOGRAM = 3;
-  // METRIC_TYPE_SUMMARY value.
-  METRIC_TYPE_SUMMARY = 4;
-}
-```
-
----
-
-### TimeGranularity
-
-<a name="timegranularity"></a>
-
-TimeGranularity represents time bucket sizes.
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `TIME_GRANULARITY_UNSPECIFIED` | 0 | TIME_GRANULARITY_UNSPECIFIED value. |
-| `TIME_GRANULARITY_MINUTE` | 1 | TIME_GRANULARITY_MINUTE value. |
-| `TIME_GRANULARITY_HOUR` | 2 | TIME_GRANULARITY_HOUR value. |
-| `TIME_GRANULARITY_DAY` | 3 | TIME_GRANULARITY_DAY value. |
-| `TIME_GRANULARITY_WEEK` | 4 | TIME_GRANULARITY_WEEK value. |
-| `TIME_GRANULARITY_MONTH` | 5 | TIME_GRANULARITY_MONTH value. |
-| `TIME_GRANULARITY_YEAR` | 6 | TIME_GRANULARITY_YEAR value. |
-
-#### Proto Definition
-
-```protobuf
-enum TimeGranularity {
-  // TIME_GRANULARITY_UNSPECIFIED value.
-  TIME_GRANULARITY_UNSPECIFIED = 0;
-  // TIME_GRANULARITY_MINUTE value.
-  TIME_GRANULARITY_MINUTE = 1;
-  // TIME_GRANULARITY_HOUR value.
-  TIME_GRANULARITY_HOUR = 2;
-  // TIME_GRANULARITY_DAY value.
-  TIME_GRANULARITY_DAY = 3;
-  // TIME_GRANULARITY_WEEK value.
-  TIME_GRANULARITY_WEEK = 4;
-  // TIME_GRANULARITY_MONTH value.
-  TIME_GRANULARITY_MONTH = 5;
-  // TIME_GRANULARITY_YEAR value.
-  TIME_GRANULARITY_YEAR = 6;
+enum AggregationType {
+  // AGGREGATION_TYPE_UNSPECIFIED value.
+  AGGREGATION_TYPE_UNSPECIFIED = 0;
+  // AGGREGATION_TYPE_SUM value.
+  AGGREGATION_TYPE_SUM = 1;
+  // AGGREGATION_TYPE_AVG value.
+  AGGREGATION_TYPE_AVG = 2;
+  // AGGREGATION_TYPE_MIN value.
+  AGGREGATION_TYPE_MIN = 3;
+  // AGGREGATION_TYPE_MAX value.
+  AGGREGATION_TYPE_MAX = 4;
+  // AGGREGATION_TYPE_COUNT value.
+  AGGREGATION_TYPE_COUNT = 5;
+  // AGGREGATION_TYPE_PERCENTILE value.
+  AGGREGATION_TYPE_PERCENTILE = 6;
 }
 ```
 
@@ -3149,6 +3065,36 @@ enum ReportType {
 
 ---
 
+### Trend
+
+<a name="trend"></a>
+
+Trend represents data trends.
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `TREND_UNSPECIFIED` | 0 | TREND_UNSPECIFIED value. |
+| `TREND_UP` | 1 | TREND_UP value. |
+| `TREND_DOWN` | 2 | TREND_DOWN value. |
+| `TREND_STABLE` | 3 | TREND_STABLE value. |
+
+#### Proto Definition
+
+```protobuf
+enum Trend {
+  // TREND_UNSPECIFIED value.
+  TREND_UNSPECIFIED = 0;
+  // TREND_UP value.
+  TREND_UP = 1;
+  // TREND_DOWN value.
+  TREND_DOWN = 2;
+  // TREND_STABLE value.
+  TREND_STABLE = 3;
+}
+```
+
+---
+
 ### ChartType
 
 <a name="charttype"></a>
@@ -3186,6 +3132,96 @@ enum ChartType {
   CHART_TYPE_HEATMAP = 6;
   // CHART_TYPE_FUNNEL value.
   CHART_TYPE_FUNNEL = 7;
+}
+```
+
+---
+
+### EventType
+
+<a name="eventtype"></a>
+
+EventType represents tracked event types.
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `EVENT_TYPE_UNSPECIFIED` | 0 | EVENT_TYPE_UNSPECIFIED value. |
+| `EVENT_TYPE_PAGE_VIEW` | 1 | EVENT_TYPE_PAGE_VIEW value. |
+| `EVENT_TYPE_CLICK` | 2 | EVENT_TYPE_CLICK value. |
+| `EVENT_TYPE_CONVERSION` | 3 | EVENT_TYPE_CONVERSION value. |
+| `EVENT_TYPE_PURCHASE` | 4 | EVENT_TYPE_PURCHASE value. |
+| `EVENT_TYPE_SIGNUP` | 5 | EVENT_TYPE_SIGNUP value. |
+| `EVENT_TYPE_LOGIN` | 6 | EVENT_TYPE_LOGIN value. |
+| `EVENT_TYPE_LOGOUT` | 7 | EVENT_TYPE_LOGOUT value. |
+| `EVENT_TYPE_SEARCH` | 8 | EVENT_TYPE_SEARCH value. |
+| `EVENT_TYPE_SHARE` | 9 | EVENT_TYPE_SHARE value. |
+| `EVENT_TYPE_CUSTOM` | 100 | EVENT_TYPE_CUSTOM value. |
+
+#### Proto Definition
+
+```protobuf
+enum EventType {
+  // EVENT_TYPE_UNSPECIFIED value.
+  EVENT_TYPE_UNSPECIFIED = 0;
+  // EVENT_TYPE_PAGE_VIEW value.
+  EVENT_TYPE_PAGE_VIEW = 1;
+  // EVENT_TYPE_CLICK value.
+  EVENT_TYPE_CLICK = 2;
+  // EVENT_TYPE_CONVERSION value.
+  EVENT_TYPE_CONVERSION = 3;
+  // EVENT_TYPE_PURCHASE value.
+  EVENT_TYPE_PURCHASE = 4;
+  // EVENT_TYPE_SIGNUP value.
+  EVENT_TYPE_SIGNUP = 5;
+  // EVENT_TYPE_LOGIN value.
+  EVENT_TYPE_LOGIN = 6;
+  // EVENT_TYPE_LOGOUT value.
+  EVENT_TYPE_LOGOUT = 7;
+  // EVENT_TYPE_SEARCH value.
+  EVENT_TYPE_SEARCH = 8;
+  // EVENT_TYPE_SHARE value.
+  EVENT_TYPE_SHARE = 9;
+  // EVENT_TYPE_CUSTOM value.
+  EVENT_TYPE_CUSTOM = 100;
+}
+```
+
+---
+
+### TimeGranularity
+
+<a name="timegranularity"></a>
+
+TimeGranularity represents time bucket sizes.
+
+| Value | Number | Description |
+|-------|--------|-------------|
+| `TIME_GRANULARITY_UNSPECIFIED` | 0 | TIME_GRANULARITY_UNSPECIFIED value. |
+| `TIME_GRANULARITY_MINUTE` | 1 | TIME_GRANULARITY_MINUTE value. |
+| `TIME_GRANULARITY_HOUR` | 2 | TIME_GRANULARITY_HOUR value. |
+| `TIME_GRANULARITY_DAY` | 3 | TIME_GRANULARITY_DAY value. |
+| `TIME_GRANULARITY_WEEK` | 4 | TIME_GRANULARITY_WEEK value. |
+| `TIME_GRANULARITY_MONTH` | 5 | TIME_GRANULARITY_MONTH value. |
+| `TIME_GRANULARITY_YEAR` | 6 | TIME_GRANULARITY_YEAR value. |
+
+#### Proto Definition
+
+```protobuf
+enum TimeGranularity {
+  // TIME_GRANULARITY_UNSPECIFIED value.
+  TIME_GRANULARITY_UNSPECIFIED = 0;
+  // TIME_GRANULARITY_MINUTE value.
+  TIME_GRANULARITY_MINUTE = 1;
+  // TIME_GRANULARITY_HOUR value.
+  TIME_GRANULARITY_HOUR = 2;
+  // TIME_GRANULARITY_DAY value.
+  TIME_GRANULARITY_DAY = 3;
+  // TIME_GRANULARITY_WEEK value.
+  TIME_GRANULARITY_WEEK = 4;
+  // TIME_GRANULARITY_MONTH value.
+  TIME_GRANULARITY_MONTH = 5;
+  // TIME_GRANULARITY_YEAR value.
+  TIME_GRANULARITY_YEAR = 6;
 }
 ```
 
@@ -3263,70 +3299,34 @@ enum WidgetType {
 
 ---
 
-### AggregationType
+### MetricType
 
-<a name="aggregationtype"></a>
+<a name="metrictype"></a>
 
-AggregationType represents aggregation methods.
+MetricType represents metric types.
 
 | Value | Number | Description |
 |-------|--------|-------------|
-| `AGGREGATION_TYPE_UNSPECIFIED` | 0 | AGGREGATION_TYPE_UNSPECIFIED value. |
-| `AGGREGATION_TYPE_SUM` | 1 | AGGREGATION_TYPE_SUM value. |
-| `AGGREGATION_TYPE_AVG` | 2 | AGGREGATION_TYPE_AVG value. |
-| `AGGREGATION_TYPE_MIN` | 3 | AGGREGATION_TYPE_MIN value. |
-| `AGGREGATION_TYPE_MAX` | 4 | AGGREGATION_TYPE_MAX value. |
-| `AGGREGATION_TYPE_COUNT` | 5 | AGGREGATION_TYPE_COUNT value. |
-| `AGGREGATION_TYPE_PERCENTILE` | 6 | AGGREGATION_TYPE_PERCENTILE value. |
+| `METRIC_TYPE_UNSPECIFIED` | 0 | METRIC_TYPE_UNSPECIFIED value. |
+| `METRIC_TYPE_COUNTER` | 1 | METRIC_TYPE_COUNTER value. |
+| `METRIC_TYPE_GAUGE` | 2 | METRIC_TYPE_GAUGE value. |
+| `METRIC_TYPE_HISTOGRAM` | 3 | METRIC_TYPE_HISTOGRAM value. |
+| `METRIC_TYPE_SUMMARY` | 4 | METRIC_TYPE_SUMMARY value. |
 
 #### Proto Definition
 
 ```protobuf
-enum AggregationType {
-  // AGGREGATION_TYPE_UNSPECIFIED value.
-  AGGREGATION_TYPE_UNSPECIFIED = 0;
-  // AGGREGATION_TYPE_SUM value.
-  AGGREGATION_TYPE_SUM = 1;
-  // AGGREGATION_TYPE_AVG value.
-  AGGREGATION_TYPE_AVG = 2;
-  // AGGREGATION_TYPE_MIN value.
-  AGGREGATION_TYPE_MIN = 3;
-  // AGGREGATION_TYPE_MAX value.
-  AGGREGATION_TYPE_MAX = 4;
-  // AGGREGATION_TYPE_COUNT value.
-  AGGREGATION_TYPE_COUNT = 5;
-  // AGGREGATION_TYPE_PERCENTILE value.
-  AGGREGATION_TYPE_PERCENTILE = 6;
-}
-```
-
----
-
-### Trend
-
-<a name="trend"></a>
-
-Trend represents data trends.
-
-| Value | Number | Description |
-|-------|--------|-------------|
-| `TREND_UNSPECIFIED` | 0 | TREND_UNSPECIFIED value. |
-| `TREND_UP` | 1 | TREND_UP value. |
-| `TREND_DOWN` | 2 | TREND_DOWN value. |
-| `TREND_STABLE` | 3 | TREND_STABLE value. |
-
-#### Proto Definition
-
-```protobuf
-enum Trend {
-  // TREND_UNSPECIFIED value.
-  TREND_UNSPECIFIED = 0;
-  // TREND_UP value.
-  TREND_UP = 1;
-  // TREND_DOWN value.
-  TREND_DOWN = 2;
-  // TREND_STABLE value.
-  TREND_STABLE = 3;
+enum MetricType {
+  // METRIC_TYPE_UNSPECIFIED value.
+  METRIC_TYPE_UNSPECIFIED = 0;
+  // METRIC_TYPE_COUNTER value.
+  METRIC_TYPE_COUNTER = 1;
+  // METRIC_TYPE_GAUGE value.
+  METRIC_TYPE_GAUGE = 2;
+  // METRIC_TYPE_HISTOGRAM value.
+  METRIC_TYPE_HISTOGRAM = 3;
+  // METRIC_TYPE_SUMMARY value.
+  METRIC_TYPE_SUMMARY = 4;
 }
 ```
 
@@ -3341,6 +3341,98 @@ Entity-Relationship diagram showing the data model.
 ```mermaid
 %{init: {'theme':'forest'}}%
 erDiagram
+    DataPoint {
+        Timestamp timestamp
+        double value
+        map<string, string> labels
+    }
+
+    GetReportResponse {
+        Report report
+    }
+
+    GetReportResponse ||--|| Report : has
+    QueryResponse {
+        DataTable result
+        Duration execution_time
+    }
+
+    QueryResponse ||--|| DataTable : has
+    GetDashboardResponse {
+        Dashboard dashboard
+        map<string, WidgetData> widget_data
+    }
+
+    GetDashboardResponse ||--|| Dashboard : has
+    DataTable {
+        string name
+        Column columns
+        Row rows
+        int64 total_count
+    }
+
+    DataTable ||--o{ Column : has
+    DataTable ||--o{ Row : has
+    Dimension {
+        string name
+        DimensionValue values
+        int64 total_count
+    }
+
+    Dimension ||--o{ DimensionValue : has
+    Row {
+        Cell cells
+    }
+
+    Row ||--o{ Cell : has
+    Position {
+        int32 x
+        int32 y
+    }
+
+    CreateDashboardRequest {
+        Dashboard dashboard
+    }
+
+    CreateDashboardRequest ||--|| Dashboard : has
+    Metric {
+        string name
+        MetricType type
+        Timestamp timestamp
+        double value
+        map<string, string> tags
+        string unit
+    }
+
+    Metric ||--|| MetricType : has
+    Dashboard {
+        string dashboard_id
+        string name
+        string description
+        string owner_id
+        Widget widgets
+        Layout layout
+        Duration refresh_interval
+        Timestamp created_at
+        Timestamp updated_at
+    }
+
+    Dashboard ||--o{ Widget : has
+    Dashboard ||--|| Layout : has
+    DeviceContext {
+        DeviceType device_type
+        string os
+        string os_version
+        string browser
+        string browser_version
+        string brand
+        string model
+        Resolution screen
+        string user_agent
+    }
+
+    DeviceContext ||--|| DeviceType : has
+    DeviceContext ||--|| Resolution : has
     LocationContext {
         string ip
         string country
@@ -3352,12 +3444,85 @@ erDiagram
         string timezone
     }
 
+    UTMContext {
+        string source
+        string medium
+        string campaign
+        string term
+        string content
+    }
+
+    Widget {
+        string widget_id
+        WidgetType type
+        string title
+        Position position
+        Size size
+        map<string, string> config
+        QueryRequest query
+    }
+
+    Widget ||--|| WidgetType : has
+    Widget ||--|| Position : has
+    Widget ||--|| Size : has
+    Widget ||--|| QueryRequest : has
+    Layout {
+        int32 columns
+        int32 rows
+        int32 grid_size
+    }
+
+    TrackEventResponse {
+        string event_id
+        bool success
+    }
+
+    QueryRequest {
+        string query
+        map<string, string> parameters
+        int32 limit
+        int32 offset
+    }
+
+    MetricSummary {
+        string name
+        double current_value
+        double previous_value
+        double change_percent
+        Trend trend
+        AggregationType aggregation
+    }
+
+    MetricSummary ||--|| Trend : has
+    MetricSummary ||--|| AggregationType : has
+    DimensionValue {
+        string value
+        int64 count
+        double percentage
+        map<string, double> metrics
+    }
+
+    GetMetricsResponse {
+        MetricSeries metrics
+    }
+
+    GetMetricsResponse ||--o{ MetricSeries : has
+    StreamMetricsRequest {
+        string metric_names
+        Duration interval
+    }
+
     MetricUpdate {
         Metric metric
         Timestamp timestamp
     }
 
     MetricUpdate ||--|| Metric : has
+    CreateDashboardResponse {
+        Dashboard dashboard
+    }
+
+    CreateDashboardResponse ||--|| Dashboard : has
     TimeRange {
         Timestamp start
         Timestamp end
@@ -3365,6 +3530,56 @@ erDiagram
     }
 
     TimeRange ||--|| TimeGranularity : has
+    Resolution {
+        int32 width
+        int32 height
+    }
+
+    Size {
+        int32 width
+        int32 height
+    }
+
+    SessionContext {
+        string session_id
+        Timestamp started_at
+        Duration duration
+        int32 page_views
+        int32 event_count
+    }
+
+    BatchTrackResponse {
+        int32 events_tracked
+        int32 failed_count
+    }
+
+    GetDashboardRequest {
+        string dashboard_id
+    }
+
+    Event {
+        string event_id
+        EventType event_type
+        string event_name
+        Timestamp timestamp
+        UserContext user
+        SessionContext session
+        DeviceContext device
+        LocationContext location
+        map<string, string> properties
+        double value
+        string currency
+        UTMContext utm
+        string referrer
+        map<string, string> dimensions
+    }
+
+    Event ||--|| EventType : has
+    Event ||--|| UserContext : has
+    Event ||--|| SessionContext : has
+    Event ||--|| DeviceContext : has
+    Event ||--|| LocationContext : has
+    Event ||--|| UTMContext : has
     Report {
         string report_id
         string name
@@ -3390,44 +3605,6 @@ erDiagram
     }
 
     Column ||--|| DataType : has
-    Position {
-        int32 x
-        int32 y
-    }
-
-    DataPoint {
-        Timestamp timestamp
-        double value
-        map<string, string> labels
-    }
-
-    MetricSummary {
-        string name
-        double current_value
-        double previous_value
-        double change_percent
-        Trend trend
-        AggregationType aggregation
-    }
-
-    MetricSummary ||--|| Trend : has
-    MetricSummary ||--|| AggregationType : has
-    Layout {
-        int32 columns
-        int32 rows
-        int32 grid_size
-    }
-
-    Resolution {
-        int32 width
-        int32 height
-    }
-
-    TrackEventResponse {
-        string event_id
-        bool success
-    }
-
     GetReportRequest {
         ReportType type
         TimeRange time_range
@@ -3438,102 +3615,6 @@ erDiagram
 
     GetReportRequest ||--|| ReportType : has
     GetReportRequest ||--|| TimeRange : has
-    CreateDashboardRequest {
-        Dashboard dashboard
-    }
-
-    CreateDashboardRequest ||--|| Dashboard : has
-    Chart {
-        string chart_id
-        ChartType type
-        string title
-        MetricSeries series
-        map<string, string> config
-    }
-
-    Chart ||--|| ChartType : has
-    Chart ||--o{ MetricSeries : has
-    Row {
-        Cell cells
-    }
-
-    Row ||--o{ Cell : has
-    Widget {
-        string widget_id
-        WidgetType type
-        string title
-        Position position
-        Size size
-        map<string, string> config
-        QueryRequest query
-    }
-
-    Widget ||--|| WidgetType : has
-    Widget ||--|| Position : has
-    Widget ||--|| Size : has
-    Widget ||--|| QueryRequest : has
-    GetMetricsResponse {
-        MetricSeries metrics
-    }
-
-    GetMetricsResponse ||--o{ MetricSeries : has
-    StreamMetricsRequest {
-        string metric_names
-        Duration interval
-    }
-
-    CreateDashboardResponse {
-        Dashboard dashboard
-    }
-
-    CreateDashboardResponse ||--|| Dashboard : has
-    GetDashboardRequest {
-        string dashboard_id
-    }
-
-    DataTable {
-        string name
-        Column columns
-        Row rows
-        int64 total_count
-    }
-
-    DataTable ||--o{ Column : has
-    DataTable ||--o{ Row : has
-    Size {
-        int32 width
-        int32 height
-    }
-
-    DeviceContext {
-        DeviceType device_type
-        string os
-        string os_version
-        string browser
-        string browser_version
-        string brand
-        string model
-        Resolution screen
-        string user_agent
-    }
-
-    DeviceContext ||--|| DeviceType : has
-    DeviceContext ||--|| Resolution : has
-    GetReportResponse {
-        Report report
-    }
-
-    GetReportResponse ||--|| Report : has
-    Metric {
-        string name
-        MetricType type
-        Timestamp timestamp
-        double value
-        map<string, string> tags
-        string unit
-    }
-
-    Metric ||--|| MetricType : has
     UserContext {
         string user_id
         string anonymous_id
@@ -3541,21 +3622,21 @@ erDiagram
         map<string, string> traits
     }
 
-    SessionContext {
-        string session_id
-        Timestamp started_at
-        Duration duration
-        int32 page_views
-        int32 event_count
+    GetMetricsRequest {
+        string metric_names
+        TimeRange time_range
+        map<string, string> filters
+        string group_by
     }
 
-    Dimension {
+    GetMetricsRequest ||--|| TimeRange : has
+    MetricSeries {
         string name
-        DimensionValue values
-        int64 total_count
+        DataPoint points
+        map<string, string> metadata
     }
 
-    Dimension ||--o{ DimensionValue : has
+    MetricSeries ||--o{ DataPoint : has
     Cell {
         string value
         string formatted_value
@@ -3566,97 +3647,16 @@ erDiagram
     }
 
     TrackEventRequest ||--|| Event : has
-    GetMetricsRequest {
-        string metric_names
-        TimeRange time_range
-        map<string, string> filters
-        string group_by
+    Chart {
+        string chart_id
+        ChartType type
+        string title
+        MetricSeries series
+        map<string, string> config
     }
 
-    GetMetricsRequest ||--|| TimeRange : has
-    QueryResponse {
-        DataTable result
-        Duration execution_time
-    }
-
-    QueryResponse ||--|| DataTable : has
-    Dashboard {
-        string dashboard_id
-        string name
-        string description
-        string owner_id
-        Widget widgets
-        Layout layout
-        Duration refresh_interval
-        Timestamp created_at
-        Timestamp updated_at
-    }
-
-    Dashboard ||--o{ Widget : has
-    Dashboard ||--|| Layout : has
-    Event {
-        string event_id
-        EventType event_type
-        string event_name
-        Timestamp timestamp
-        UserContext user
-        SessionContext session
-        DeviceContext device
-        LocationContext location
-        map<string, string> properties
-        double value
-        string currency
-        UTMContext utm
-        string referrer
-        map<string, string> dimensions
-    }
-
-    Event ||--|| EventType : has
-    Event ||--|| UserContext : has
-    Event ||--|| SessionContext : has
-    Event ||--|| DeviceContext : has
-    Event ||--|| LocationContext : has
-    Event ||--|| UTMContext : has
-    DimensionValue {
-        string value
-        int64 count
-        double percentage
-        map<string, double> metrics
-    }
-
-    UTMContext {
-        string source
-        string medium
-        string campaign
-        string term
-        string content
-    }
-
-    BatchTrackResponse {
-        int32 events_tracked
-        int32 failed_count
-    }
-
-    QueryRequest {
-        string query
-        map<string, string> parameters
-        int32 limit
-        int32 offset
-    }
-
-    GetDashboardResponse {
-        Dashboard dashboard
-        map<string, WidgetData> widget_data
-    }
-
-    GetDashboardResponse ||--|| Dashboard : has
-    MetricSeries {
-        string name
-        DataPoint points
-        map<string, string> metadata
-    }
-
-    MetricSeries ||--o{ DataPoint : has
+    Chart ||--|| ChartType : has
+    Chart ||--o{ MetricSeries : has
 ```
 
 ---
@@ -3799,7 +3799,7 @@ client.TrackEvent(request, (error: grpc.ServiceError | null, response?: any) => 
 
 | Attribute | Value |
 |-----------|-------|
-| Generated At | 2025-11-23 00:27:00 UTC |
+| Generated At | 2025-11-23 00:35:25 UTC |
 | Generator Version | 7.0.0 |
 
 📚 **Documentation** | 🔧 **ProtoDocs** | ✨ **Auto-Generated**

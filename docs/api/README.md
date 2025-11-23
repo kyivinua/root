@@ -12,6 +12,8 @@ Comprehensive, consolidated documentation for all services.
 | [NotificationService](NotificationService.md) | `notifications.v1` | 9 | 27 | 7 |
 | [PaymentService](PaymentService.md) | `payments.v1` | 7 | 36 | 12 |
 | [UserService](UserService.md) | `users.v1` | 10 | 36 | 7 |
+| [FirstService](FirstService.md) | `first.v1` | 17 | 32 | 0 |
+| [SecondService](SecondService.md) | `second.v1` | 18 | 36 | 0 |
 
 ## Documentation Features
 
@@ -76,6 +78,30 @@ UserService manages user accounts and profiles.
 - `DeleteUser` - DeleteUser soft-deletes a user.
 - `ListUsers` - ListUsers lists users with pagination.
 - ... and 5 more
+
+### [FirstService](FirstService.md)
+
+FirstService manages projects and tasks with full lifecycle operations.
+
+**Methods:**
+- `CreateProject` - CreateProject creates a new project.
+- `GetProject` - GetProject retrieves a project by ID.
+- `UpdateProject` - UpdateProject updates an existing project.
+- `DeleteProject` - DeleteProject soft-deletes a project.
+- `ListProjects` - ListProjects lists projects with pagination and filtering.
+- ... and 12 more
+
+### [SecondService](SecondService.md)
+
+SecondService manages documents, permissions, and resource activities.
+
+**Methods:**
+- `CreateDocument` - CreateDocument creates a new document.
+- `GetDocument` - GetDocument retrieves a document by ID.
+- `UpdateDocument` - UpdateDocument updates an existing document.
+- `DeleteDocument` - DeleteDocument soft-deletes a document.
+- `ListDocuments` - ListDocuments lists documents with pagination and filtering.
+- ... and 13 more
 
 ---
 

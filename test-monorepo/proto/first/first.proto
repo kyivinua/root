@@ -1,0 +1,508 @@
+syntax = "proto3";
+
+package first.v1;
+
+option go_package = "github.com/test/monorepo/gen/go/first/v1;firstv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "common/common.proto";
+import "shared/resources.proto";
+
+// FirstService manages projects and tasks with full lifecycle operations
+service FirstService {
+  // CreateProject creates a new project
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
+
+  // GetProject retrieves a project by ID
+  rpc GetProject(GetProjectRequest) returns (GetProjectResponse);
+
+  // UpdateProject updates an existing project
+  rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
+
+  // DeleteProject soft-deletes a project
+  rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
+
+  // ListProjects lists projects with pagination and filtering
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse);
+
+  // AddProjectMember adds a member to a project
+  rpc AddProjectMember(AddProjectMemberRequest) returns (AddProjectMemberResponse);
+
+  // RemoveProjectMember removes a member from a project
+  rpc RemoveProjectMember(RemoveProjectMemberRequest) returns (RemoveProjectMemberResponse);
+
+  // CreateTask creates a new task in a project
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
+
+  // GetTask retrieves a task by ID
+  rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
+
+  // UpdateTask updates an existing task
+  rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
+
+  // DeleteTask soft-deletes a task
+  rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
+
+  // ListTasks lists tasks with pagination and filtering
+  rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
+
+  // AssignTask assigns a task to a user
+  rpc AssignTask(AssignTaskRequest) returns (AssignTaskResponse);
+
+  // CompleteTask marks a task as completed
+  rpc CompleteTask(CompleteTaskRequest) returns (CompleteTaskResponse);
+
+  // StreamProjectUpdates streams real-time updates for a project. Uses server-side streaming
+  rpc StreamProjectUpdates(StreamProjectUpdatesRequest) returns (stream ProjectUpdate);
+
+  // BatchCreateTasks creates multiple tasks. Uses client-side streaming
+  rpc BatchCreateTasks(stream CreateTaskRequest) returns (BatchCreateTasksResponse);
+
+  // SyncProjectData synchronizes project data bidirectionally. Uses bidirectional streaming
+  rpc SyncProjectData(stream ProjectSyncMessage) returns (stream ProjectSyncMessage);
+}
+
+// CreateProjectRequest creates a new project
+message CreateProjectRequest {
+  // Project name
+  string name = 1;
+
+  // Project description
+  string description = 2;
+
+  // Owner user ID
+  string owner_id = 3;
+
+  // Start date
+  google.protobuf.Timestamp start_date = 4;
+
+  // End date
+  google.protobuf.Timestamp end_date = 5;
+
+  // Budget
+  common.v1.Money budget = 6;
+
+  // Initial members
+  repeated shared.v1.ProjectMember members = 7;
+
+  // Tags
+  repeated string tags = 8;
+}
+
+// CreateProjectResponse returns the created project
+message CreateProjectResponse {
+  // Created project
+  shared.v1.Project project = 1;
+}
+
+// GetProjectRequest retrieves a project
+message GetProjectRequest {
+  // Project ID
+  string project_id = 1;
+
+  // Include deleted projects
+  bool include_deleted = 2;
+}
+
+// GetProjectResponse returns the requested project
+message GetProjectResponse {
+  // Retrieved project
+  shared.v1.Project project = 1;
+}
+
+// UpdateProjectRequest updates a project
+message UpdateProjectRequest {
+  // Project ID
+  string project_id = 1;
+
+  // Updated name
+  string name = 2;
+
+  // Updated description
+  string description = 3;
+
+  // Updated end date
+  google.protobuf.Timestamp end_date = 4;
+
+  // Updated budget
+  common.v1.Money budget = 5;
+
+  // Updated status
+  common.v1.Status status = 6;
+
+  // Updated tags
+  repeated string tags = 7;
+
+  // Version for optimistic locking
+  int64 version = 8;
+}
+
+// UpdateProjectResponse returns the updated project
+message UpdateProjectResponse {
+  // Updated project
+  shared.v1.Project project = 1;
+}
+
+// DeleteProjectRequest deletes a project
+message DeleteProjectRequest {
+  // Project ID
+  string project_id = 1;
+
+  // Hard delete (permanent)
+  bool hard_delete = 2;
+}
+
+// DeleteProjectResponse confirms deletion
+message DeleteProjectResponse {
+  // Success status
+  bool success = 1;
+
+  // Deletion timestamp
+  google.protobuf.Timestamp deleted_at = 2;
+}
+
+// ListProjectsRequest lists projects
+message ListProjectsRequest {
+  // Pagination
+  common.v1.PaginationRequest pagination = 1;
+
+  // Filter by owner ID
+  string owner_id = 2;
+
+  // Filter by state
+  shared.v1.ResourceState state = 3;
+
+  // Filter by status
+  common.v1.Status status = 4;
+
+  // Filter by tags
+  repeated string tags = 5;
+
+  // Search query
+  string search_query = 6;
+
+  // Sort by field
+  string sort_by = 7;
+
+  // Sort descending
+  bool sort_desc = 8;
+}
+
+// ListProjectsResponse returns matching projects
+message ListProjectsResponse {
+  // Matching projects
+  repeated shared.v1.Project projects = 1;
+
+  // Pagination metadata
+  common.v1.PaginationResponse pagination = 2;
+}
+
+// AddProjectMemberRequest adds a member to a project
+message AddProjectMemberRequest {
+  // Project ID
+  string project_id = 1;
+
+  // User ID to add
+  string user_id = 2;
+
+  // Member role
+  string role = 3;
+
+  // Access level
+  shared.v1.AccessLevel access_level = 4;
+}
+
+// AddProjectMemberResponse returns the added member
+message AddProjectMemberResponse {
+  // Added member
+  shared.v1.ProjectMember member = 1;
+
+  // Updated project
+  shared.v1.Project project = 2;
+}
+
+// RemoveProjectMemberRequest removes a member from a project
+message RemoveProjectMemberRequest {
+  // Project ID
+  string project_id = 1;
+
+  // User ID to remove
+  string user_id = 2;
+}
+
+// RemoveProjectMemberResponse confirms removal
+message RemoveProjectMemberResponse {
+  // Success status
+  bool success = 1;
+
+  // Updated project
+  shared.v1.Project project = 2;
+}
+
+// CreateTaskRequest creates a new task
+message CreateTaskRequest {
+  // Project ID
+  string project_id = 1;
+
+  // Task title
+  string title = 2;
+
+  // Task description
+  string description = 3;
+
+  // Assignee user ID
+  string assignee_id = 4;
+
+  // Priority
+  common.v1.Priority priority = 5;
+
+  // Due date
+  google.protobuf.Timestamp due_date = 6;
+
+  // Estimated hours
+  double estimated_hours = 7;
+
+  // Parent task ID (for subtasks)
+  string parent_task_id = 8;
+
+  // Dependencies
+  repeated string dependency_ids = 9;
+
+  // Labels
+  repeated string labels = 10;
+}
+
+// CreateTaskResponse returns the created task
+message CreateTaskResponse {
+  // Created task
+  shared.v1.Task task = 1;
+}
+
+// GetTaskRequest retrieves a task
+message GetTaskRequest {
+  // Task ID
+  string task_id = 1;
+
+  // Include deleted tasks
+  bool include_deleted = 2;
+}
+
+// GetTaskResponse returns the requested task
+message GetTaskResponse {
+  // Retrieved task
+  shared.v1.Task task = 1;
+}
+
+// UpdateTaskRequest updates a task
+message UpdateTaskRequest {
+  // Task ID
+  string task_id = 1;
+
+  // Updated title
+  string title = 2;
+
+  // Updated description
+  string description = 3;
+
+  // Updated assignee
+  string assignee_id = 4;
+
+  // Updated priority
+  common.v1.Priority priority = 5;
+
+  // Updated status
+  common.v1.Status status = 6;
+
+  // Updated due date
+  google.protobuf.Timestamp due_date = 7;
+
+  // Actual hours
+  double actual_hours = 8;
+
+  // Version for optimistic locking
+  int64 version = 9;
+}
+
+// UpdateTaskResponse returns the updated task
+message UpdateTaskResponse {
+  // Updated task
+  shared.v1.Task task = 1;
+}
+
+// DeleteTaskRequest deletes a task
+message DeleteTaskRequest {
+  // Task ID
+  string task_id = 1;
+
+  // Hard delete (permanent)
+  bool hard_delete = 2;
+}
+
+// DeleteTaskResponse confirms deletion
+message DeleteTaskResponse {
+  // Success status
+  bool success = 1;
+
+  // Deletion timestamp
+  google.protobuf.Timestamp deleted_at = 2;
+}
+
+// ListTasksRequest lists tasks
+message ListTasksRequest {
+  // Pagination
+  common.v1.PaginationRequest pagination = 1;
+
+  // Filter by project ID
+  string project_id = 2;
+
+  // Filter by assignee ID
+  string assignee_id = 3;
+
+  // Filter by status
+  common.v1.Status status = 4;
+
+  // Filter by priority
+  common.v1.Priority priority = 5;
+
+  // Filter by state
+  shared.v1.ResourceState state = 6;
+
+  // Filter by labels
+  repeated string labels = 7;
+
+  // Search query
+  string search_query = 8;
+
+  // Due before date
+  google.protobuf.Timestamp due_before = 9;
+
+  // Due after date
+  google.protobuf.Timestamp due_after = 10;
+
+  // Sort by field
+  string sort_by = 11;
+
+  // Sort descending
+  bool sort_desc = 12;
+}
+
+// ListTasksResponse returns matching tasks
+message ListTasksResponse {
+  // Matching tasks
+  repeated shared.v1.Task tasks = 1;
+
+  // Pagination metadata
+  common.v1.PaginationResponse pagination = 2;
+}
+
+// AssignTaskRequest assigns a task to a user
+message AssignTaskRequest {
+  // Task ID
+  string task_id = 1;
+
+  // Assignee user ID
+  string assignee_id = 2;
+}
+
+// AssignTaskResponse returns the assigned task
+message AssignTaskResponse {
+  // Updated task
+  shared.v1.Task task = 1;
+}
+
+// CompleteTaskRequest marks a task as completed
+message CompleteTaskRequest {
+  // Task ID
+  string task_id = 1;
+
+  // Actual hours spent
+  double actual_hours = 2;
+
+  // Completion notes
+  string notes = 3;
+}
+
+// CompleteTaskResponse returns the completed task
+message CompleteTaskResponse {
+  // Completed task
+  shared.v1.Task task = 1;
+
+  // Completion timestamp
+  google.protobuf.Timestamp completed_at = 2;
+}
+
+// StreamProjectUpdatesRequest requests project update stream
+message StreamProjectUpdatesRequest {
+  // Project ID
+  string project_id = 1;
+
+  // Include task updates
+  bool include_tasks = 2;
+
+  // Include member changes
+  bool include_members = 3;
+}
+
+// ProjectUpdate represents a project update event
+message ProjectUpdate {
+  // Update timestamp
+  google.protobuf.Timestamp timestamp = 1;
+
+  // Update type
+  string update_type = 2;
+
+  // Updated project
+  shared.v1.Project project = 3;
+
+  // Updated task (if applicable)
+  shared.v1.Task task = 4;
+
+  // Update description
+  string description = 5;
+
+  // User who made the update
+  string updated_by = 6;
+}
+
+// BatchCreateTasksResponse returns batch creation results
+message BatchCreateTasksResponse {
+  // Created tasks
+  repeated shared.v1.Task tasks = 1;
+
+  // Number of tasks created
+  int32 created_count = 2;
+
+  // Number of tasks failed
+  int32 failed_count = 3;
+
+  // Errors encountered
+  repeated common.v1.Error errors = 4;
+}
+
+// ProjectSyncMessage for bidirectional sync
+message ProjectSyncMessage {
+  // Message ID for tracking
+  string message_id = 1;
+
+  // Message type (update, acknowledge, error)
+  string message_type = 2;
+
+  // Timestamp
+  google.protobuf.Timestamp timestamp = 3;
+
+  // Project ID
+  string project_id = 4;
+
+  // Updated project data
+  shared.v1.Project project = 5;
+
+  // Updated tasks
+  repeated shared.v1.Task tasks = 6;
+
+  // Sync status
+  string sync_status = 7;
+
+  // Error message if applicable
+  string error = 8;
+}

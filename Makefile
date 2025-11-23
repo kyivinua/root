@@ -194,7 +194,10 @@ descriptor: ## Create proto descriptor file from test-monorepo
 		$(PROTO_DIR)/common/common.proto \
 		$(PROTO_DIR)/notifications/notifications.proto \
 		$(PROTO_DIR)/payments/payments.proto \
-		$(PROTO_DIR)/users/users.proto
+		$(PROTO_DIR)/users/users.proto \
+		$(PROTO_DIR)/shared/resources.proto \
+		$(PROTO_DIR)/first/first.proto \
+		$(PROTO_DIR)/second/second.proto
 	@ls -lh $(DESCRIPTOR_FILE)
 	@echo '$(COLOR_GREEN)✓ Descriptor created: $(DESCRIPTOR_FILE)$(COLOR_RESET)'
 

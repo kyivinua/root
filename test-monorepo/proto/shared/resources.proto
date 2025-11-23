@@ -1,0 +1,310 @@
+syntax = "proto3";
+
+package shared.v1;
+
+option go_package = "github.com/test/monorepo/gen/go/shared/v1;sharedv1";
+
+import "google/protobuf/timestamp.proto";
+import "common/common.proto";
+
+// ResourceType defines types of shared resources
+enum ResourceType {
+  RESOURCE_TYPE_UNSPECIFIED = 0;
+  RESOURCE_TYPE_PROJECT = 1;
+  RESOURCE_TYPE_TASK = 2;
+  RESOURCE_TYPE_DOCUMENT = 3;
+  RESOURCE_TYPE_DATASET = 4;
+  RESOURCE_TYPE_WORKFLOW = 5;
+}
+
+// AccessLevel defines access permissions for resources
+enum AccessLevel {
+  ACCESS_LEVEL_UNSPECIFIED = 0;
+  ACCESS_LEVEL_NONE = 1;
+  ACCESS_LEVEL_READ = 2;
+  ACCESS_LEVEL_WRITE = 3;
+  ACCESS_LEVEL_ADMIN = 4;
+  ACCESS_LEVEL_OWNER = 5;
+}
+
+// ResourceState represents the current state of a resource
+enum ResourceState {
+  RESOURCE_STATE_UNSPECIFIED = 0;
+  RESOURCE_STATE_DRAFT = 1;
+  RESOURCE_STATE_ACTIVE = 2;
+  RESOURCE_STATE_ARCHIVED = 3;
+  RESOURCE_STATE_DELETED = 4;
+}
+
+// Resource represents a shared resource across services
+message Resource {
+  // Resource metadata
+  common.v1.Metadata metadata = 1;
+
+  // Resource type
+  ResourceType type = 2;
+
+  // Resource name
+  string name = 3;
+
+  // Resource description
+  string description = 4;
+
+  // Resource owner ID
+  string owner_id = 5;
+
+  // Resource state
+  ResourceState state = 6;
+
+  // Parent resource ID (for hierarchical resources)
+  string parent_id = 7;
+
+  // Resource attributes (flexible key-value storage)
+  map<string, string> attributes = 8;
+
+  // Resource configuration (JSON serialized)
+  string config = 9;
+}
+
+// Project represents a project resource
+message Project {
+  // Project metadata
+  common.v1.Metadata metadata = 1;
+
+  // Project name
+  string name = 2;
+
+  // Project description
+  string description = 3;
+
+  // Project owner
+  string owner_id = 4;
+
+  // Project state
+  ResourceState state = 5;
+
+  // Project start date
+  google.protobuf.Timestamp start_date = 6;
+
+  // Project end date
+  google.protobuf.Timestamp end_date = 7;
+
+  // Project budget
+  common.v1.Money budget = 8;
+
+  // Project members
+  repeated ProjectMember members = 9;
+
+  // Project tags
+  repeated string tags = 10;
+
+  // Project status
+  common.v1.Status status = 11;
+}
+
+// ProjectMember represents a member of a project
+message ProjectMember {
+  // User ID
+  string user_id = 1;
+
+  // Member role
+  string role = 2;
+
+  // Access level
+  AccessLevel access_level = 3;
+
+  // Join date
+  google.protobuf.Timestamp joined_at = 4;
+}
+
+// Task represents a task resource
+message Task {
+  // Task metadata
+  common.v1.Metadata metadata = 1;
+
+  // Project ID this task belongs to
+  string project_id = 2;
+
+  // Task title
+  string title = 3;
+
+  // Task description
+  string description = 4;
+
+  // Assigned user ID
+  string assignee_id = 5;
+
+  // Task priority
+  common.v1.Priority priority = 6;
+
+  // Task status
+  common.v1.Status status = 7;
+
+  // Task state
+  ResourceState state = 8;
+
+  // Due date
+  google.protobuf.Timestamp due_date = 9;
+
+  // Completion date
+  google.protobuf.Timestamp completed_at = 10;
+
+  // Estimated hours
+  double estimated_hours = 11;
+
+  // Actual hours
+  double actual_hours = 12;
+
+  // Parent task ID (for subtasks)
+  string parent_task_id = 13;
+
+  // Task dependencies (blocking tasks)
+  repeated string dependency_ids = 14;
+
+  // Task labels
+  repeated string labels = 15;
+}
+
+// Document represents a document resource
+message Document {
+  // Document metadata
+  common.v1.Metadata metadata = 1;
+
+  // Project ID this document belongs to
+  string project_id = 2;
+
+  // Document title
+  string title = 3;
+
+  // Document content
+  string content = 4;
+
+  // Document format (markdown, html, text, etc.)
+  string format = 5;
+
+  // Document state
+  ResourceState state = 6;
+
+  // Document version
+  int32 version_number = 7;
+
+  // Document author
+  string author_id = 8;
+
+  // Document collaborators
+  repeated DocumentCollaborator collaborators = 9;
+
+  // Attached file references
+  repeated FileReference attachments = 10;
+}
+
+// DocumentCollaborator represents a document collaborator
+message DocumentCollaborator {
+  // User ID
+  string user_id = 1;
+
+  // Access level
+  AccessLevel access_level = 2;
+
+  // Last accessed
+  google.protobuf.Timestamp last_accessed = 3;
+}
+
+// FileReference represents a reference to a file
+message FileReference {
+  // File ID
+  string id = 1;
+
+  // File name
+  string name = 2;
+
+  // File size in bytes
+  int64 size = 3;
+
+  // MIME type
+  string mime_type = 4;
+
+  // Upload timestamp
+  google.protobuf.Timestamp uploaded_at = 5;
+
+  // Uploader user ID
+  string uploaded_by = 6;
+
+  // File URL
+  string url = 7;
+}
+
+// ResourcePermission represents permissions on a resource
+message ResourcePermission {
+  // Permission metadata
+  common.v1.Metadata metadata = 1;
+
+  // Resource ID
+  string resource_id = 2;
+
+  // Resource type
+  ResourceType resource_type = 3;
+
+  // User ID or group ID
+  string principal_id = 4;
+
+  // Principal type (user or group)
+  string principal_type = 5;
+
+  // Access level
+  AccessLevel access_level = 6;
+
+  // Permission expiry
+  google.protobuf.Timestamp expires_at = 7;
+}
+
+// ResourceActivity represents activity on a resource
+message ResourceActivity {
+  // Activity metadata
+  common.v1.Metadata metadata = 1;
+
+  // Resource ID
+  string resource_id = 2;
+
+  // Resource type
+  ResourceType resource_type = 3;
+
+  // Activity type (created, updated, deleted, accessed, etc.)
+  string activity_type = 4;
+
+  // User who performed the activity
+  string user_id = 5;
+
+  // Activity description
+  string description = 6;
+
+  // Activity details (JSON serialized)
+  string details = 7;
+
+  // IP address
+  string ip_address = 8;
+}
+
+// ResourceQuota represents quota limits for resources
+message ResourceQuota {
+  // User or organization ID
+  string owner_id = 1;
+
+  // Resource type
+  ResourceType resource_type = 2;
+
+  // Maximum allowed resources
+  int64 max_count = 3;
+
+  // Current resource count
+  int64 current_count = 4;
+
+  // Maximum storage in bytes
+  int64 max_storage_bytes = 5;
+
+  // Current storage usage in bytes
+  int64 current_storage_bytes = 6;
+
+  // Quota reset date
+  google.protobuf.Timestamp reset_at = 7;
+}

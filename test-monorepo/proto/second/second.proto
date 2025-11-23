@@ -1,0 +1,559 @@
+syntax = "proto3";
+
+package second.v1;
+
+option go_package = "github.com/test/monorepo/gen/go/second/v1;secondv1";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+import "common/common.proto";
+import "shared/resources.proto";
+
+// SecondService manages documents, permissions, and resource activities
+service SecondService {
+  // CreateDocument creates a new document
+  rpc CreateDocument(CreateDocumentRequest) returns (CreateDocumentResponse);
+
+  // GetDocument retrieves a document by ID
+  rpc GetDocument(GetDocumentRequest) returns (GetDocumentResponse);
+
+  // UpdateDocument updates an existing document
+  rpc UpdateDocument(UpdateDocumentRequest) returns (UpdateDocumentResponse);
+
+  // DeleteDocument soft-deletes a document
+  rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
+
+  // ListDocuments lists documents with pagination and filtering
+  rpc ListDocuments(ListDocumentsRequest) returns (ListDocumentsResponse);
+
+  // AddCollaborator adds a collaborator to a document
+  rpc AddCollaborator(AddCollaboratorRequest) returns (AddCollaboratorResponse);
+
+  // RemoveCollaborator removes a collaborator from a document
+  rpc RemoveCollaborator(RemoveCollaboratorRequest) returns (RemoveCollaboratorResponse);
+
+  // GrantPermission grants permission on a resource
+  rpc GrantPermission(GrantPermissionRequest) returns (GrantPermissionResponse);
+
+  // RevokePermission revokes permission on a resource
+  rpc RevokePermission(RevokePermissionRequest) returns (RevokePermissionResponse);
+
+  // CheckPermission checks if a user has permission on a resource
+  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
+
+  // ListPermissions lists permissions for a resource
+  rpc ListPermissions(ListPermissionsRequest) returns (ListPermissionsResponse);
+
+  // LogActivity logs an activity on a resource
+  rpc LogActivity(LogActivityRequest) returns (LogActivityResponse);
+
+  // GetActivityLog retrieves activity log for a resource
+  rpc GetActivityLog(GetActivityLogRequest) returns (GetActivityLogResponse);
+
+  // GetQuota retrieves resource quota information
+  rpc GetQuota(GetQuotaRequest) returns (GetQuotaResponse);
+
+  // UpdateQuota updates resource quota limits
+  rpc UpdateQuota(UpdateQuotaRequest) returns (UpdateQuotaResponse);
+
+  // StreamActivityFeed streams real-time activity feed. Uses server-side streaming
+  rpc StreamActivityFeed(StreamActivityFeedRequest) returns (stream shared.v1.ResourceActivity);
+
+  // BatchGrantPermissions grants multiple permissions. Uses client-side streaming
+  rpc BatchGrantPermissions(stream GrantPermissionRequest) returns (BatchGrantPermissionsResponse);
+
+  // CollaborateOnDocument enables real-time document collaboration. Uses bidirectional streaming
+  rpc CollaborateOnDocument(stream DocumentCollaboration) returns (stream DocumentCollaboration);
+}
+
+// CreateDocumentRequest creates a new document
+message CreateDocumentRequest {
+  // Project ID (optional)
+  string project_id = 1;
+
+  // Document title
+  string title = 2;
+
+  // Document content
+  string content = 3;
+
+  // Document format (markdown, html, text)
+  string format = 4;
+
+  // Author user ID
+  string author_id = 5;
+
+  // Initial collaborators
+  repeated shared.v1.DocumentCollaborator collaborators = 6;
+
+  // Tags
+  repeated string tags = 7;
+}
+
+// CreateDocumentResponse returns the created document
+message CreateDocumentResponse {
+  // Created document
+  shared.v1.Document document = 1;
+}
+
+// GetDocumentRequest retrieves a document
+message GetDocumentRequest {
+  // Document ID
+  string document_id = 1;
+
+  // Include deleted documents
+  bool include_deleted = 2;
+
+  // Include content
+  bool include_content = 3;
+}
+
+// GetDocumentResponse returns the requested document
+message GetDocumentResponse {
+  // Retrieved document
+  shared.v1.Document document = 1;
+}
+
+// UpdateDocumentRequest updates a document
+message UpdateDocumentRequest {
+  // Document ID
+  string document_id = 1;
+
+  // Updated title
+  string title = 2;
+
+  // Updated content
+  string content = 3;
+
+  // Updated format
+  string format = 4;
+
+  // Version for optimistic locking
+  int64 version = 5;
+
+  // Update description
+  string update_description = 6;
+}
+
+// UpdateDocumentResponse returns the updated document
+message UpdateDocumentResponse {
+  // Updated document
+  shared.v1.Document document = 1;
+
+  // New version number
+  int32 new_version = 2;
+}
+
+// DeleteDocumentRequest deletes a document
+message DeleteDocumentRequest {
+  // Document ID
+  string document_id = 1;
+
+  // Hard delete (permanent)
+  bool hard_delete = 2;
+}
+
+// DeleteDocumentResponse confirms deletion
+message DeleteDocumentResponse {
+  // Success status
+  bool success = 1;
+
+  // Deletion timestamp
+  google.protobuf.Timestamp deleted_at = 2;
+}
+
+// ListDocumentsRequest lists documents
+message ListDocumentsRequest {
+  // Pagination
+  common.v1.PaginationRequest pagination = 1;
+
+  // Filter by project ID
+  string project_id = 2;
+
+  // Filter by author ID
+  string author_id = 3;
+
+  // Filter by state
+  shared.v1.ResourceState state = 4;
+
+  // Filter by format
+  string format = 5;
+
+  // Filter by tags
+  repeated string tags = 6;
+
+  // Search query
+  string search_query = 7;
+
+  // Created after date
+  google.protobuf.Timestamp created_after = 8;
+
+  // Created before date
+  google.protobuf.Timestamp created_before = 9;
+
+  // Sort by field
+  string sort_by = 10;
+
+  // Sort descending
+  bool sort_desc = 11;
+}
+
+// ListDocumentsResponse returns matching documents
+message ListDocumentsResponse {
+  // Matching documents
+  repeated shared.v1.Document documents = 1;
+
+  // Pagination metadata
+  common.v1.PaginationResponse pagination = 2;
+}
+
+// AddCollaboratorRequest adds a collaborator to a document
+message AddCollaboratorRequest {
+  // Document ID
+  string document_id = 1;
+
+  // User ID to add
+  string user_id = 2;
+
+  // Access level
+  shared.v1.AccessLevel access_level = 3;
+}
+
+// AddCollaboratorResponse returns the added collaborator
+message AddCollaboratorResponse {
+  // Added collaborator
+  shared.v1.DocumentCollaborator collaborator = 1;
+
+  // Updated document
+  shared.v1.Document document = 2;
+}
+
+// RemoveCollaboratorRequest removes a collaborator from a document
+message RemoveCollaboratorRequest {
+  // Document ID
+  string document_id = 1;
+
+  // User ID to remove
+  string user_id = 2;
+}
+
+// RemoveCollaboratorResponse confirms removal
+message RemoveCollaboratorResponse {
+  // Success status
+  bool success = 1;
+
+  // Updated document
+  shared.v1.Document document = 2;
+}
+
+// GrantPermissionRequest grants permission on a resource
+message GrantPermissionRequest {
+  // Resource ID
+  string resource_id = 1;
+
+  // Resource type
+  shared.v1.ResourceType resource_type = 2;
+
+  // Principal ID (user or group)
+  string principal_id = 3;
+
+  // Principal type (user or group)
+  string principal_type = 4;
+
+  // Access level
+  shared.v1.AccessLevel access_level = 5;
+
+  // Permission expiry
+  google.protobuf.Timestamp expires_at = 6;
+
+  // Granted by user ID
+  string granted_by = 7;
+}
+
+// GrantPermissionResponse returns the granted permission
+message GrantPermissionResponse {
+  // Granted permission
+  shared.v1.ResourcePermission permission = 1;
+}
+
+// RevokePermissionRequest revokes a permission
+message RevokePermissionRequest {
+  // Permission ID
+  string permission_id = 1;
+
+  // Revoked by user ID
+  string revoked_by = 2;
+}
+
+// RevokePermissionResponse confirms revocation
+message RevokePermissionResponse {
+  // Success status
+  bool success = 1;
+
+  // Revocation timestamp
+  google.protobuf.Timestamp revoked_at = 2;
+}
+
+// CheckPermissionRequest checks permission
+message CheckPermissionRequest {
+  // Resource ID
+  string resource_id = 1;
+
+  // Resource type
+  shared.v1.ResourceType resource_type = 2;
+
+  // User ID to check
+  string user_id = 3;
+
+  // Required access level
+  shared.v1.AccessLevel required_access_level = 4;
+}
+
+// CheckPermissionResponse returns permission check result
+message CheckPermissionResponse {
+  // Has permission
+  bool has_permission = 1;
+
+  // Actual access level
+  shared.v1.AccessLevel access_level = 2;
+
+  // Permission details
+  shared.v1.ResourcePermission permission = 3;
+}
+
+// ListPermissionsRequest lists permissions
+message ListPermissionsRequest {
+  // Filter by resource ID
+  string resource_id = 1;
+
+  // Filter by resource type
+  shared.v1.ResourceType resource_type = 2;
+
+  // Filter by principal ID
+  string principal_id = 3;
+
+  // Include expired permissions
+  bool include_expired = 4;
+
+  // Pagination
+  common.v1.PaginationRequest pagination = 5;
+}
+
+// ListPermissionsResponse returns matching permissions
+message ListPermissionsResponse {
+  // Matching permissions
+  repeated shared.v1.ResourcePermission permissions = 1;
+
+  // Pagination metadata
+  common.v1.PaginationResponse pagination = 2;
+}
+
+// LogActivityRequest logs an activity
+message LogActivityRequest {
+  // Resource ID
+  string resource_id = 1;
+
+  // Resource type
+  shared.v1.ResourceType resource_type = 2;
+
+  // Activity type
+  string activity_type = 3;
+
+  // User ID
+  string user_id = 4;
+
+  // Description
+  string description = 5;
+
+  // Details (JSON)
+  string details = 6;
+
+  // IP address
+  string ip_address = 7;
+}
+
+// LogActivityResponse returns the logged activity
+message LogActivityResponse {
+  // Logged activity
+  shared.v1.ResourceActivity activity = 1;
+}
+
+// GetActivityLogRequest retrieves activity log
+message GetActivityLogRequest {
+  // Resource ID
+  string resource_id = 1;
+
+  // Resource type
+  shared.v1.ResourceType resource_type = 2;
+
+  // Filter by user ID
+  string user_id = 3;
+
+  // Filter by activity type
+  string activity_type = 4;
+
+  // Activities after timestamp
+  google.protobuf.Timestamp after = 5;
+
+  // Activities before timestamp
+  google.protobuf.Timestamp before = 6;
+
+  // Pagination
+  common.v1.PaginationRequest pagination = 7;
+}
+
+// GetActivityLogResponse returns activity log
+message GetActivityLogResponse {
+  // Activity entries
+  repeated shared.v1.ResourceActivity activities = 1;
+
+  // Pagination metadata
+  common.v1.PaginationResponse pagination = 2;
+}
+
+// GetQuotaRequest retrieves quota information
+message GetQuotaRequest {
+  // Owner ID (user or organization)
+  string owner_id = 1;
+
+  // Resource type
+  shared.v1.ResourceType resource_type = 2;
+}
+
+// GetQuotaResponse returns quota information
+message GetQuotaResponse {
+  // Resource quota
+  shared.v1.ResourceQuota quota = 1;
+
+  // Usage percentage
+  double usage_percentage = 2;
+
+  // Is over quota
+  bool over_quota = 3;
+}
+
+// UpdateQuotaRequest updates quota limits
+message UpdateQuotaRequest {
+  // Owner ID
+  string owner_id = 1;
+
+  // Resource type
+  shared.v1.ResourceType resource_type = 2;
+
+  // New maximum count
+  int64 max_count = 3;
+
+  // New maximum storage bytes
+  int64 max_storage_bytes = 4;
+
+  // Updated by user ID
+  string updated_by = 5;
+}
+
+// UpdateQuotaResponse returns the updated quota
+message UpdateQuotaResponse {
+  // Updated quota
+  shared.v1.ResourceQuota quota = 1;
+}
+
+// StreamActivityFeedRequest requests activity feed stream
+message StreamActivityFeedRequest {
+  // Filter by resource type
+  shared.v1.ResourceType resource_type = 1;
+
+  // Filter by user ID
+  string user_id = 2;
+
+  // Filter by activity types
+  repeated string activity_types = 3;
+
+  // Start from timestamp
+  google.protobuf.Timestamp start_from = 4;
+}
+
+// BatchGrantPermissionsResponse returns batch grant results
+message BatchGrantPermissionsResponse {
+  // Granted permissions
+  repeated shared.v1.ResourcePermission permissions = 1;
+
+  // Number of permissions granted
+  int32 granted_count = 2;
+
+  // Number of permissions failed
+  int32 failed_count = 3;
+
+  // Errors encountered
+  repeated common.v1.Error errors = 4;
+}
+
+// DocumentCollaboration for real-time collaboration
+message DocumentCollaboration {
+  // Message ID for tracking
+  string message_id = 1;
+
+  // Message type (edit, cursor, selection, comment)
+  string message_type = 2;
+
+  // Timestamp
+  google.protobuf.Timestamp timestamp = 3;
+
+  // Document ID
+  string document_id = 4;
+
+  // User ID
+  string user_id = 5;
+
+  // Content change (for edit messages)
+  ContentChange content_change = 6;
+
+  // Cursor position (for cursor messages)
+  CursorPosition cursor_position = 7;
+
+  // Comment (for comment messages)
+  string comment = 8;
+
+  // Acknowledge message ID
+  string ack_message_id = 9;
+}
+
+// ContentChange represents a change to document content
+message ContentChange {
+  // Change operation (insert, delete, replace)
+  string operation = 1;
+
+  // Start position
+  int32 start_position = 2;
+
+  // End position
+  int32 end_position = 3;
+
+  // New content
+  string content = 4;
+
+  // Version before change
+  int32 version = 5;
+}
+
+// CursorPosition represents a user's cursor position
+message CursorPosition {
+  // Line number
+  int32 line = 1;
+
+  // Column number
+  int32 column = 2;
+
+  // Selection start (if any)
+  Position selection_start = 3;
+
+  // Selection end (if any)
+  Position selection_end = 4;
+}
+
+// Position represents a position in a document
+message Position {
+  // Line number
+  int32 line = 1;
+
+  // Column number
+  int32 column = 2;
+}
