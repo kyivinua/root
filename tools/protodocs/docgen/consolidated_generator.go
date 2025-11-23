@@ -11,7 +11,8 @@ const GeneratorVersion = "7.0.0"
 
 // ConsolidatedDocGenerator creates comprehensive, single-file documentation for each service
 type ConsolidatedDocGenerator struct {
-	config ConsolidatedConfig
+	config           ConsolidatedConfig
+	industrialConfig IndustrialConfig
 }
 
 // ConsolidatedConfig holds configuration for consolidated documentation
@@ -88,7 +89,16 @@ func DefaultConsolidatedConfig() ConsolidatedConfig {
 // NewConsolidatedDocGenerator creates a new consolidated documentation generator
 func NewConsolidatedDocGenerator(config ConsolidatedConfig) *ConsolidatedDocGenerator {
 	return &ConsolidatedDocGenerator{
-		config: config,
+		config:           config,
+		industrialConfig: DefaultIndustrialConfig(),
+	}
+}
+
+// NewConsolidatedDocGeneratorWithIndustrial creates a generator with custom industrial config
+func NewConsolidatedDocGeneratorWithIndustrial(config ConsolidatedConfig, industrialConfig IndustrialConfig) *ConsolidatedDocGenerator {
+	return &ConsolidatedDocGenerator{
+		config:           config,
+		industrialConfig: industrialConfig,
 	}
 }
 
@@ -203,6 +213,23 @@ func (g *ConsolidatedDocGenerator) GenerateConsolidatedDoc(doc *ServiceDocumenta
 		g.writeOverview(&sb, doc)
 	}
 
+	// Industrial-grade sections
+	if g.industrialConfig.EnableAuthenticationSection {
+		g.writeAuthenticationSection(&sb, doc, g.industrialConfig)
+	}
+
+	if g.industrialConfig.EnableRateLimitingSection {
+		g.writeRateLimitingSection(&sb, doc, g.industrialConfig)
+	}
+
+	if g.industrialConfig.EnableSLASection {
+		g.writeSLASection(&sb, doc, g.industrialConfig)
+	}
+
+	if g.industrialConfig.EnableVersioningSection {
+		g.writeVersioningSection(&sb, doc, g.industrialConfig)
+	}
+
 	// Architecture diagram
 	if g.config.IncludeDiagrams && g.config.IncludeArchitecture {
 		g.writeArchitectureDiagram(&sb, doc)
@@ -303,6 +330,20 @@ func (g *ConsolidatedDocGenerator) writeTOC(sb *strings.Builder, doc *ServiceDoc
 	// Overview
 	if g.config.IncludeOverview {
 		sb.WriteString("- [Overview](#overview)\n")
+	}
+
+	// Industrial sections
+	if g.industrialConfig.EnableAuthenticationSection {
+		sb.WriteString("- [Authentication & Authorization](#authentication)\n")
+	}
+	if g.industrialConfig.EnableRateLimitingSection {
+		sb.WriteString("- [Rate Limits & Quotas](#rate-limits)\n")
+	}
+	if g.industrialConfig.EnableSLASection {
+		sb.WriteString("- [Service Level Agreement (SLA)](#sla)\n")
+	}
+	if g.industrialConfig.EnableVersioningSection {
+		sb.WriteString("- [API Versioning & Lifecycle](#versioning)\n")
 	}
 
 	// Architecture

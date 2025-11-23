@@ -6,7 +6,7 @@
 | **Package** | `second.v1` |
 | **Version** | v1 |
 | **Proto File** | `second/second.proto` |
-| **Generated** | 2025-11-23T00:35:25Z |
+| **Generated** | 2025-11-23T01:12:47Z |
 
 SecondService manages documents, permissions, and resource activities.
 
@@ -15,6 +15,10 @@ SecondService manages documents, permissions, and resource activities.
 ## 📑 Table of Contents
 
 - [Overview](#overview)
+- [Authentication & Authorization](#authentication)
+- [Rate Limits & Quotas](#rate-limits)
+- [Service Level Agreement (SLA)](#sla)
+- [API Versioning & Lifecycle](#versioning)
 - [Architecture](#architecture)
 - [gRPC Service Interactions](#service-interaction)
 - [Message Type Diagrams](#class-diagram)
@@ -38,42 +42,42 @@ SecondService manages documents, permissions, and resource activities.
   - [BatchGrantPermissions](#batchgrantpermissions)
   - [CollaborateOnDocument](#collaborateondocument)
 - [Messages](#messages)
-  - [AddCollaboratorRequest](#addcollaboratorrequest)
   - [GetQuotaResponse](#getquotaresponse)
   - [BatchGrantPermissionsResponse](#batchgrantpermissionsresponse)
-  - [DocumentCollaboration](#documentcollaboration)
-  - [CreateDocumentRequest](#createdocumentrequest)
-  - [UpdateDocumentResponse](#updatedocumentresponse)
-  - [RemoveCollaboratorRequest](#removecollaboratorrequest)
-  - [ListPermissionsRequest](#listpermissionsrequest)
-  - [ListPermissionsResponse](#listpermissionsresponse)
   - [GetDocumentResponse](#getdocumentresponse)
-  - [DeleteDocumentRequest](#deletedocumentrequest)
-  - [GrantPermissionRequest](#grantpermissionrequest)
-  - [LogActivityRequest](#logactivityrequest)
-  - [CursorPosition](#cursorposition)
-  - [GetDocumentRequest](#getdocumentrequest)
-  - [ListDocumentsRequest](#listdocumentsrequest)
-  - [ListDocumentsResponse](#listdocumentsresponse)
-  - [LogActivityResponse](#logactivityresponse)
-  - [CheckPermissionRequest](#checkpermissionrequest)
-  - [CheckPermissionResponse](#checkpermissionresponse)
-  - [CreateDocumentResponse](#createdocumentresponse)
-  - [GrantPermissionResponse](#grantpermissionresponse)
-  - [StreamActivityFeedRequest](#streamactivityfeedrequest)
-  - [GetQuotaRequest](#getquotarequest)
   - [UpdateDocumentRequest](#updatedocumentrequest)
-  - [DeleteDocumentResponse](#deletedocumentresponse)
+  - [CheckPermissionResponse](#checkpermissionresponse)
+  - [LogActivityRequest](#logactivityrequest)
+  - [LogActivityResponse](#logactivityresponse)
+  - [GetQuotaRequest](#getquotarequest)
+  - [StreamActivityFeedRequest](#streamactivityfeedrequest)
+  - [ContentChange](#contentchange)
+  - [CreateDocumentResponse](#createdocumentresponse)
+  - [UpdateDocumentResponse](#updatedocumentresponse)
   - [AddCollaboratorResponse](#addcollaboratorresponse)
   - [RevokePermissionResponse](#revokepermissionresponse)
-  - [GetActivityLogResponse](#getactivitylogresponse)
-  - [UpdateQuotaRequest](#updatequotarequest)
-  - [RemoveCollaboratorResponse](#removecollaboratorresponse)
-  - [RevokePermissionRequest](#revokepermissionrequest)
+  - [CursorPosition](#cursorposition)
+  - [ListDocumentsRequest](#listdocumentsrequest)
+  - [AddCollaboratorRequest](#addcollaboratorrequest)
   - [GetActivityLogRequest](#getactivitylogrequest)
+  - [UpdateQuotaRequest](#updatequotarequest)
   - [UpdateQuotaResponse](#updatequotaresponse)
-  - [ContentChange](#contentchange)
   - [Position](#position)
+  - [ListPermissionsResponse](#listpermissionsresponse)
+  - [DeleteDocumentRequest](#deletedocumentrequest)
+  - [ListDocumentsResponse](#listdocumentsresponse)
+  - [RemoveCollaboratorResponse](#removecollaboratorresponse)
+  - [CheckPermissionRequest](#checkpermissionrequest)
+  - [ListPermissionsRequest](#listpermissionsrequest)
+  - [DeleteDocumentResponse](#deletedocumentresponse)
+  - [GrantPermissionResponse](#grantpermissionresponse)
+  - [DocumentCollaboration](#documentcollaboration)
+  - [CreateDocumentRequest](#createdocumentrequest)
+  - [GetDocumentRequest](#getdocumentrequest)
+  - [RemoveCollaboratorRequest](#removecollaboratorrequest)
+  - [GrantPermissionRequest](#grantpermissionrequest)
+  - [RevokePermissionRequest](#revokepermissionrequest)
+  - [GetActivityLogResponse](#getactivitylogresponse)
 - [Error Codes](#error-codes)
 - [Examples](#examples)
 
@@ -102,6 +106,295 @@ This service provides the following capabilities:
 - [`DeleteDocument`](#deletedocument): DeleteDocument soft-deletes a document.
 - [`ListDocuments`](#listdocuments): ListDocuments lists documents with pagination and filtering.
 - ... and 13 more methods
+
+---
+
+## 🔐 Authentication & Authorization
+
+<a name="authentication"></a>
+
+### Supported Authentication Methods
+
+This service supports the following authentication methods:
+
+1. **API Keys** - For service-to-service communication
+2. **OAuth 2.0** - For user-delegated access with bearer tokens
+3. **JWT Tokens** - For stateless authentication
+
+### Authentication Examples
+
+#### Using API Keys
+
+```bash
+# Command-line (grpcurl)
+grpcurl -H 'x-api-key: YOUR_API_KEY' \
+  api.example.com:443 \
+  second.v1.SecondService/CreateDocument
+```
+
+#### Using OAuth 2.0 Bearer Token (Go)
+
+```go
+import (
+    "context"
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/metadata"
+)
+
+func callWithAuth(client pb.ServiceClient, token string) error {
+    // Create metadata with authorization header
+    md := metadata.New(map[string]string{
+        "authorization": "Bearer " + token,
+    })
+    ctx := metadata.NewOutgoingContext(context.Background(), md)
+
+    // Make RPC call with authenticated context
+    resp, err := client.SomeMethod(ctx, &pb.Request{})
+    return err
+}
+```
+
+#### Using OAuth 2.0 Bearer Token (TypeScript)
+
+```typescript
+import * as grpc from '@grpc/grpc-js';
+
+// Create metadata with authorization header
+const metadata = new grpc.Metadata();
+metadata.add('authorization', 'Bearer ' + accessToken);
+
+// Make RPC call with authenticated metadata
+client.someMethod(request, metadata, (error, response) => {
+    if (error) {
+        console.error('Error:', error);
+        return;
+    }
+    console.log('Response:', response);
+});
+```
+
+### Authorization Scopes
+
+Different methods require different permission scopes:
+
+| Method | Required Scope | Description |
+|--------|---------------|-------------|
+| `CreateDocument` | `second.write` | Create new resources |
+| `GetDocument` | `second.read` | Read individual resources |
+| `UpdateDocument` | `second.write` | Modify existing resources |
+| `DeleteDocument` | `second.admin` | Administrative access required |
+| `ListDocuments` | `second.read` | List and query resources |
+| `AddCollaborator` | `second.access` | Access resources |
+| `RemoveCollaborator` | `second.access` | Access resources |
+| `GrantPermission` | `second.access` | Access resources |
+| `RevokePermission` | `second.access` | Access resources |
+| `CheckPermission` | `second.access` | Access resources |
+| `ListPermissions` | `second.read` | List and query resources |
+| `LogActivity` | `second.access` | Access resources |
+| `GetActivityLog` | `second.read` | Read individual resources |
+| `GetQuota` | `second.read` | Read individual resources |
+| `UpdateQuota` | `second.write` | Modify existing resources |
+| `StreamActivityFeed` | `second.access` | Access resources |
+| `BatchGrantPermissions` | `second.access` | Access resources |
+| `CollaborateOnDocument` | `second.access` | Access resources |
+
+### Security Best Practices
+
+- ✅ Always use TLS 1.3+ in production environments
+- ✅ Rotate API keys every 90 days
+- ✅ Use short-lived tokens (1 hour maximum)
+- ✅ Implement request signing for sensitive operations
+- ✅ Store credentials securely (use secret management systems)
+- ❌ Never log authentication credentials or tokens
+- ❌ Never commit API keys to version control
+
+---
+
+## ⏱️ Rate Limits & Quotas
+
+<a name="rate-limits"></a>
+
+### Standard Rate Limits
+
+The following rate limits apply to all API requests:
+
+| Tier | Requests/Second | Requests/Day | Burst |
+|------|----------------|--------------|-------|
+| **Free** | 10 | 10000 | 20 |
+| **Professional** | 100 | 1000000 | 200 |
+| **Enterprise** | 1000 | Unlimited | 2000 |
+
+### Rate Limit Headers
+
+All API responses include rate limit information in the response metadata:
+
+```http
+x-ratelimit-limit: 100
+x-ratelimit-remaining: 87
+x-ratelimit-reset: 1634567890
+x-ratelimit-retry-after: 42
+```
+
+### Handling Rate Limits
+
+When you exceed rate limits, you'll receive a `RESOURCE_EXHAUSTED` error. Implement exponential backoff to handle rate limiting gracefully:
+
+#### Exponential Backoff Example (TypeScript)
+
+```typescript
+async function callWithRetry(
+  fn: () => Promise<any>,
+  maxRetries = 3
+): Promise<any> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (error.code === grpc.status.RESOURCE_EXHAUSTED) {
+        const delay = Math.min(1000 * Math.pow(2, i), 30000);
+        console.log(`Rate limited. Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error('Max retries exceeded');
+}
+```
+
+#### Exponential Backoff Example (Go)
+
+```go
+import (
+    "context"
+    "time"
+    "google.golang.org/grpc/codes"
+    "google.golang.org/grpc/status"
+)
+
+func callWithRetry(ctx context.Context, fn func() error, maxRetries int) error {
+    for i := 0; i < maxRetries; i++ {
+        err := fn()
+        if err == nil {
+            return nil
+        }
+
+        if status.Code(err) == codes.ResourceExhausted {
+            delay := time.Duration(1000*math.Pow(2, float64(i))) * time.Millisecond
+            if delay > 30*time.Second {
+                delay = 30 * time.Second
+            }
+            log.Printf("Rate limited. Retrying in %v...", delay)
+            time.Sleep(delay)
+            continue
+        }
+        return err
+    }
+    return fmt.Errorf("max retries exceeded")
+}
+```
+
+---
+
+## 📊 Service Level Agreement (SLA)
+
+<a name="sla"></a>
+
+### Availability Commitments
+
+| Service Tier | Uptime SLA | Monthly Downtime | Latency (p95) |
+|-------------|-----------|------------------|---------------|
+| **Standard** | 99.9% | 43.8 minutes | < 200ms |
+| **Premium** | 99.95% | 21.9 minutes | < 100ms |
+| **Enterprise** | 99.99% | 4.38 minutes | < 50ms |
+
+### Performance SLOs
+
+#### Latency Targets (p95)
+
+| Operation Type | Target | Notes |
+|---------------|--------|-------|
+| **Read Operations** (Get*) | < 100ms | Measured server-side |
+| **Write Operations** (Create*, Update*) | < 500ms | Includes validation |
+| **List Operations** (List*) | < 200ms | With pagination |
+| **Delete Operations** (Delete*) | < 300ms | Soft delete |
+| **Streaming** | < 50ms | Time to first message |
+
+### Monitoring & Observability
+
+All services expose Prometheus-compatible metrics:
+
+```prometheus
+# Request latency histogram (seconds)
+api_request_duration_seconds{service="SecondService",method="CreateDocument",quantile="0.95"}
+
+# Total request count
+api_requests_total{service="SecondService",method="CreateDocument",status="success"}
+
+# Error count by code
+api_errors_total{service="SecondService",method="CreateDocument",code="INVALID_ARGUMENT"}
+```
+
+### Health Check
+
+Health status is available via the standard gRPC health check protocol:
+
+```bash
+grpc_health_probe -addr=api.example.com:443 \
+  -service=second.v1.SecondService
+```
+
+---
+
+## 🔄 API Versioning & Lifecycle
+
+<a name="versioning"></a>
+
+### Versioning Strategy
+
+**Strategy**: Semantic Versioning (package.v{major})
+
+This service follows semantic versioning:
+
+- **Major version** (v1, v2): Breaking changes requiring client updates
+- **Minor version** (implicit): Backward-compatible additions
+- **Patch version**: Bug fixes (not reflected in package name)
+
+**Current Version**: v1
+
+### Version Support Policy
+
+| Version State | Support Period | Updates | Deprecation Notice |
+|--------------|----------------|---------|-------------------|
+| **Current** | Indefinite | Features + Fixes | N/A |
+| **Previous** | 12 months for previous version | Security fixes only | 6 months advance notice prior |
+| **Deprecated** | 6 months | Critical security only | 12 months prior |
+| **Sunset** | 0 months | None | Service disabled |
+
+### Breaking vs. Non-Breaking Changes
+
+**Breaking changes** (require major version bump):
+- ❌ Removing or renaming services, methods, or fields
+- ❌ Changing field types or field numbers
+- ❌ Changing method behavior significantly
+- ❌ Removing enum values
+
+**Non-breaking changes** (allowed in current version):
+- ✅ Adding new services, methods, or fields
+- ✅ Adding optional fields
+- ✅ Adding enum values
+- ✅ Deprecating (but not removing) fields
+
+### Migration Support
+
+When major version updates are released, we provide:
+
+- ✅ Comprehensive migration guides
+- ✅ Code examples showing before/after
+- ✅ Side-by-side running period (overlap)
+- ✅ Automated migration tools (where possible)
+- ✅ Dedicated support during migration period
 
 ---
 
@@ -310,51 +603,44 @@ UML class diagrams showing the structure of message types.
 classDiagram
     class SecondService {
         <<service>>
-        +AddCollaboratorRequest()
         +GetQuotaResponse()
         +BatchGrantPermissionsResponse()
-        +DocumentCollaboration()
-        +CreateDocumentRequest()
-        +UpdateDocumentResponse()
-        +RemoveCollaboratorRequest()
-        +ListPermissionsRequest()
-        +ListPermissionsResponse()
         +GetDocumentResponse()
-        +DeleteDocumentRequest()
-        +GrantPermissionRequest()
-        +LogActivityRequest()
-        +CursorPosition()
-        +GetDocumentRequest()
-        +ListDocumentsRequest()
-        +ListDocumentsResponse()
-        +LogActivityResponse()
-        +CheckPermissionRequest()
-        +CheckPermissionResponse()
-        +CreateDocumentResponse()
-        +GrantPermissionResponse()
-        +StreamActivityFeedRequest()
-        +GetQuotaRequest()
         +UpdateDocumentRequest()
-        +DeleteDocumentResponse()
+        +CheckPermissionResponse()
+        +LogActivityRequest()
+        +LogActivityResponse()
+        +GetQuotaRequest()
+        +StreamActivityFeedRequest()
+        +ContentChange()
+        +CreateDocumentResponse()
+        +UpdateDocumentResponse()
         +AddCollaboratorResponse()
         +RevokePermissionResponse()
-        +GetActivityLogResponse()
-        +UpdateQuotaRequest()
-        +RemoveCollaboratorResponse()
-        +RevokePermissionRequest()
+        +CursorPosition()
+        +ListDocumentsRequest()
+        +AddCollaboratorRequest()
         +GetActivityLogRequest()
+        +UpdateQuotaRequest()
         +UpdateQuotaResponse()
-        +ContentChange()
         +Position()
+        +ListPermissionsResponse()
+        +DeleteDocumentRequest()
+        +ListDocumentsResponse()
+        +RemoveCollaboratorResponse()
+        +CheckPermissionRequest()
+        +ListPermissionsRequest()
+        +DeleteDocumentResponse()
+        +GrantPermissionResponse()
+        +DocumentCollaboration()
+        +CreateDocumentRequest()
+        +GetDocumentRequest()
+        +RemoveCollaboratorRequest()
+        +GrantPermissionRequest()
+        +RevokePermissionRequest()
+        +GetActivityLogResponse()
     }
 
-    class AddCollaboratorRequest {
-        +string document_id
-        +string user_id
-        +AccessLevel access_level
-    }
-
-    AddCollaboratorRequest "1" --> "1" AccessLevel
     class GetQuotaResponse {
         +ResourceQuota quota
         +double usage_percentage
@@ -371,6 +657,206 @@ classDiagram
 
     BatchGrantPermissionsResponse "1" --> "*" ResourcePermission
     BatchGrantPermissionsResponse "1" --> "*" Error
+    class GetDocumentResponse {
+        +Document document
+    }
+
+    GetDocumentResponse "1" --> "1" Document
+    class UpdateDocumentRequest {
+        +string document_id
+        +string title
+        +string content
+        +string format
+        +int64 version
+        +string update_description
+    }
+
+    class CheckPermissionResponse {
+        +bool has_permission
+        +AccessLevel access_level
+        +ResourcePermission permission
+    }
+
+    CheckPermissionResponse "1" --> "1" AccessLevel
+    CheckPermissionResponse "1" --> "1" ResourcePermission
+    class LogActivityRequest {
+        +string resource_id
+        +ResourceType resource_type
+        +string activity_type
+        +string user_id
+        +string description
+        +string details
+        +string ip_address
+    }
+
+    LogActivityRequest "1" --> "1" ResourceType
+    class LogActivityResponse {
+        +ResourceActivity activity
+    }
+
+    LogActivityResponse "1" --> "1" ResourceActivity
+    class GetQuotaRequest {
+        +string owner_id
+        +ResourceType resource_type
+    }
+
+    GetQuotaRequest "1" --> "1" ResourceType
+    class StreamActivityFeedRequest {
+        +ResourceType resource_type
+        +string user_id
+        +string activity_types[]
+        +Timestamp start_from
+    }
+
+    StreamActivityFeedRequest "1" --> "1" ResourceType
+    class ContentChange {
+        +string operation
+        +int32 start_position
+        +int32 end_position
+        +string content
+        +int32 version
+    }
+
+    class CreateDocumentResponse {
+        +Document document
+    }
+
+    CreateDocumentResponse "1" --> "1" Document
+    class UpdateDocumentResponse {
+        +Document document
+        +int32 new_version
+    }
+
+    UpdateDocumentResponse "1" --> "1" Document
+    class AddCollaboratorResponse {
+        +DocumentCollaborator collaborator
+        +Document document
+    }
+
+    AddCollaboratorResponse "1" --> "1" DocumentCollaborator
+    AddCollaboratorResponse "1" --> "1" Document
+    class RevokePermissionResponse {
+        +bool success
+        +Timestamp revoked_at
+    }
+
+    class CursorPosition {
+        +int32 line
+        +int32 column
+        +Position selection_start
+        +Position selection_end
+    }
+
+    CursorPosition "1" --> "1" Position
+    CursorPosition "1" --> "1" Position
+    class ListDocumentsRequest {
+        +PaginationRequest pagination
+        +string project_id
+        +string author_id
+        +ResourceState state
+        +string format
+        +string tags[]
+        +string search_query
+        +Timestamp created_after
+        +Timestamp created_before
+        +string sort_by
+        +bool sort_desc
+    }
+
+    ListDocumentsRequest "1" --> "1" PaginationRequest
+    ListDocumentsRequest "1" --> "1" ResourceState
+    class AddCollaboratorRequest {
+        +string document_id
+        +string user_id
+        +AccessLevel access_level
+    }
+
+    AddCollaboratorRequest "1" --> "1" AccessLevel
+    class GetActivityLogRequest {
+        +string resource_id
+        +ResourceType resource_type
+        +string user_id
+        +string activity_type
+        +Timestamp after
+        +Timestamp before
+        +PaginationRequest pagination
+    }
+
+    GetActivityLogRequest "1" --> "1" ResourceType
+    GetActivityLogRequest "1" --> "1" PaginationRequest
+    class UpdateQuotaRequest {
+        +string owner_id
+        +ResourceType resource_type
+        +int64 max_count
+        +int64 max_storage_bytes
+        +string updated_by
+    }
+
+    UpdateQuotaRequest "1" --> "1" ResourceType
+    class UpdateQuotaResponse {
+        +ResourceQuota quota
+    }
+
+    UpdateQuotaResponse "1" --> "1" ResourceQuota
+    class Position {
+        +int32 line
+        +int32 column
+    }
+
+    class ListPermissionsResponse {
+        +ResourcePermission permissions[]
+        +PaginationResponse pagination
+    }
+
+    ListPermissionsResponse "1" --> "*" ResourcePermission
+    ListPermissionsResponse "1" --> "1" PaginationResponse
+    class DeleteDocumentRequest {
+        +string document_id
+        +bool hard_delete
+    }
+
+    class ListDocumentsResponse {
+        +Document documents[]
+        +PaginationResponse pagination
+    }
+
+    ListDocumentsResponse "1" --> "*" Document
+    ListDocumentsResponse "1" --> "1" PaginationResponse
+    class RemoveCollaboratorResponse {
+        +bool success
+        +Document document
+    }
+
+    RemoveCollaboratorResponse "1" --> "1" Document
+    class CheckPermissionRequest {
+        +string resource_id
+        +ResourceType resource_type
+        +string user_id
+        +AccessLevel required_access_level
+    }
+
+    CheckPermissionRequest "1" --> "1" ResourceType
+    CheckPermissionRequest "1" --> "1" AccessLevel
+    class ListPermissionsRequest {
+        +string resource_id
+        +ResourceType resource_type
+        +string principal_id
+        +bool include_expired
+        +PaginationRequest pagination
+    }
+
+    ListPermissionsRequest "1" --> "1" ResourceType
+    ListPermissionsRequest "1" --> "1" PaginationRequest
+    class DeleteDocumentResponse {
+        +bool success
+        +Timestamp deleted_at
+    }
+
+    class GrantPermissionResponse {
+        +ResourcePermission permission
+    }
+
+    GrantPermissionResponse "1" --> "1" ResourcePermission
     class DocumentCollaboration {
         +string message_id
         +string message_type
@@ -396,42 +882,15 @@ classDiagram
     }
 
     CreateDocumentRequest "1" --> "*" DocumentCollaborator
-    class UpdateDocumentResponse {
-        +Document document
-        +int32 new_version
+    class GetDocumentRequest {
+        +string document_id
+        +bool include_deleted
+        +bool include_content
     }
 
-    UpdateDocumentResponse "1" --> "1" Document
     class RemoveCollaboratorRequest {
         +string document_id
         +string user_id
-    }
-
-    class ListPermissionsRequest {
-        +string resource_id
-        +ResourceType resource_type
-        +string principal_id
-        +bool include_expired
-        +PaginationRequest pagination
-    }
-
-    ListPermissionsRequest "1" --> "1" ResourceType
-    ListPermissionsRequest "1" --> "1" PaginationRequest
-    class ListPermissionsResponse {
-        +ResourcePermission permissions[]
-        +PaginationResponse pagination
-    }
-
-    ListPermissionsResponse "1" --> "*" ResourcePermission
-    ListPermissionsResponse "1" --> "1" PaginationResponse
-    class GetDocumentResponse {
-        +Document document
-    }
-
-    GetDocumentResponse "1" --> "1" Document
-    class DeleteDocumentRequest {
-        +string document_id
-        +bool hard_delete
     }
 
     class GrantPermissionRequest {
@@ -446,125 +905,9 @@ classDiagram
 
     GrantPermissionRequest "1" --> "1" ResourceType
     GrantPermissionRequest "1" --> "1" AccessLevel
-    class LogActivityRequest {
-        +string resource_id
-        +ResourceType resource_type
-        +string activity_type
-        +string user_id
-        +string description
-        +string details
-        +string ip_address
-    }
-
-    LogActivityRequest "1" --> "1" ResourceType
-    class CursorPosition {
-        +int32 line
-        +int32 column
-        +Position selection_start
-        +Position selection_end
-    }
-
-    CursorPosition "1" --> "1" Position
-    CursorPosition "1" --> "1" Position
-    class GetDocumentRequest {
-        +string document_id
-        +bool include_deleted
-        +bool include_content
-    }
-
-    class ListDocumentsRequest {
-        +PaginationRequest pagination
-        +string project_id
-        +string author_id
-        +ResourceState state
-        +string format
-        +string tags[]
-        +string search_query
-        +Timestamp created_after
-        +Timestamp created_before
-        +string sort_by
-        +bool sort_desc
-    }
-
-    ListDocumentsRequest "1" --> "1" PaginationRequest
-    ListDocumentsRequest "1" --> "1" ResourceState
-    class ListDocumentsResponse {
-        +Document documents[]
-        +PaginationResponse pagination
-    }
-
-    ListDocumentsResponse "1" --> "*" Document
-    ListDocumentsResponse "1" --> "1" PaginationResponse
-    class LogActivityResponse {
-        +ResourceActivity activity
-    }
-
-    LogActivityResponse "1" --> "1" ResourceActivity
-    class CheckPermissionRequest {
-        +string resource_id
-        +ResourceType resource_type
-        +string user_id
-        +AccessLevel required_access_level
-    }
-
-    CheckPermissionRequest "1" --> "1" ResourceType
-    CheckPermissionRequest "1" --> "1" AccessLevel
-    class CheckPermissionResponse {
-        +bool has_permission
-        +AccessLevel access_level
-        +ResourcePermission permission
-    }
-
-    CheckPermissionResponse "1" --> "1" AccessLevel
-    CheckPermissionResponse "1" --> "1" ResourcePermission
-    class CreateDocumentResponse {
-        +Document document
-    }
-
-    CreateDocumentResponse "1" --> "1" Document
-    class GrantPermissionResponse {
-        +ResourcePermission permission
-    }
-
-    GrantPermissionResponse "1" --> "1" ResourcePermission
-    class StreamActivityFeedRequest {
-        +ResourceType resource_type
-        +string user_id
-        +string activity_types[]
-        +Timestamp start_from
-    }
-
-    StreamActivityFeedRequest "1" --> "1" ResourceType
-    class GetQuotaRequest {
-        +string owner_id
-        +ResourceType resource_type
-    }
-
-    GetQuotaRequest "1" --> "1" ResourceType
-    class UpdateDocumentRequest {
-        +string document_id
-        +string title
-        +string content
-        +string format
-        +int64 version
-        +string update_description
-    }
-
-    class DeleteDocumentResponse {
-        +bool success
-        +Timestamp deleted_at
-    }
-
-    class AddCollaboratorResponse {
-        +DocumentCollaborator collaborator
-        +Document document
-    }
-
-    AddCollaboratorResponse "1" --> "1" DocumentCollaborator
-    AddCollaboratorResponse "1" --> "1" Document
-    class RevokePermissionResponse {
-        +bool success
-        +Timestamp revoked_at
+    class RevokePermissionRequest {
+        +string permission_id
+        +string revoked_by
     }
 
     class GetActivityLogResponse {
@@ -574,56 +917,6 @@ classDiagram
 
     GetActivityLogResponse "1" --> "*" ResourceActivity
     GetActivityLogResponse "1" --> "1" PaginationResponse
-    class UpdateQuotaRequest {
-        +string owner_id
-        +ResourceType resource_type
-        +int64 max_count
-        +int64 max_storage_bytes
-        +string updated_by
-    }
-
-    UpdateQuotaRequest "1" --> "1" ResourceType
-    class RemoveCollaboratorResponse {
-        +bool success
-        +Document document
-    }
-
-    RemoveCollaboratorResponse "1" --> "1" Document
-    class RevokePermissionRequest {
-        +string permission_id
-        +string revoked_by
-    }
-
-    class GetActivityLogRequest {
-        +string resource_id
-        +ResourceType resource_type
-        +string user_id
-        +string activity_type
-        +Timestamp after
-        +Timestamp before
-        +PaginationRequest pagination
-    }
-
-    GetActivityLogRequest "1" --> "1" ResourceType
-    GetActivityLogRequest "1" --> "1" PaginationRequest
-    class UpdateQuotaResponse {
-        +ResourceQuota quota
-    }
-
-    UpdateQuotaResponse "1" --> "1" ResourceQuota
-    class ContentChange {
-        +string operation
-        +int32 start_position
-        +int32 end_position
-        +string content
-        +int32 version
-    }
-
-    class Position {
-        +int32 line
-        +int32 column
-    }
-
 ```
 
 ---
@@ -1332,53 +1625,6 @@ sequenceDiagram
 
 This service defines **36 message types**:
 
-### AddCollaboratorRequest
-
-<a name="addcollaboratorrequest"></a>
-
-AddCollaboratorRequest adds a collaborator to a document.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.AddCollaboratorRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `document_id` | string | optional | Document ID. (Must be a non-empty identifier) |
-| 2 | `user_id` | string | optional | User ID to add. (Must be a non-empty identifier) |
-| 3 | `access_level` | [`AccessLevel`](#accesslevel) | optional | Access level. |
-
-#### Proto Definition
-
-```protobuf
-message AddCollaboratorRequest {
-  // Document ID. (Must be a non-empty identifier)
-  optional string document_id = 1;
-  // User ID to add. (Must be a non-empty identifier)
-  optional string user_id = 2;
-  // Access level.
-  optional AccessLevel access_level = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class AddCollaboratorRequest {
-        +string document_id
-        +string user_id
-        +AccessLevel access_level
-    }
-    AddCollaboratorRequest --> AccessLevel
-```
-
----
-
 ### GetQuotaResponse
 
 <a name="getquotaresponse"></a>
@@ -1474,6 +1720,1317 @@ classDiagram
     }
     BatchGrantPermissionsResponse "1" --> "*" ResourcePermission
     BatchGrantPermissionsResponse "1" --> "*" Error
+```
+
+---
+
+### GetDocumentResponse
+
+<a name="getdocumentresponse"></a>
+
+GetDocumentResponse returns the requested document.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.GetDocumentResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `document` | [`Document`](#document) | optional | Retrieved document. |
+
+#### Proto Definition
+
+```protobuf
+message GetDocumentResponse {
+  // Retrieved document.
+  optional Document document = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class GetDocumentResponse {
+        +Document document
+    }
+    GetDocumentResponse --> Document
+```
+
+---
+
+### UpdateDocumentRequest
+
+<a name="updatedocumentrequest"></a>
+
+UpdateDocumentRequest updates a document.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.UpdateDocumentRequest` |
+| **Field Count** | 6 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `document_id` | string | optional | Document ID. (Must be a non-empty identifier) |
+| 2 | `title` | string | optional | Updated title. |
+| 3 | `content` | string | optional | Updated content. |
+| 4 | `format` | string | optional | Updated format. |
+| 5 | `version` | int64 | optional | Version for optimistic locking. |
+| 6 | `update_description` | string | optional | Update description. |
+
+#### Proto Definition
+
+```protobuf
+message UpdateDocumentRequest {
+  // Document ID. (Must be a non-empty identifier)
+  optional string document_id = 1;
+  // Updated title.
+  optional string title = 2;
+  // Updated content.
+  optional string content = 3;
+  // Updated format.
+  optional string format = 4;
+  // Version for optimistic locking.
+  optional int64 version = 5;
+  // Update description.
+  optional string update_description = 6;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class UpdateDocumentRequest {
+        +string document_id
+        +string title
+        +string content
+        +string format
+        +int64 version
+        +string update_description
+    }
+```
+
+---
+
+### CheckPermissionResponse
+
+<a name="checkpermissionresponse"></a>
+
+CheckPermissionResponse returns permission check result.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.CheckPermissionResponse` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `has_permission` | bool | optional | Has permission. |
+| 2 | `access_level` | [`AccessLevel`](#accesslevel) | optional | Actual access level. |
+| 3 | `permission` | [`ResourcePermission`](#resourcepermission) | optional | Permission details. |
+
+#### Proto Definition
+
+```protobuf
+message CheckPermissionResponse {
+  // Has permission.
+  optional bool has_permission = 1;
+  // Actual access level.
+  optional AccessLevel access_level = 2;
+  // Permission details.
+  optional ResourcePermission permission = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class CheckPermissionResponse {
+        +bool has_permission
+        +AccessLevel access_level
+        +ResourcePermission permission
+    }
+    CheckPermissionResponse --> AccessLevel
+    CheckPermissionResponse --> ResourcePermission
+```
+
+---
+
+### LogActivityRequest
+
+<a name="logactivityrequest"></a>
+
+LogActivityRequest logs an activity.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.LogActivityRequest` |
+| **Field Count** | 7 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `resource_id` | string | optional | Resource ID. (Must be a non-empty identifier) |
+| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Resource type. |
+| 3 | `activity_type` | string | optional | Activity type. |
+| 4 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
+| 5 | `description` | string | optional | Description. |
+| 6 | `details` | string | optional | Details (JSON). |
+| 7 | `ip_address` | string | optional | IP address. |
+
+#### Proto Definition
+
+```protobuf
+message LogActivityRequest {
+  // Resource ID. (Must be a non-empty identifier)
+  optional string resource_id = 1;
+  // Resource type.
+  optional ResourceType resource_type = 2;
+  // Activity type.
+  optional string activity_type = 3;
+  // User ID. (Must be a non-empty identifier)
+  optional string user_id = 4;
+  // Description.
+  optional string description = 5;
+  // Details (JSON).
+  optional string details = 6;
+  // IP address.
+  optional string ip_address = 7;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class LogActivityRequest {
+        +string resource_id
+        +ResourceType resource_type
+        +string activity_type
+        +string user_id
+        +string description
+        +string details
+        +string ip_address
+    }
+    LogActivityRequest --> ResourceType
+```
+
+---
+
+### LogActivityResponse
+
+<a name="logactivityresponse"></a>
+
+LogActivityResponse returns the logged activity.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.LogActivityResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `activity` | [`ResourceActivity`](#resourceactivity) | optional | Logged activity. |
+
+#### Proto Definition
+
+```protobuf
+message LogActivityResponse {
+  // Logged activity.
+  optional ResourceActivity activity = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class LogActivityResponse {
+        +ResourceActivity activity
+    }
+    LogActivityResponse --> ResourceActivity
+```
+
+---
+
+### GetQuotaRequest
+
+<a name="getquotarequest"></a>
+
+GetQuotaRequest retrieves quota information.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.GetQuotaRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `owner_id` | string | optional | Owner ID (user or organization). (Must be a non-empty identifier) |
+| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Resource type. |
+
+#### Proto Definition
+
+```protobuf
+message GetQuotaRequest {
+  // Owner ID (user or organization). (Must be a non-empty identifier)
+  optional string owner_id = 1;
+  // Resource type.
+  optional ResourceType resource_type = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class GetQuotaRequest {
+        +string owner_id
+        +ResourceType resource_type
+    }
+    GetQuotaRequest --> ResourceType
+```
+
+---
+
+### StreamActivityFeedRequest
+
+<a name="streamactivityfeedrequest"></a>
+
+StreamActivityFeedRequest requests activity feed stream.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.StreamActivityFeedRequest` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Filter by resource type. |
+| 2 | `user_id` | string | optional | Filter by user ID. (Must be a non-empty identifier) |
+| 3 | `activity_types` | string | repeated | Filter by activity types. |
+| 4 | `start_from` | [`Timestamp`](#timestamp) | optional | Start from timestamp. |
+
+#### Proto Definition
+
+```protobuf
+message StreamActivityFeedRequest {
+  // Filter by resource type.
+  optional ResourceType resource_type = 1;
+  // Filter by user ID. (Must be a non-empty identifier)
+  optional string user_id = 2;
+  // Filter by activity types.
+  repeated string activity_types = 3;
+  // Start from timestamp.
+  optional Timestamp start_from = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class StreamActivityFeedRequest {
+        +ResourceType resource_type
+        +string user_id
+        +string[] activity_types
+        +Timestamp start_from
+    }
+    StreamActivityFeedRequest --> ResourceType
+    StreamActivityFeedRequest --> Timestamp
+```
+
+---
+
+### ContentChange
+
+<a name="contentchange"></a>
+
+ContentChange represents a change to document content.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.ContentChange` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `operation` | string | optional | Change operation (insert, delete, replace). |
+| 2 | `start_position` | int32 | optional | Start position. |
+| 3 | `end_position` | int32 | optional | End position. |
+| 4 | `content` | string | optional | New content. |
+| 5 | `version` | int32 | optional | Version before change. |
+
+#### Proto Definition
+
+```protobuf
+message ContentChange {
+  // Change operation (insert, delete, replace).
+  optional string operation = 1;
+  // Start position.
+  optional int32 start_position = 2;
+  // End position.
+  optional int32 end_position = 3;
+  // New content.
+  optional string content = 4;
+  // Version before change.
+  optional int32 version = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class ContentChange {
+        +string operation
+        +int32 start_position
+        +int32 end_position
+        +string content
+        +int32 version
+    }
+```
+
+---
+
+### CreateDocumentResponse
+
+<a name="createdocumentresponse"></a>
+
+CreateDocumentResponse returns the created document.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.CreateDocumentResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `document` | [`Document`](#document) | optional | Created document. |
+
+#### Proto Definition
+
+```protobuf
+message CreateDocumentResponse {
+  // Created document.
+  optional Document document = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class CreateDocumentResponse {
+        +Document document
+    }
+    CreateDocumentResponse --> Document
+```
+
+---
+
+### UpdateDocumentResponse
+
+<a name="updatedocumentresponse"></a>
+
+UpdateDocumentResponse returns the updated document.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.UpdateDocumentResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `document` | [`Document`](#document) | optional | Updated document. |
+| 2 | `new_version` | int32 | optional | New version number. |
+
+#### Proto Definition
+
+```protobuf
+message UpdateDocumentResponse {
+  // Updated document.
+  optional Document document = 1;
+  // New version number.
+  optional int32 new_version = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class UpdateDocumentResponse {
+        +Document document
+        +int32 new_version
+    }
+    UpdateDocumentResponse --> Document
+```
+
+---
+
+### AddCollaboratorResponse
+
+<a name="addcollaboratorresponse"></a>
+
+AddCollaboratorResponse returns the added collaborator.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.AddCollaboratorResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `collaborator` | [`DocumentCollaborator`](#documentcollaborator) | optional | Added collaborator. |
+| 2 | `document` | [`Document`](#document) | optional | Updated document. |
+
+#### Proto Definition
+
+```protobuf
+message AddCollaboratorResponse {
+  // Added collaborator.
+  optional DocumentCollaborator collaborator = 1;
+  // Updated document.
+  optional Document document = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class AddCollaboratorResponse {
+        +DocumentCollaborator collaborator
+        +Document document
+    }
+    AddCollaboratorResponse --> DocumentCollaborator
+    AddCollaboratorResponse --> Document
+```
+
+---
+
+### RevokePermissionResponse
+
+<a name="revokepermissionresponse"></a>
+
+RevokePermissionResponse confirms revocation.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.RevokePermissionResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `success` | bool | optional | Success status. |
+| 2 | `revoked_at` | [`Timestamp`](#timestamp) | optional | Revocation timestamp. (RFC 3339 timestamp format) |
+
+#### Proto Definition
+
+```protobuf
+message RevokePermissionResponse {
+  // Success status.
+  optional bool success = 1;
+  // Revocation timestamp. (RFC 3339 timestamp format)
+  optional Timestamp revoked_at = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class RevokePermissionResponse {
+        +bool success
+        +Timestamp revoked_at
+    }
+    RevokePermissionResponse --> Timestamp
+```
+
+---
+
+### CursorPosition
+
+<a name="cursorposition"></a>
+
+CursorPosition represents a user's cursor position.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.CursorPosition` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `line` | int32 | optional | Line number. |
+| 2 | `column` | int32 | optional | Column number. |
+| 3 | `selection_start` | [`Position`](#position) | optional | Selection start (if any). |
+| 4 | `selection_end` | [`Position`](#position) | optional | Selection end (if any). |
+
+#### Proto Definition
+
+```protobuf
+message CursorPosition {
+  // Line number.
+  optional int32 line = 1;
+  // Column number.
+  optional int32 column = 2;
+  // Selection start (if any).
+  optional Position selection_start = 3;
+  // Selection end (if any).
+  optional Position selection_end = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class CursorPosition {
+        +int32 line
+        +int32 column
+        +Position selection_start
+        +Position selection_end
+    }
+    CursorPosition --> Position
+    CursorPosition --> Position
+```
+
+---
+
+### ListDocumentsRequest
+
+<a name="listdocumentsrequest"></a>
+
+ListDocumentsRequest lists documents.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.ListDocumentsRequest` |
+| **Field Count** | 11 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination. |
+| 2 | `project_id` | string | optional | Filter by project ID. (Must be a non-empty identifier) |
+| 3 | `author_id` | string | optional | Filter by author ID. (Must be a non-empty identifier) |
+| 4 | `state` | [`ResourceState`](#resourcestate) | optional | Filter by state. |
+| 5 | `format` | string | optional | Filter by format. |
+| 6 | `tags` | string | repeated | Filter by tags. |
+| 7 | `search_query` | string | optional | Search query. |
+| 8 | `created_after` | [`Timestamp`](#timestamp) | optional | Created after date. |
+| 9 | `created_before` | [`Timestamp`](#timestamp) | optional | Created before date. |
+| 10 | `sort_by` | string | optional | Sort by field. |
+| 11 | `sort_desc` | bool | optional | Sort descending. |
+
+#### Proto Definition
+
+```protobuf
+message ListDocumentsRequest {
+  // Pagination.
+  optional PaginationRequest pagination = 1;
+  // Filter by project ID. (Must be a non-empty identifier)
+  optional string project_id = 2;
+  // Filter by author ID. (Must be a non-empty identifier)
+  optional string author_id = 3;
+  // Filter by state.
+  optional ResourceState state = 4;
+  // Filter by format.
+  optional string format = 5;
+  // Filter by tags.
+  repeated string tags = 6;
+  // Search query.
+  optional string search_query = 7;
+  // Created after date.
+  optional Timestamp created_after = 8;
+  // Created before date.
+  optional Timestamp created_before = 9;
+  // Sort by field.
+  optional string sort_by = 10;
+  // Sort descending.
+  optional bool sort_desc = 11;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class ListDocumentsRequest {
+        +PaginationRequest pagination
+        +string project_id
+        +string author_id
+        +ResourceState state
+        +string format
+        +string[] tags
+        +string search_query
+        +Timestamp created_after
+        +Timestamp created_before
+        +string sort_by
+        +bool sort_desc
+    }
+    ListDocumentsRequest --> PaginationRequest
+    ListDocumentsRequest --> ResourceState
+    ListDocumentsRequest --> Timestamp
+    ListDocumentsRequest --> Timestamp
+```
+
+---
+
+### AddCollaboratorRequest
+
+<a name="addcollaboratorrequest"></a>
+
+AddCollaboratorRequest adds a collaborator to a document.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.AddCollaboratorRequest` |
+| **Field Count** | 3 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `document_id` | string | optional | Document ID. (Must be a non-empty identifier) |
+| 2 | `user_id` | string | optional | User ID to add. (Must be a non-empty identifier) |
+| 3 | `access_level` | [`AccessLevel`](#accesslevel) | optional | Access level. |
+
+#### Proto Definition
+
+```protobuf
+message AddCollaboratorRequest {
+  // Document ID. (Must be a non-empty identifier)
+  optional string document_id = 1;
+  // User ID to add. (Must be a non-empty identifier)
+  optional string user_id = 2;
+  // Access level.
+  optional AccessLevel access_level = 3;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class AddCollaboratorRequest {
+        +string document_id
+        +string user_id
+        +AccessLevel access_level
+    }
+    AddCollaboratorRequest --> AccessLevel
+```
+
+---
+
+### GetActivityLogRequest
+
+<a name="getactivitylogrequest"></a>
+
+GetActivityLogRequest retrieves activity log.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.GetActivityLogRequest` |
+| **Field Count** | 7 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `resource_id` | string | optional | Resource ID. (Must be a non-empty identifier) |
+| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Resource type. |
+| 3 | `user_id` | string | optional | Filter by user ID. (Must be a non-empty identifier) |
+| 4 | `activity_type` | string | optional | Filter by activity type. |
+| 5 | `after` | [`Timestamp`](#timestamp) | optional | Activities after timestamp. |
+| 6 | `before` | [`Timestamp`](#timestamp) | optional | Activities before timestamp. |
+| 7 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination. |
+
+#### Proto Definition
+
+```protobuf
+message GetActivityLogRequest {
+  // Resource ID. (Must be a non-empty identifier)
+  optional string resource_id = 1;
+  // Resource type.
+  optional ResourceType resource_type = 2;
+  // Filter by user ID. (Must be a non-empty identifier)
+  optional string user_id = 3;
+  // Filter by activity type.
+  optional string activity_type = 4;
+  // Activities after timestamp.
+  optional Timestamp after = 5;
+  // Activities before timestamp.
+  optional Timestamp before = 6;
+  // Pagination.
+  optional PaginationRequest pagination = 7;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class GetActivityLogRequest {
+        +string resource_id
+        +ResourceType resource_type
+        +string user_id
+        +string activity_type
+        +Timestamp after
+        +Timestamp before
+        +PaginationRequest pagination
+    }
+    GetActivityLogRequest --> ResourceType
+    GetActivityLogRequest --> Timestamp
+    GetActivityLogRequest --> Timestamp
+    GetActivityLogRequest --> PaginationRequest
+```
+
+---
+
+### UpdateQuotaRequest
+
+<a name="updatequotarequest"></a>
+
+UpdateQuotaRequest updates quota limits.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.UpdateQuotaRequest` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `owner_id` | string | optional | Owner ID. (Must be a non-empty identifier) |
+| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Resource type. |
+| 3 | `max_count` | int64 | optional | New maximum count Must be >= 0. |
+| 4 | `max_storage_bytes` | int64 | optional | New maximum storage bytes. |
+| 5 | `updated_by` | string | optional | Updated by user ID. |
+
+#### Proto Definition
+
+```protobuf
+message UpdateQuotaRequest {
+  // Owner ID. (Must be a non-empty identifier)
+  optional string owner_id = 1;
+  // Resource type.
+  optional ResourceType resource_type = 2;
+  // New maximum count Must be >= 0.
+  optional int64 max_count = 3;
+  // New maximum storage bytes.
+  optional int64 max_storage_bytes = 4;
+  // Updated by user ID.
+  optional string updated_by = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class UpdateQuotaRequest {
+        +string owner_id
+        +ResourceType resource_type
+        +int64 max_count
+        +int64 max_storage_bytes
+        +string updated_by
+    }
+    UpdateQuotaRequest --> ResourceType
+```
+
+---
+
+### UpdateQuotaResponse
+
+<a name="updatequotaresponse"></a>
+
+UpdateQuotaResponse returns the updated quota.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.UpdateQuotaResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `quota` | [`ResourceQuota`](#resourcequota) | optional | Updated quota. |
+
+#### Proto Definition
+
+```protobuf
+message UpdateQuotaResponse {
+  // Updated quota.
+  optional ResourceQuota quota = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class UpdateQuotaResponse {
+        +ResourceQuota quota
+    }
+    UpdateQuotaResponse --> ResourceQuota
+```
+
+---
+
+### Position
+
+<a name="position"></a>
+
+Position represents a position in a document.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.Position` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `line` | int32 | optional | Line number. |
+| 2 | `column` | int32 | optional | Column number. |
+
+#### Proto Definition
+
+```protobuf
+message Position {
+  // Line number.
+  optional int32 line = 1;
+  // Column number.
+  optional int32 column = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class Position {
+        +int32 line
+        +int32 column
+    }
+```
+
+---
+
+### ListPermissionsResponse
+
+<a name="listpermissionsresponse"></a>
+
+ListPermissionsResponse returns matching permissions.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.ListPermissionsResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `permissions` | [`ResourcePermission`](#resourcepermission) | repeated | Matching permissions. |
+| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination metadata. |
+
+#### Proto Definition
+
+```protobuf
+message ListPermissionsResponse {
+  // Matching permissions.
+  repeated ResourcePermission permissions = 1;
+  // Pagination metadata.
+  optional PaginationResponse pagination = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class ListPermissionsResponse {
+        +ResourcePermission[] permissions
+        +PaginationResponse pagination
+    }
+    ListPermissionsResponse "1" --> "*" ResourcePermission
+    ListPermissionsResponse --> PaginationResponse
+```
+
+---
+
+### DeleteDocumentRequest
+
+<a name="deletedocumentrequest"></a>
+
+DeleteDocumentRequest deletes a document.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.DeleteDocumentRequest` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `document_id` | string | optional | Document ID. (Must be a non-empty identifier) |
+| 2 | `hard_delete` | bool | optional | Hard delete (permanent). |
+
+#### Proto Definition
+
+```protobuf
+message DeleteDocumentRequest {
+  // Document ID. (Must be a non-empty identifier)
+  optional string document_id = 1;
+  // Hard delete (permanent).
+  optional bool hard_delete = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class DeleteDocumentRequest {
+        +string document_id
+        +bool hard_delete
+    }
+```
+
+---
+
+### ListDocumentsResponse
+
+<a name="listdocumentsresponse"></a>
+
+ListDocumentsResponse returns matching documents.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.ListDocumentsResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `documents` | [`Document`](#document) | repeated | Matching documents. |
+| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination metadata. |
+
+#### Proto Definition
+
+```protobuf
+message ListDocumentsResponse {
+  // Matching documents.
+  repeated Document documents = 1;
+  // Pagination metadata.
+  optional PaginationResponse pagination = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class ListDocumentsResponse {
+        +Document[] documents
+        +PaginationResponse pagination
+    }
+    ListDocumentsResponse "1" --> "*" Document
+    ListDocumentsResponse --> PaginationResponse
+```
+
+---
+
+### RemoveCollaboratorResponse
+
+<a name="removecollaboratorresponse"></a>
+
+RemoveCollaboratorResponse confirms removal.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.RemoveCollaboratorResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `success` | bool | optional | Success status. |
+| 2 | `document` | [`Document`](#document) | optional | Updated document. |
+
+#### Proto Definition
+
+```protobuf
+message RemoveCollaboratorResponse {
+  // Success status.
+  optional bool success = 1;
+  // Updated document.
+  optional Document document = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class RemoveCollaboratorResponse {
+        +bool success
+        +Document document
+    }
+    RemoveCollaboratorResponse --> Document
+```
+
+---
+
+### CheckPermissionRequest
+
+<a name="checkpermissionrequest"></a>
+
+CheckPermissionRequest checks permission.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.CheckPermissionRequest` |
+| **Field Count** | 4 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `resource_id` | string | optional | Resource ID. (Must be a non-empty identifier) |
+| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Resource type. |
+| 3 | `user_id` | string | optional | User ID to check. (Must be a non-empty identifier) |
+| 4 | `required_access_level` | [`AccessLevel`](#accesslevel) | optional | Required access level. |
+
+#### Proto Definition
+
+```protobuf
+message CheckPermissionRequest {
+  // Resource ID. (Must be a non-empty identifier)
+  optional string resource_id = 1;
+  // Resource type.
+  optional ResourceType resource_type = 2;
+  // User ID to check. (Must be a non-empty identifier)
+  optional string user_id = 3;
+  // Required access level.
+  optional AccessLevel required_access_level = 4;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class CheckPermissionRequest {
+        +string resource_id
+        +ResourceType resource_type
+        +string user_id
+        +AccessLevel required_access_level
+    }
+    CheckPermissionRequest --> ResourceType
+    CheckPermissionRequest --> AccessLevel
+```
+
+---
+
+### ListPermissionsRequest
+
+<a name="listpermissionsrequest"></a>
+
+ListPermissionsRequest lists permissions.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.ListPermissionsRequest` |
+| **Field Count** | 5 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `resource_id` | string | optional | Filter by resource ID. (Must be a non-empty identifier) |
+| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Filter by resource type. |
+| 3 | `principal_id` | string | optional | Filter by principal ID. (Must be a non-empty identifier) |
+| 4 | `include_expired` | bool | optional | Include expired permissions. |
+| 5 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination. |
+
+#### Proto Definition
+
+```protobuf
+message ListPermissionsRequest {
+  // Filter by resource ID. (Must be a non-empty identifier)
+  optional string resource_id = 1;
+  // Filter by resource type.
+  optional ResourceType resource_type = 2;
+  // Filter by principal ID. (Must be a non-empty identifier)
+  optional string principal_id = 3;
+  // Include expired permissions.
+  optional bool include_expired = 4;
+  // Pagination.
+  optional PaginationRequest pagination = 5;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class ListPermissionsRequest {
+        +string resource_id
+        +ResourceType resource_type
+        +string principal_id
+        +bool include_expired
+        +PaginationRequest pagination
+    }
+    ListPermissionsRequest --> ResourceType
+    ListPermissionsRequest --> PaginationRequest
+```
+
+---
+
+### DeleteDocumentResponse
+
+<a name="deletedocumentresponse"></a>
+
+DeleteDocumentResponse confirms deletion.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.DeleteDocumentResponse` |
+| **Field Count** | 2 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `success` | bool | optional | Success status. |
+| 2 | `deleted_at` | [`Timestamp`](#timestamp) | optional | Deletion timestamp. (RFC 3339 timestamp format) |
+
+#### Proto Definition
+
+```protobuf
+message DeleteDocumentResponse {
+  // Success status.
+  optional bool success = 1;
+  // Deletion timestamp. (RFC 3339 timestamp format)
+  optional Timestamp deleted_at = 2;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class DeleteDocumentResponse {
+        +bool success
+        +Timestamp deleted_at
+    }
+    DeleteDocumentResponse --> Timestamp
+```
+
+---
+
+### GrantPermissionResponse
+
+<a name="grantpermissionresponse"></a>
+
+GrantPermissionResponse returns the granted permission.
+
+| Attribute | Value |
+|-----------|-------|
+| **Full Name** | `second.v1.GrantPermissionResponse` |
+| **Field Count** | 1 |
+
+#### Fields
+
+| # | Name | Type | Label | Description |
+|---|------|------|-------|-------------|
+| 1 | `permission` | [`ResourcePermission`](#resourcepermission) | optional | Granted permission. |
+
+#### Proto Definition
+
+```protobuf
+message GrantPermissionResponse {
+  // Granted permission.
+  optional ResourcePermission permission = 1;
+}
+```
+
+##### Message Structure
+
+```mermaid
+%{init: {'theme':'forest'}}%
+classDiagram
+    class GrantPermissionResponse {
+        +ResourcePermission permission
+    }
+    GrantPermissionResponse --> ResourcePermission
 ```
 
 ---
@@ -1614,32 +3171,35 @@ classDiagram
 
 ---
 
-### UpdateDocumentResponse
+### GetDocumentRequest
 
-<a name="updatedocumentresponse"></a>
+<a name="getdocumentrequest"></a>
 
-UpdateDocumentResponse returns the updated document.
+GetDocumentRequest retrieves a document.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `second.v1.UpdateDocumentResponse` |
-| **Field Count** | 2 |
+| **Full Name** | `second.v1.GetDocumentRequest` |
+| **Field Count** | 3 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `document` | [`Document`](#document) | optional | Updated document. |
-| 2 | `new_version` | int32 | optional | New version number. |
+| 1 | `document_id` | string | optional | Document ID. (Must be a non-empty identifier) |
+| 2 | `include_deleted` | bool | optional | Include deleted documents. |
+| 3 | `include_content` | bool | optional | Include content. |
 
 #### Proto Definition
 
 ```protobuf
-message UpdateDocumentResponse {
-  // Updated document.
-  optional Document document = 1;
-  // New version number.
-  optional int32 new_version = 2;
+message GetDocumentRequest {
+  // Document ID. (Must be a non-empty identifier)
+  optional string document_id = 1;
+  // Include deleted documents.
+  optional bool include_deleted = 2;
+  // Include content.
+  optional bool include_content = 3;
 }
 ```
 
@@ -1648,11 +3208,11 @@ message UpdateDocumentResponse {
 ```mermaid
 %{init: {'theme':'forest'}}%
 classDiagram
-    class UpdateDocumentResponse {
-        +Document document
-        +int32 new_version
+    class GetDocumentRequest {
+        +string document_id
+        +bool include_deleted
+        +bool include_content
     }
-    UpdateDocumentResponse --> Document
 ```
 
 ---
@@ -1694,187 +3254,6 @@ classDiagram
     class RemoveCollaboratorRequest {
         +string document_id
         +string user_id
-    }
-```
-
----
-
-### ListPermissionsRequest
-
-<a name="listpermissionsrequest"></a>
-
-ListPermissionsRequest lists permissions.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.ListPermissionsRequest` |
-| **Field Count** | 5 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `resource_id` | string | optional | Filter by resource ID. (Must be a non-empty identifier) |
-| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Filter by resource type. |
-| 3 | `principal_id` | string | optional | Filter by principal ID. (Must be a non-empty identifier) |
-| 4 | `include_expired` | bool | optional | Include expired permissions. |
-| 5 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination. |
-
-#### Proto Definition
-
-```protobuf
-message ListPermissionsRequest {
-  // Filter by resource ID. (Must be a non-empty identifier)
-  optional string resource_id = 1;
-  // Filter by resource type.
-  optional ResourceType resource_type = 2;
-  // Filter by principal ID. (Must be a non-empty identifier)
-  optional string principal_id = 3;
-  // Include expired permissions.
-  optional bool include_expired = 4;
-  // Pagination.
-  optional PaginationRequest pagination = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class ListPermissionsRequest {
-        +string resource_id
-        +ResourceType resource_type
-        +string principal_id
-        +bool include_expired
-        +PaginationRequest pagination
-    }
-    ListPermissionsRequest --> ResourceType
-    ListPermissionsRequest --> PaginationRequest
-```
-
----
-
-### ListPermissionsResponse
-
-<a name="listpermissionsresponse"></a>
-
-ListPermissionsResponse returns matching permissions.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.ListPermissionsResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `permissions` | [`ResourcePermission`](#resourcepermission) | repeated | Matching permissions. |
-| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination metadata. |
-
-#### Proto Definition
-
-```protobuf
-message ListPermissionsResponse {
-  // Matching permissions.
-  repeated ResourcePermission permissions = 1;
-  // Pagination metadata.
-  optional PaginationResponse pagination = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class ListPermissionsResponse {
-        +ResourcePermission[] permissions
-        +PaginationResponse pagination
-    }
-    ListPermissionsResponse "1" --> "*" ResourcePermission
-    ListPermissionsResponse --> PaginationResponse
-```
-
----
-
-### GetDocumentResponse
-
-<a name="getdocumentresponse"></a>
-
-GetDocumentResponse returns the requested document.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.GetDocumentResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `document` | [`Document`](#document) | optional | Retrieved document. |
-
-#### Proto Definition
-
-```protobuf
-message GetDocumentResponse {
-  // Retrieved document.
-  optional Document document = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class GetDocumentResponse {
-        +Document document
-    }
-    GetDocumentResponse --> Document
-```
-
----
-
-### DeleteDocumentRequest
-
-<a name="deletedocumentrequest"></a>
-
-DeleteDocumentRequest deletes a document.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.DeleteDocumentRequest` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `document_id` | string | optional | Document ID. (Must be a non-empty identifier) |
-| 2 | `hard_delete` | bool | optional | Hard delete (permanent). |
-
-#### Proto Definition
-
-```protobuf
-message DeleteDocumentRequest {
-  // Document ID. (Must be a non-empty identifier)
-  optional string document_id = 1;
-  // Hard delete (permanent).
-  optional bool hard_delete = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class DeleteDocumentRequest {
-        +string document_id
-        +bool hard_delete
     }
 ```
 
@@ -1945,275 +3324,32 @@ classDiagram
 
 ---
 
-### LogActivityRequest
+### RevokePermissionRequest
 
-<a name="logactivityrequest"></a>
+<a name="revokepermissionrequest"></a>
 
-LogActivityRequest logs an activity.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.LogActivityRequest` |
-| **Field Count** | 7 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `resource_id` | string | optional | Resource ID. (Must be a non-empty identifier) |
-| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Resource type. |
-| 3 | `activity_type` | string | optional | Activity type. |
-| 4 | `user_id` | string | optional | User ID. (Must be a non-empty identifier) |
-| 5 | `description` | string | optional | Description. |
-| 6 | `details` | string | optional | Details (JSON). |
-| 7 | `ip_address` | string | optional | IP address. |
-
-#### Proto Definition
-
-```protobuf
-message LogActivityRequest {
-  // Resource ID. (Must be a non-empty identifier)
-  optional string resource_id = 1;
-  // Resource type.
-  optional ResourceType resource_type = 2;
-  // Activity type.
-  optional string activity_type = 3;
-  // User ID. (Must be a non-empty identifier)
-  optional string user_id = 4;
-  // Description.
-  optional string description = 5;
-  // Details (JSON).
-  optional string details = 6;
-  // IP address.
-  optional string ip_address = 7;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class LogActivityRequest {
-        +string resource_id
-        +ResourceType resource_type
-        +string activity_type
-        +string user_id
-        +string description
-        +string details
-        +string ip_address
-    }
-    LogActivityRequest --> ResourceType
-```
-
----
-
-### CursorPosition
-
-<a name="cursorposition"></a>
-
-CursorPosition represents a user's cursor position.
+RevokePermissionRequest revokes a permission.
 
 | Attribute | Value |
 |-----------|-------|
-| **Full Name** | `second.v1.CursorPosition` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `line` | int32 | optional | Line number. |
-| 2 | `column` | int32 | optional | Column number. |
-| 3 | `selection_start` | [`Position`](#position) | optional | Selection start (if any). |
-| 4 | `selection_end` | [`Position`](#position) | optional | Selection end (if any). |
-
-#### Proto Definition
-
-```protobuf
-message CursorPosition {
-  // Line number.
-  optional int32 line = 1;
-  // Column number.
-  optional int32 column = 2;
-  // Selection start (if any).
-  optional Position selection_start = 3;
-  // Selection end (if any).
-  optional Position selection_end = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class CursorPosition {
-        +int32 line
-        +int32 column
-        +Position selection_start
-        +Position selection_end
-    }
-    CursorPosition --> Position
-    CursorPosition --> Position
-```
-
----
-
-### GetDocumentRequest
-
-<a name="getdocumentrequest"></a>
-
-GetDocumentRequest retrieves a document.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.GetDocumentRequest` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `document_id` | string | optional | Document ID. (Must be a non-empty identifier) |
-| 2 | `include_deleted` | bool | optional | Include deleted documents. |
-| 3 | `include_content` | bool | optional | Include content. |
-
-#### Proto Definition
-
-```protobuf
-message GetDocumentRequest {
-  // Document ID. (Must be a non-empty identifier)
-  optional string document_id = 1;
-  // Include deleted documents.
-  optional bool include_deleted = 2;
-  // Include content.
-  optional bool include_content = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class GetDocumentRequest {
-        +string document_id
-        +bool include_deleted
-        +bool include_content
-    }
-```
-
----
-
-### ListDocumentsRequest
-
-<a name="listdocumentsrequest"></a>
-
-ListDocumentsRequest lists documents.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.ListDocumentsRequest` |
-| **Field Count** | 11 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination. |
-| 2 | `project_id` | string | optional | Filter by project ID. (Must be a non-empty identifier) |
-| 3 | `author_id` | string | optional | Filter by author ID. (Must be a non-empty identifier) |
-| 4 | `state` | [`ResourceState`](#resourcestate) | optional | Filter by state. |
-| 5 | `format` | string | optional | Filter by format. |
-| 6 | `tags` | string | repeated | Filter by tags. |
-| 7 | `search_query` | string | optional | Search query. |
-| 8 | `created_after` | [`Timestamp`](#timestamp) | optional | Created after date. |
-| 9 | `created_before` | [`Timestamp`](#timestamp) | optional | Created before date. |
-| 10 | `sort_by` | string | optional | Sort by field. |
-| 11 | `sort_desc` | bool | optional | Sort descending. |
-
-#### Proto Definition
-
-```protobuf
-message ListDocumentsRequest {
-  // Pagination.
-  optional PaginationRequest pagination = 1;
-  // Filter by project ID. (Must be a non-empty identifier)
-  optional string project_id = 2;
-  // Filter by author ID. (Must be a non-empty identifier)
-  optional string author_id = 3;
-  // Filter by state.
-  optional ResourceState state = 4;
-  // Filter by format.
-  optional string format = 5;
-  // Filter by tags.
-  repeated string tags = 6;
-  // Search query.
-  optional string search_query = 7;
-  // Created after date.
-  optional Timestamp created_after = 8;
-  // Created before date.
-  optional Timestamp created_before = 9;
-  // Sort by field.
-  optional string sort_by = 10;
-  // Sort descending.
-  optional bool sort_desc = 11;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class ListDocumentsRequest {
-        +PaginationRequest pagination
-        +string project_id
-        +string author_id
-        +ResourceState state
-        +string format
-        +string[] tags
-        +string search_query
-        +Timestamp created_after
-        +Timestamp created_before
-        +string sort_by
-        +bool sort_desc
-    }
-    ListDocumentsRequest --> PaginationRequest
-    ListDocumentsRequest --> ResourceState
-    ListDocumentsRequest --> Timestamp
-    ListDocumentsRequest --> Timestamp
-```
-
----
-
-### ListDocumentsResponse
-
-<a name="listdocumentsresponse"></a>
-
-ListDocumentsResponse returns matching documents.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.ListDocumentsResponse` |
+| **Full Name** | `second.v1.RevokePermissionRequest` |
 | **Field Count** | 2 |
 
 #### Fields
 
 | # | Name | Type | Label | Description |
 |---|------|------|-------|-------------|
-| 1 | `documents` | [`Document`](#document) | repeated | Matching documents. |
-| 2 | `pagination` | [`PaginationResponse`](#paginationresponse) | optional | Pagination metadata. |
+| 1 | `permission_id` | string | optional | Permission ID. (Must be a non-empty identifier) |
+| 2 | `revoked_by` | string | optional | Revoked by user ID. |
 
 #### Proto Definition
 
 ```protobuf
-message ListDocumentsResponse {
-  // Matching documents.
-  repeated Document documents = 1;
-  // Pagination metadata.
-  optional PaginationResponse pagination = 2;
+message RevokePermissionRequest {
+  // Permission ID. (Must be a non-empty identifier)
+  optional string permission_id = 1;
+  // Revoked by user ID.
+  optional string revoked_by = 2;
 }
 ```
 
@@ -2222,512 +3358,10 @@ message ListDocumentsResponse {
 ```mermaid
 %{init: {'theme':'forest'}}%
 classDiagram
-    class ListDocumentsResponse {
-        +Document[] documents
-        +PaginationResponse pagination
+    class RevokePermissionRequest {
+        +string permission_id
+        +string revoked_by
     }
-    ListDocumentsResponse "1" --> "*" Document
-    ListDocumentsResponse --> PaginationResponse
-```
-
----
-
-### LogActivityResponse
-
-<a name="logactivityresponse"></a>
-
-LogActivityResponse returns the logged activity.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.LogActivityResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `activity` | [`ResourceActivity`](#resourceactivity) | optional | Logged activity. |
-
-#### Proto Definition
-
-```protobuf
-message LogActivityResponse {
-  // Logged activity.
-  optional ResourceActivity activity = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class LogActivityResponse {
-        +ResourceActivity activity
-    }
-    LogActivityResponse --> ResourceActivity
-```
-
----
-
-### CheckPermissionRequest
-
-<a name="checkpermissionrequest"></a>
-
-CheckPermissionRequest checks permission.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.CheckPermissionRequest` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `resource_id` | string | optional | Resource ID. (Must be a non-empty identifier) |
-| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Resource type. |
-| 3 | `user_id` | string | optional | User ID to check. (Must be a non-empty identifier) |
-| 4 | `required_access_level` | [`AccessLevel`](#accesslevel) | optional | Required access level. |
-
-#### Proto Definition
-
-```protobuf
-message CheckPermissionRequest {
-  // Resource ID. (Must be a non-empty identifier)
-  optional string resource_id = 1;
-  // Resource type.
-  optional ResourceType resource_type = 2;
-  // User ID to check. (Must be a non-empty identifier)
-  optional string user_id = 3;
-  // Required access level.
-  optional AccessLevel required_access_level = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class CheckPermissionRequest {
-        +string resource_id
-        +ResourceType resource_type
-        +string user_id
-        +AccessLevel required_access_level
-    }
-    CheckPermissionRequest --> ResourceType
-    CheckPermissionRequest --> AccessLevel
-```
-
----
-
-### CheckPermissionResponse
-
-<a name="checkpermissionresponse"></a>
-
-CheckPermissionResponse returns permission check result.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.CheckPermissionResponse` |
-| **Field Count** | 3 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `has_permission` | bool | optional | Has permission. |
-| 2 | `access_level` | [`AccessLevel`](#accesslevel) | optional | Actual access level. |
-| 3 | `permission` | [`ResourcePermission`](#resourcepermission) | optional | Permission details. |
-
-#### Proto Definition
-
-```protobuf
-message CheckPermissionResponse {
-  // Has permission.
-  optional bool has_permission = 1;
-  // Actual access level.
-  optional AccessLevel access_level = 2;
-  // Permission details.
-  optional ResourcePermission permission = 3;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class CheckPermissionResponse {
-        +bool has_permission
-        +AccessLevel access_level
-        +ResourcePermission permission
-    }
-    CheckPermissionResponse --> AccessLevel
-    CheckPermissionResponse --> ResourcePermission
-```
-
----
-
-### CreateDocumentResponse
-
-<a name="createdocumentresponse"></a>
-
-CreateDocumentResponse returns the created document.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.CreateDocumentResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `document` | [`Document`](#document) | optional | Created document. |
-
-#### Proto Definition
-
-```protobuf
-message CreateDocumentResponse {
-  // Created document.
-  optional Document document = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class CreateDocumentResponse {
-        +Document document
-    }
-    CreateDocumentResponse --> Document
-```
-
----
-
-### GrantPermissionResponse
-
-<a name="grantpermissionresponse"></a>
-
-GrantPermissionResponse returns the granted permission.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.GrantPermissionResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `permission` | [`ResourcePermission`](#resourcepermission) | optional | Granted permission. |
-
-#### Proto Definition
-
-```protobuf
-message GrantPermissionResponse {
-  // Granted permission.
-  optional ResourcePermission permission = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class GrantPermissionResponse {
-        +ResourcePermission permission
-    }
-    GrantPermissionResponse --> ResourcePermission
-```
-
----
-
-### StreamActivityFeedRequest
-
-<a name="streamactivityfeedrequest"></a>
-
-StreamActivityFeedRequest requests activity feed stream.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.StreamActivityFeedRequest` |
-| **Field Count** | 4 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Filter by resource type. |
-| 2 | `user_id` | string | optional | Filter by user ID. (Must be a non-empty identifier) |
-| 3 | `activity_types` | string | repeated | Filter by activity types. |
-| 4 | `start_from` | [`Timestamp`](#timestamp) | optional | Start from timestamp. |
-
-#### Proto Definition
-
-```protobuf
-message StreamActivityFeedRequest {
-  // Filter by resource type.
-  optional ResourceType resource_type = 1;
-  // Filter by user ID. (Must be a non-empty identifier)
-  optional string user_id = 2;
-  // Filter by activity types.
-  repeated string activity_types = 3;
-  // Start from timestamp.
-  optional Timestamp start_from = 4;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class StreamActivityFeedRequest {
-        +ResourceType resource_type
-        +string user_id
-        +string[] activity_types
-        +Timestamp start_from
-    }
-    StreamActivityFeedRequest --> ResourceType
-    StreamActivityFeedRequest --> Timestamp
-```
-
----
-
-### GetQuotaRequest
-
-<a name="getquotarequest"></a>
-
-GetQuotaRequest retrieves quota information.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.GetQuotaRequest` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `owner_id` | string | optional | Owner ID (user or organization). (Must be a non-empty identifier) |
-| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Resource type. |
-
-#### Proto Definition
-
-```protobuf
-message GetQuotaRequest {
-  // Owner ID (user or organization). (Must be a non-empty identifier)
-  optional string owner_id = 1;
-  // Resource type.
-  optional ResourceType resource_type = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class GetQuotaRequest {
-        +string owner_id
-        +ResourceType resource_type
-    }
-    GetQuotaRequest --> ResourceType
-```
-
----
-
-### UpdateDocumentRequest
-
-<a name="updatedocumentrequest"></a>
-
-UpdateDocumentRequest updates a document.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.UpdateDocumentRequest` |
-| **Field Count** | 6 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `document_id` | string | optional | Document ID. (Must be a non-empty identifier) |
-| 2 | `title` | string | optional | Updated title. |
-| 3 | `content` | string | optional | Updated content. |
-| 4 | `format` | string | optional | Updated format. |
-| 5 | `version` | int64 | optional | Version for optimistic locking. |
-| 6 | `update_description` | string | optional | Update description. |
-
-#### Proto Definition
-
-```protobuf
-message UpdateDocumentRequest {
-  // Document ID. (Must be a non-empty identifier)
-  optional string document_id = 1;
-  // Updated title.
-  optional string title = 2;
-  // Updated content.
-  optional string content = 3;
-  // Updated format.
-  optional string format = 4;
-  // Version for optimistic locking.
-  optional int64 version = 5;
-  // Update description.
-  optional string update_description = 6;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class UpdateDocumentRequest {
-        +string document_id
-        +string title
-        +string content
-        +string format
-        +int64 version
-        +string update_description
-    }
-```
-
----
-
-### DeleteDocumentResponse
-
-<a name="deletedocumentresponse"></a>
-
-DeleteDocumentResponse confirms deletion.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.DeleteDocumentResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `success` | bool | optional | Success status. |
-| 2 | `deleted_at` | [`Timestamp`](#timestamp) | optional | Deletion timestamp. (RFC 3339 timestamp format) |
-
-#### Proto Definition
-
-```protobuf
-message DeleteDocumentResponse {
-  // Success status.
-  optional bool success = 1;
-  // Deletion timestamp. (RFC 3339 timestamp format)
-  optional Timestamp deleted_at = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class DeleteDocumentResponse {
-        +bool success
-        +Timestamp deleted_at
-    }
-    DeleteDocumentResponse --> Timestamp
-```
-
----
-
-### AddCollaboratorResponse
-
-<a name="addcollaboratorresponse"></a>
-
-AddCollaboratorResponse returns the added collaborator.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.AddCollaboratorResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `collaborator` | [`DocumentCollaborator`](#documentcollaborator) | optional | Added collaborator. |
-| 2 | `document` | [`Document`](#document) | optional | Updated document. |
-
-#### Proto Definition
-
-```protobuf
-message AddCollaboratorResponse {
-  // Added collaborator.
-  optional DocumentCollaborator collaborator = 1;
-  // Updated document.
-  optional Document document = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class AddCollaboratorResponse {
-        +DocumentCollaborator collaborator
-        +Document document
-    }
-    AddCollaboratorResponse --> DocumentCollaborator
-    AddCollaboratorResponse --> Document
-```
-
----
-
-### RevokePermissionResponse
-
-<a name="revokepermissionresponse"></a>
-
-RevokePermissionResponse confirms revocation.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.RevokePermissionResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `success` | bool | optional | Success status. |
-| 2 | `revoked_at` | [`Timestamp`](#timestamp) | optional | Revocation timestamp. (RFC 3339 timestamp format) |
-
-#### Proto Definition
-
-```protobuf
-message RevokePermissionResponse {
-  // Success status.
-  optional bool success = 1;
-  // Revocation timestamp. (RFC 3339 timestamp format)
-  optional Timestamp revoked_at = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class RevokePermissionResponse {
-        +bool success
-        +Timestamp revoked_at
-    }
-    RevokePermissionResponse --> Timestamp
 ```
 
 ---
@@ -2776,347 +3410,6 @@ classDiagram
 
 ---
 
-### UpdateQuotaRequest
-
-<a name="updatequotarequest"></a>
-
-UpdateQuotaRequest updates quota limits.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.UpdateQuotaRequest` |
-| **Field Count** | 5 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `owner_id` | string | optional | Owner ID. (Must be a non-empty identifier) |
-| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Resource type. |
-| 3 | `max_count` | int64 | optional | New maximum count Must be >= 0. |
-| 4 | `max_storage_bytes` | int64 | optional | New maximum storage bytes. |
-| 5 | `updated_by` | string | optional | Updated by user ID. |
-
-#### Proto Definition
-
-```protobuf
-message UpdateQuotaRequest {
-  // Owner ID. (Must be a non-empty identifier)
-  optional string owner_id = 1;
-  // Resource type.
-  optional ResourceType resource_type = 2;
-  // New maximum count Must be >= 0.
-  optional int64 max_count = 3;
-  // New maximum storage bytes.
-  optional int64 max_storage_bytes = 4;
-  // Updated by user ID.
-  optional string updated_by = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class UpdateQuotaRequest {
-        +string owner_id
-        +ResourceType resource_type
-        +int64 max_count
-        +int64 max_storage_bytes
-        +string updated_by
-    }
-    UpdateQuotaRequest --> ResourceType
-```
-
----
-
-### RemoveCollaboratorResponse
-
-<a name="removecollaboratorresponse"></a>
-
-RemoveCollaboratorResponse confirms removal.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.RemoveCollaboratorResponse` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `success` | bool | optional | Success status. |
-| 2 | `document` | [`Document`](#document) | optional | Updated document. |
-
-#### Proto Definition
-
-```protobuf
-message RemoveCollaboratorResponse {
-  // Success status.
-  optional bool success = 1;
-  // Updated document.
-  optional Document document = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class RemoveCollaboratorResponse {
-        +bool success
-        +Document document
-    }
-    RemoveCollaboratorResponse --> Document
-```
-
----
-
-### RevokePermissionRequest
-
-<a name="revokepermissionrequest"></a>
-
-RevokePermissionRequest revokes a permission.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.RevokePermissionRequest` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `permission_id` | string | optional | Permission ID. (Must be a non-empty identifier) |
-| 2 | `revoked_by` | string | optional | Revoked by user ID. |
-
-#### Proto Definition
-
-```protobuf
-message RevokePermissionRequest {
-  // Permission ID. (Must be a non-empty identifier)
-  optional string permission_id = 1;
-  // Revoked by user ID.
-  optional string revoked_by = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class RevokePermissionRequest {
-        +string permission_id
-        +string revoked_by
-    }
-```
-
----
-
-### GetActivityLogRequest
-
-<a name="getactivitylogrequest"></a>
-
-GetActivityLogRequest retrieves activity log.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.GetActivityLogRequest` |
-| **Field Count** | 7 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `resource_id` | string | optional | Resource ID. (Must be a non-empty identifier) |
-| 2 | `resource_type` | [`ResourceType`](#resourcetype) | optional | Resource type. |
-| 3 | `user_id` | string | optional | Filter by user ID. (Must be a non-empty identifier) |
-| 4 | `activity_type` | string | optional | Filter by activity type. |
-| 5 | `after` | [`Timestamp`](#timestamp) | optional | Activities after timestamp. |
-| 6 | `before` | [`Timestamp`](#timestamp) | optional | Activities before timestamp. |
-| 7 | `pagination` | [`PaginationRequest`](#paginationrequest) | optional | Pagination. |
-
-#### Proto Definition
-
-```protobuf
-message GetActivityLogRequest {
-  // Resource ID. (Must be a non-empty identifier)
-  optional string resource_id = 1;
-  // Resource type.
-  optional ResourceType resource_type = 2;
-  // Filter by user ID. (Must be a non-empty identifier)
-  optional string user_id = 3;
-  // Filter by activity type.
-  optional string activity_type = 4;
-  // Activities after timestamp.
-  optional Timestamp after = 5;
-  // Activities before timestamp.
-  optional Timestamp before = 6;
-  // Pagination.
-  optional PaginationRequest pagination = 7;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class GetActivityLogRequest {
-        +string resource_id
-        +ResourceType resource_type
-        +string user_id
-        +string activity_type
-        +Timestamp after
-        +Timestamp before
-        +PaginationRequest pagination
-    }
-    GetActivityLogRequest --> ResourceType
-    GetActivityLogRequest --> Timestamp
-    GetActivityLogRequest --> Timestamp
-    GetActivityLogRequest --> PaginationRequest
-```
-
----
-
-### UpdateQuotaResponse
-
-<a name="updatequotaresponse"></a>
-
-UpdateQuotaResponse returns the updated quota.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.UpdateQuotaResponse` |
-| **Field Count** | 1 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `quota` | [`ResourceQuota`](#resourcequota) | optional | Updated quota. |
-
-#### Proto Definition
-
-```protobuf
-message UpdateQuotaResponse {
-  // Updated quota.
-  optional ResourceQuota quota = 1;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class UpdateQuotaResponse {
-        +ResourceQuota quota
-    }
-    UpdateQuotaResponse --> ResourceQuota
-```
-
----
-
-### ContentChange
-
-<a name="contentchange"></a>
-
-ContentChange represents a change to document content.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.ContentChange` |
-| **Field Count** | 5 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `operation` | string | optional | Change operation (insert, delete, replace). |
-| 2 | `start_position` | int32 | optional | Start position. |
-| 3 | `end_position` | int32 | optional | End position. |
-| 4 | `content` | string | optional | New content. |
-| 5 | `version` | int32 | optional | Version before change. |
-
-#### Proto Definition
-
-```protobuf
-message ContentChange {
-  // Change operation (insert, delete, replace).
-  optional string operation = 1;
-  // Start position.
-  optional int32 start_position = 2;
-  // End position.
-  optional int32 end_position = 3;
-  // New content.
-  optional string content = 4;
-  // Version before change.
-  optional int32 version = 5;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class ContentChange {
-        +string operation
-        +int32 start_position
-        +int32 end_position
-        +string content
-        +int32 version
-    }
-```
-
----
-
-### Position
-
-<a name="position"></a>
-
-Position represents a position in a document.
-
-| Attribute | Value |
-|-----------|-------|
-| **Full Name** | `second.v1.Position` |
-| **Field Count** | 2 |
-
-#### Fields
-
-| # | Name | Type | Label | Description |
-|---|------|------|-------|-------------|
-| 1 | `line` | int32 | optional | Line number. |
-| 2 | `column` | int32 | optional | Column number. |
-
-#### Proto Definition
-
-```protobuf
-message Position {
-  // Line number.
-  optional int32 line = 1;
-  // Column number.
-  optional int32 column = 2;
-}
-```
-
-##### Message Structure
-
-```mermaid
-%{init: {'theme':'forest'}}%
-classDiagram
-    class Position {
-        +int32 line
-        +int32 column
-    }
-```
-
----
-
 ## 🗄️ Data Model (ERD)
 
 <a name="erd"></a>
@@ -3126,13 +3419,6 @@ Entity-Relationship diagram showing the data model.
 ```mermaid
 %{init: {'theme':'forest'}}%
 erDiagram
-    AddCollaboratorRequest {
-        string document_id
-        string user_id
-        AccessLevel access_level
-    }
-
-    AddCollaboratorRequest ||--|| AccessLevel : has
     GetQuotaResponse {
         ResourceQuota quota
         double usage_percentage
@@ -3149,6 +3435,206 @@ erDiagram
 
     BatchGrantPermissionsResponse ||--o{ ResourcePermission : has
     BatchGrantPermissionsResponse ||--o{ Error : has
+    GetDocumentResponse {
+        Document document
+    }
+
+    GetDocumentResponse ||--|| Document : has
+    UpdateDocumentRequest {
+        string document_id
+        string title
+        string content
+        string format
+        int64 version
+        string update_description
+    }
+
+    CheckPermissionResponse {
+        bool has_permission
+        AccessLevel access_level
+        ResourcePermission permission
+    }
+
+    CheckPermissionResponse ||--|| AccessLevel : has
+    CheckPermissionResponse ||--|| ResourcePermission : has
+    LogActivityRequest {
+        string resource_id
+        ResourceType resource_type
+        string activity_type
+        string user_id
+        string description
+        string details
+        string ip_address
+    }
+
+    LogActivityRequest ||--|| ResourceType : has
+    LogActivityResponse {
+        ResourceActivity activity
+    }
+
+    LogActivityResponse ||--|| ResourceActivity : has
+    GetQuotaRequest {
+        string owner_id
+        ResourceType resource_type
+    }
+
+    GetQuotaRequest ||--|| ResourceType : has
+    StreamActivityFeedRequest {
+        ResourceType resource_type
+        string user_id
+        string activity_types
+        Timestamp start_from
+    }
+
+    StreamActivityFeedRequest ||--|| ResourceType : has
+    ContentChange {
+        string operation
+        int32 start_position
+        int32 end_position
+        string content
+        int32 version
+    }
+
+    CreateDocumentResponse {
+        Document document
+    }
+
+    CreateDocumentResponse ||--|| Document : has
+    UpdateDocumentResponse {
+        Document document
+        int32 new_version
+    }
+
+    UpdateDocumentResponse ||--|| Document : has
+    AddCollaboratorResponse {
+        DocumentCollaborator collaborator
+        Document document
+    }
+
+    AddCollaboratorResponse ||--|| DocumentCollaborator : has
+    AddCollaboratorResponse ||--|| Document : has
+    RevokePermissionResponse {
+        bool success
+        Timestamp revoked_at
+    }
+
+    CursorPosition {
+        int32 line
+        int32 column
+        Position selection_start
+        Position selection_end
+    }
+
+    CursorPosition ||--|| Position : has
+    CursorPosition ||--|| Position : has
+    ListDocumentsRequest {
+        PaginationRequest pagination
+        string project_id
+        string author_id
+        ResourceState state
+        string format
+        string tags
+        string search_query
+        Timestamp created_after
+        Timestamp created_before
+        string sort_by
+        bool sort_desc
+    }
+
+    ListDocumentsRequest ||--|| PaginationRequest : has
+    ListDocumentsRequest ||--|| ResourceState : has
+    AddCollaboratorRequest {
+        string document_id
+        string user_id
+        AccessLevel access_level
+    }
+
+    AddCollaboratorRequest ||--|| AccessLevel : has
+    GetActivityLogRequest {
+        string resource_id
+        ResourceType resource_type
+        string user_id
+        string activity_type
+        Timestamp after
+        Timestamp before
+        PaginationRequest pagination
+    }
+
+    GetActivityLogRequest ||--|| ResourceType : has
+    GetActivityLogRequest ||--|| PaginationRequest : has
+    UpdateQuotaRequest {
+        string owner_id
+        ResourceType resource_type
+        int64 max_count
+        int64 max_storage_bytes
+        string updated_by
+    }
+
+    UpdateQuotaRequest ||--|| ResourceType : has
+    UpdateQuotaResponse {
+        ResourceQuota quota
+    }
+
+    UpdateQuotaResponse ||--|| ResourceQuota : has
+    Position {
+        int32 line
+        int32 column
+    }
+
+    ListPermissionsResponse {
+        ResourcePermission permissions
+        PaginationResponse pagination
+    }
+
+    ListPermissionsResponse ||--o{ ResourcePermission : has
+    ListPermissionsResponse ||--|| PaginationResponse : has
+    DeleteDocumentRequest {
+        string document_id
+        bool hard_delete
+    }
+
+    ListDocumentsResponse {
+        Document documents
+        PaginationResponse pagination
+    }
+
+    ListDocumentsResponse ||--o{ Document : has
+    ListDocumentsResponse ||--|| PaginationResponse : has
+    RemoveCollaboratorResponse {
+        bool success
+        Document document
+    }
+
+    RemoveCollaboratorResponse ||--|| Document : has
+    CheckPermissionRequest {
+        string resource_id
+        ResourceType resource_type
+        string user_id
+        AccessLevel required_access_level
+    }
+
+    CheckPermissionRequest ||--|| ResourceType : has
+    CheckPermissionRequest ||--|| AccessLevel : has
+    ListPermissionsRequest {
+        string resource_id
+        ResourceType resource_type
+        string principal_id
+        bool include_expired
+        PaginationRequest pagination
+    }
+
+    ListPermissionsRequest ||--|| ResourceType : has
+    ListPermissionsRequest ||--|| PaginationRequest : has
+    DeleteDocumentResponse {
+        bool success
+        Timestamp deleted_at
+    }
+
+    GrantPermissionResponse {
+        ResourcePermission permission
+    }
+
+    GrantPermissionResponse ||--|| ResourcePermission : has
     DocumentCollaboration {
         string message_id
         string message_type
@@ -3174,42 +3660,15 @@ erDiagram
     }
 
     CreateDocumentRequest ||--o{ DocumentCollaborator : has
-    UpdateDocumentResponse {
-        Document document
-        int32 new_version
+    GetDocumentRequest {
+        string document_id
+        bool include_deleted
+        bool include_content
     }
 
-    UpdateDocumentResponse ||--|| Document : has
     RemoveCollaboratorRequest {
         string document_id
         string user_id
-    }
-
-    ListPermissionsRequest {
-        string resource_id
-        ResourceType resource_type
-        string principal_id
-        bool include_expired
-        PaginationRequest pagination
-    }
-
-    ListPermissionsRequest ||--|| ResourceType : has
-    ListPermissionsRequest ||--|| PaginationRequest : has
-    ListPermissionsResponse {
-        ResourcePermission permissions
-        PaginationResponse pagination
-    }
-
-    ListPermissionsResponse ||--o{ ResourcePermission : has
-    ListPermissionsResponse ||--|| PaginationResponse : has
-    GetDocumentResponse {
-        Document document
-    }
-
-    GetDocumentResponse ||--|| Document : has
-    DeleteDocumentRequest {
-        string document_id
-        bool hard_delete
     }
 
     GrantPermissionRequest {
@@ -3224,125 +3683,9 @@ erDiagram
 
     GrantPermissionRequest ||--|| ResourceType : has
     GrantPermissionRequest ||--|| AccessLevel : has
-    LogActivityRequest {
-        string resource_id
-        ResourceType resource_type
-        string activity_type
-        string user_id
-        string description
-        string details
-        string ip_address
-    }
-
-    LogActivityRequest ||--|| ResourceType : has
-    CursorPosition {
-        int32 line
-        int32 column
-        Position selection_start
-        Position selection_end
-    }
-
-    CursorPosition ||--|| Position : has
-    CursorPosition ||--|| Position : has
-    GetDocumentRequest {
-        string document_id
-        bool include_deleted
-        bool include_content
-    }
-
-    ListDocumentsRequest {
-        PaginationRequest pagination
-        string project_id
-        string author_id
-        ResourceState state
-        string format
-        string tags
-        string search_query
-        Timestamp created_after
-        Timestamp created_before
-        string sort_by
-        bool sort_desc
-    }
-
-    ListDocumentsRequest ||--|| PaginationRequest : has
-    ListDocumentsRequest ||--|| ResourceState : has
-    ListDocumentsResponse {
-        Document documents
-        PaginationResponse pagination
-    }
-
-    ListDocumentsResponse ||--o{ Document : has
-    ListDocumentsResponse ||--|| PaginationResponse : has
-    LogActivityResponse {
-        ResourceActivity activity
-    }
-
-    LogActivityResponse ||--|| ResourceActivity : has
-    CheckPermissionRequest {
-        string resource_id
-        ResourceType resource_type
-        string user_id
-        AccessLevel required_access_level
-    }
-
-    CheckPermissionRequest ||--|| ResourceType : has
-    CheckPermissionRequest ||--|| AccessLevel : has
-    CheckPermissionResponse {
-        bool has_permission
-        AccessLevel access_level
-        ResourcePermission permission
-    }
-
-    CheckPermissionResponse ||--|| AccessLevel : has
-    CheckPermissionResponse ||--|| ResourcePermission : has
-    CreateDocumentResponse {
-        Document document
-    }
-
-    CreateDocumentResponse ||--|| Document : has
-    GrantPermissionResponse {
-        ResourcePermission permission
-    }
-
-    GrantPermissionResponse ||--|| ResourcePermission : has
-    StreamActivityFeedRequest {
-        ResourceType resource_type
-        string user_id
-        string activity_types
-        Timestamp start_from
-    }
-
-    StreamActivityFeedRequest ||--|| ResourceType : has
-    GetQuotaRequest {
-        string owner_id
-        ResourceType resource_type
-    }
-
-    GetQuotaRequest ||--|| ResourceType : has
-    UpdateDocumentRequest {
-        string document_id
-        string title
-        string content
-        string format
-        int64 version
-        string update_description
-    }
-
-    DeleteDocumentResponse {
-        bool success
-        Timestamp deleted_at
-    }
-
-    AddCollaboratorResponse {
-        DocumentCollaborator collaborator
-        Document document
-    }
-
-    AddCollaboratorResponse ||--|| DocumentCollaborator : has
-    AddCollaboratorResponse ||--|| Document : has
-    RevokePermissionResponse {
-        bool success
-        Timestamp revoked_at
+    RevokePermissionRequest {
+        string permission_id
+        string revoked_by
     }
 
     GetActivityLogResponse {
@@ -3352,56 +3695,6 @@ erDiagram
 
     GetActivityLogResponse ||--o{ ResourceActivity : has
     GetActivityLogResponse ||--|| PaginationResponse : has
-    UpdateQuotaRequest {
-        string owner_id
-        ResourceType resource_type
-        int64 max_count
-        int64 max_storage_bytes
-        string updated_by
-    }
-
-    UpdateQuotaRequest ||--|| ResourceType : has
-    RemoveCollaboratorResponse {
-        bool success
-        Document document
-    }
-
-    RemoveCollaboratorResponse ||--|| Document : has
-    RevokePermissionRequest {
-        string permission_id
-        string revoked_by
-    }
-
-    GetActivityLogRequest {
-        string resource_id
-        ResourceType resource_type
-        string user_id
-        string activity_type
-        Timestamp after
-        Timestamp before
-        PaginationRequest pagination
-    }
-
-    GetActivityLogRequest ||--|| ResourceType : has
-    GetActivityLogRequest ||--|| PaginationRequest : has
-    UpdateQuotaResponse {
-        ResourceQuota quota
-    }
-
-    UpdateQuotaResponse ||--|| ResourceQuota : has
-    ContentChange {
-        string operation
-        int32 start_position
-        int32 end_position
-        string content
-        int32 version
-    }
-
-    Position {
-        int32 line
-        int32 column
-    }
-
 ```
 
 ---
@@ -3544,7 +3837,7 @@ client.CreateDocument(request, (error: grpc.ServiceError | null, response?: any)
 
 | Attribute | Value |
 |-----------|-------|
-| Generated At | 2025-11-23 00:35:25 UTC |
+| Generated At | 2025-11-23 01:12:47 UTC |
 | Generator Version | 7.0.0 |
 
 📚 **Documentation** | 🔧 **ProtoDocs** | ✨ **Auto-Generated**
