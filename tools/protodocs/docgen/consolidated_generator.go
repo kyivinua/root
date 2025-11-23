@@ -6,6 +6,9 @@ import (
 	"time"
 )
 
+// GeneratorVersion is the version of the ProtoDocs documentation generator
+const GeneratorVersion = "7.0.0"
+
 // ConsolidatedDocGenerator creates comprehensive, single-file documentation for each service
 type ConsolidatedDocGenerator struct {
 	config ConsolidatedConfig
@@ -42,7 +45,7 @@ type ConsolidatedConfig struct {
 	// Example languages
 	IncludeGoExamples         bool
 	IncludePythonExamples     bool
-	IncludeJavaScriptExamples bool
+	IncludeTypeScriptExamples bool
 
 	// Formatting
 	UseEmojis             bool
@@ -75,7 +78,7 @@ func DefaultConsolidatedConfig() ConsolidatedConfig {
 		IncludeChangelog:      false,
 		IncludeGoExamples:         true,
 		IncludePythonExamples:     false, // Excluded per user request
-		IncludeJavaScriptExamples: true,
+		IncludeTypeScriptExamples: true,
 		UseEmojis:             true,
 		CodeHighlighting:      "protobuf",
 		DiagramTheme:          "default",

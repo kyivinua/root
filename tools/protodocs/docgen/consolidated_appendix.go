@@ -84,8 +84,8 @@ func (g *ConsolidatedDocGenerator) writeExamplesSection(sb *strings.Builder, doc
 	if g.config.IncludePythonExamples {
 		g.writePythonExample(sb, doc)
 	}
-	if g.config.IncludeJavaScriptExamples {
-		g.writeJavaScriptExample(sb, doc)
+	if g.config.IncludeTypeScriptExamples {
+		g.writeTypeScriptExample(sb, doc)
 	}
 
 	sb.WriteString("---\n\n")
@@ -182,13 +182,15 @@ func (g *ConsolidatedDocGenerator) writePythonExample(sb *strings.Builder, doc *
 	sb.WriteString("```\n\n")
 }
 
-// writeJavaScriptExample writes a JavaScript/Node.js example
-func (g *ConsolidatedDocGenerator) writeJavaScriptExample(sb *strings.Builder, doc *ServiceDocumentation) {
-	sb.WriteString("### JavaScript (Node.js) Example\n\n")
+// writeTypeScriptExample writes a TypeScript example
+func (g *ConsolidatedDocGenerator) writeTypeScriptExample(sb *strings.Builder, doc *ServiceDocumentation) {
+	sb.WriteString("### TypeScript Example\n\n")
 
-	sb.WriteString("```javascript\n")
-	sb.WriteString("const grpc = require('@grpc/grpc-js');\n")
-	sb.WriteString("const protoLoader = require('@grpc/proto-loader');\n\n")
+	sb.WriteString("```typescript\n")
+	sb.WriteString("import * as grpc from '@grpc/grpc-js';\n")
+	sb.WriteString("import * as protoLoader from '@grpc/proto-loader';\n")
+	sb.WriteString(fmt.Sprintf("import { ProtoGrpcType } from './%s';\n", strings.TrimSuffix(doc.Service.ProtoFile, ".proto")))
+	sb.WriteString(fmt.Sprintf("import { %sClient } from './%s/%s';\n\n", doc.Service.Name, doc.Service.Package, doc.Service.Name))
 
 	sb.WriteString("// Load proto file\n")
 	sb.WriteString("const packageDefinition = protoLoader.loadSync(\n")
@@ -202,11 +204,13 @@ func (g *ConsolidatedDocGenerator) writeJavaScriptExample(sb *strings.Builder, d
 	sb.WriteString("    }\n")
 	sb.WriteString(");\n\n")
 
-	sb.WriteString("const proto = grpc.loadPackageDefinition(packageDefinition);\n\n")
+	sb.WriteString("const proto = grpc.loadPackageDefinition(\n")
+	sb.WriteString("    packageDefinition\n")
+	sb.WriteString(") as unknown as ProtoGrpcType;\n\n")
 
 	sb.WriteString("// Create client\n")
 	packagePath := strings.ReplaceAll(doc.Service.Package, ".", ".")
-	sb.WriteString(fmt.Sprintf("const client = new proto.%s.%s(\n", packagePath, doc.Service.Name))
+	sb.WriteString(fmt.Sprintf("const client: %sClient = new proto.%s.%s(\n", doc.Service.Name, packagePath, doc.Service.Name))
 	sb.WriteString("    'localhost:50051',\n")
 	sb.WriteString("    grpc.credentials.createInsecure()\n")
 	sb.WriteString(");\n\n")
@@ -219,7 +223,7 @@ func (g *ConsolidatedDocGenerator) writeJavaScriptExample(sb *strings.Builder, d
 		sb.WriteString("    // Fill in request fields\n")
 		sb.WriteString("};\n\n")
 
-		sb.WriteString(fmt.Sprintf("client.%s(request, (error, response) => {\n", method.Name))
+		sb.WriteString(fmt.Sprintf("client.%s(request, (error: grpc.ServiceError | null, response?: any) => {\n", method.Name))
 		sb.WriteString("    if (error) {\n")
 		sb.WriteString("        console.error('RPC failed:', error);\n")
 		sb.WriteString("        return;\n")

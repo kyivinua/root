@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/validation"
 	"google.golang.org/protobuf/proto"
@@ -152,18 +153,26 @@ func (p *ProtoParser) parseService(file *descriptorpb.FileDescriptorProto, servi
 	// Enhance service description with smart generation
 	enhancedServiceDesc := p.descGen.EnhanceServiceDescription(service.GetName(), serviceDesc)
 
+	// Extract version from package name
+	apiVersion := extractVersion(file.GetPackage())
+
 	doc := &ServiceDocumentation{
 		Service: &ServiceDoc{
 			Name:        service.GetName(),
 			FullName:    fmt.Sprintf("%s.%s", file.GetPackage(), service.GetName()),
 			Package:     file.GetPackage(),
 			Description: enhancedServiceDesc,
+			Version:     apiVersion,
 			ProtoFile:   file.GetName(),
 		},
 		Methods:  make([]MethodDoc, 0),
 		Messages: make([]MessageDoc, 0),
 		Enums:    make([]EnumDoc, 0),
 		Diagrams: make(map[string]string),
+		Metadata: DocumentMetadata{
+			Generated: time.Now(),
+			Version:   GeneratorVersion,
+		},
 	}
 
 	// Parse methods
@@ -614,4 +623,22 @@ func getShortTypeName(fullTypeName string) string {
 		return parts[len(parts)-1]
 	}
 	return fullTypeName
+}
+
+// extractVersion extracts API version from package name
+// e.g., "users.v1" -> "v1"
+// e.g., "analytics.v2alpha1" -> "v2alpha1"
+// e.g., "common" -> "" (no version)
+func extractVersion(packageName string) string {
+	parts := strings.Split(packageName, ".")
+	for _, part := range parts {
+		// Check if part starts with 'v' followed by a digit
+		if len(part) > 1 && strings.HasPrefix(part, "v") {
+			// Check if the character after 'v' is a digit
+			if part[1] >= '0' && part[1] <= '9' {
+				return part
+			}
+		}
+	}
+	return "" // No version found
 }
