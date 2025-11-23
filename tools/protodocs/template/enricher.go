@@ -312,7 +312,7 @@ func (e *Enricher) getCacheKey(chunk *Chunk) string {
 	// Include context in hash
 	for key, val := range chunk.Context {
 		hash.Write([]byte(key))
-		hash.Write([]byte(fmt.Sprintf("%v", val)))
+		_, _ = fmt.Fprintf(hash, "%v", val)
 	}
 
 	return hex.EncodeToString(hash.Sum(nil))

@@ -447,7 +447,7 @@ func (g *EnhancedMermaidGenerator) GenerateDataFlowDiagram(service *DocService, 
 
 func (g *EnhancedMermaidGenerator) writeThemeConfig(sb *strings.Builder) {
 	if g.config.Theme != "default" && g.config.Theme != "" {
-		sb.WriteString(fmt.Sprintf("%%{init: {'theme':'%s'}}%%\n", g.config.Theme))
+		fmt.Fprintf(sb, "%%{init: {'theme':'%s'}}%%\n", g.config.Theme)
 	}
 }
 

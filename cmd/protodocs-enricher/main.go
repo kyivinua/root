@@ -194,7 +194,11 @@ func runEnrichment(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("create enricher: %w", err)
 	}
-	defer enricherInstance.Close()
+	defer func() {
+		if err := enricherInstance.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to close enricher: %v\n", err)
+		}
+	}()
 
 	// Load input model
 	fmt.Printf("Loading input model from %s...\n", inputModel)

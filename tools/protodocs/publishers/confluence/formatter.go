@@ -6,6 +6,13 @@ import (
 	"strings"
 )
 
+var (
+	// Pre-compiled regexes for performance
+	orderedListRegex   = regexp.MustCompile(`^\d+\. `)
+	unorderedListRegex = regexp.MustCompile(`^[\*\-] `)
+	tableSeparatorRegex = regexp.MustCompile(`^\|[\s\-:]+\|$`)
+)
+
 // Formatter converts Markdown to Confluence Storage Format.
 type Formatter struct {
 	includeDiagrams bool
@@ -145,7 +152,7 @@ func (f *Formatter) convertLists(content string) string {
 
 	for i, line := range lines {
 		// Ordered list
-		if matched, _ := regexp.MatchString(`^\d+\. `, line); matched {
+		if matched := orderedListRegex.MatchString(line); matched {
 			if !inOrderedList {
 				result = append(result, "<ol>")
 				inOrderedList = true
@@ -158,7 +165,8 @@ func (f *Formatter) convertLists(content string) string {
 		}
 
 		// Unordered list
-		if matched, _ := regexp.MatchString(`^[\*\-] `, line); matched {
+		matched := unorderedListRegex.MatchString(line)
+		if matched {
 			if !inUnorderedList {
 				result = append(result, "<ul>")
 				inUnorderedList = true
@@ -204,7 +212,7 @@ func (f *Formatter) convertTables(content string) string {
 			}
 
 			// Skip separator line (|---|---|)
-			if matched, _ := regexp.MatchString(`^\|[\s\-:]+\|$`, line); matched {
+			if tableSeparatorRegex.MatchString(line) {
 				isHeaderRow = false
 				continue
 			}

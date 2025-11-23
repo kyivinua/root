@@ -235,13 +235,13 @@ func TestValidatePageID(t *testing.T) {
 // Benchmark tests
 func BenchmarkValidateFilePath(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ValidateFilePath("test/path/to/file.proto")
+		_, _ = ValidateFilePath("test/path/to/file.proto")
 	}
 }
 
 func BenchmarkValidateAPIKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ValidateAPIKey("sk-1234567890abcdef")
+		_ = ValidateAPIKey("sk-1234567890abcdef")
 	}
 }
 

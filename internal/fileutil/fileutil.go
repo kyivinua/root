@@ -56,13 +56,13 @@ func WriteFile(path string, content []byte) error {
 	// Clean up temp file on error
 	defer func() {
 		if err != nil {
-			os.Remove(tmpPath)
+			_ = os.Remove(tmpPath)
 		}
 	}()
 
 	// Write content
 	if _, err = tmpFile.Write(content); err != nil {
-		tmpFile.Close()
+		_ = tmpFile.Close()
 		return fmt.Errorf("failed to write to temp file: %w", err)
 	}
 
@@ -124,7 +124,7 @@ func CopyFile(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
 	}
-	defer srcFile.Close()
+	defer func() { _ = srcFile.Close() }()
 
 	// Ensure destination directory exists
 	if err := EnsureDir(filepath.Dir(cleanDst)); err != nil {
@@ -136,7 +136,7 @@ func CopyFile(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
-	defer dstFile.Close()
+	defer func() { _ = dstFile.Close() }()
 
 	// Copy content
 	if _, err = io.Copy(dstFile, srcFile); err != nil {

@@ -12,7 +12,6 @@ type Limiter struct {
 	rate     int           // requests per interval
 	interval time.Duration // time interval
 	tokens   chan struct{} // token bucket
-	mu       sync.Mutex
 }
 
 // NewLimiter creates a new rate limiter.

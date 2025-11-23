@@ -15,7 +15,7 @@ func (g *ConsolidatedDocGenerator) writeErrorCodes(sb *strings.Builder, doc *Ser
 		emoji = "⚠️ "
 	}
 
-	sb.WriteString(fmt.Sprintf("## %sError Codes\n\n", emoji))
+	fmt.Fprintf(sb, "## %sError Codes\n\n", emoji)
 
 	if g.config.IncludeAnchors {
 		sb.WriteString("<a name=\"error-codes\"></a>\n\n")
@@ -51,7 +51,7 @@ func (g *ConsolidatedDocGenerator) writeErrorCodes(sb *strings.Builder, doc *Ser
 	sb.WriteString("|-----------|-------------|-------------|\n")
 
 	for _, ec := range errorCodes {
-		sb.WriteString(fmt.Sprintf("| `%s` | %d | %s |\n", ec.Code, ec.HTTPStatus, ec.Description))
+		fmt.Fprintf(sb, "| `%s` | %d | %s |\n", ec.Code, ec.HTTPStatus, ec.Description)
 	}
 
 	sb.WriteString("\n")
@@ -74,7 +74,7 @@ func (g *ConsolidatedDocGenerator) writeExamplesSection(sb *strings.Builder, doc
 		emoji = "💡 "
 	}
 
-	sb.WriteString(fmt.Sprintf("## %sExamples\n\n", emoji))
+	fmt.Fprintf(sb, "## %sExamples\n\n", emoji)
 
 	if g.config.IncludeAnchors {
 		sb.WriteString("<a name=\"examples\"></a>\n\n")
@@ -106,7 +106,7 @@ func (g *ConsolidatedDocGenerator) writeGoExample(sb *strings.Builder, doc *Serv
 	sb.WriteString("    \"time\"\n\n")
 	sb.WriteString("    \"google.golang.org/grpc\"\n")
 	sb.WriteString("    \"google.golang.org/grpc/credentials/insecure\"\n\n")
-	sb.WriteString(fmt.Sprintf("    pb \"%s\"\n", doc.Service.Package))
+	fmt.Fprintf(sb, "    pb \"%s\"\n", doc.Service.Package)
 	sb.WriteString(")\n\n")
 
 	sb.WriteString("func main() {\n")
@@ -118,7 +118,7 @@ func (g *ConsolidatedDocGenerator) writeGoExample(sb *strings.Builder, doc *Serv
 	sb.WriteString("    }\n")
 	sb.WriteString("    defer conn.Close()\n\n")
 
-	sb.WriteString(fmt.Sprintf("    client := pb.New%sClient(conn)\n\n", doc.Service.Name))
+	fmt.Fprintf(sb, "    client := pb.New%sClient(conn)\n\n", doc.Service.Name)
 
 	// Example call for first method
 	if len(doc.Methods) > 0 {
@@ -131,11 +131,11 @@ func (g *ConsolidatedDocGenerator) writeGoExample(sb *strings.Builder, doc *Serv
 
 		if !method.ClientStreaming && !method.ServerStreaming {
 			// Unary call
-			sb.WriteString(fmt.Sprintf("    req := &pb.%s{\n", inputType))
+			fmt.Fprintf(sb, "    req := &pb.%s{\n", inputType)
 			sb.WriteString("        // Fill in request fields\n")
 			sb.WriteString("    }\n\n")
 
-			sb.WriteString(fmt.Sprintf("    resp, err := client.%s(ctx, req)\n", method.Name))
+			fmt.Fprintf(sb, "    resp, err := client.%s(ctx, req)\n", method.Name)
 			sb.WriteString("    if err != nil {\n")
 			sb.WriteString("        log.Fatalf(\"RPC failed: %v\", err)\n")
 			sb.WriteString("    }\n\n")
@@ -154,8 +154,8 @@ func (g *ConsolidatedDocGenerator) writePythonExample(sb *strings.Builder, doc *
 
 	sb.WriteString("```python\n")
 	sb.WriteString("import grpc\n")
-	sb.WriteString(fmt.Sprintf("import %s_pb2\n", strings.ToLower(doc.Service.Name)))
-	sb.WriteString(fmt.Sprintf("import %s_pb2_grpc\n\n", strings.ToLower(doc.Service.Name)))
+	fmt.Fprintf(sb, "import %s_pb2\n", strings.ToLower(doc.Service.Name))
+	fmt.Fprintf(sb, "import %s_pb2_grpc\n\n", strings.ToLower(doc.Service.Name))
 
 	sb.WriteString("def main():\n")
 	sb.WriteString("    # Connect to the service\n")

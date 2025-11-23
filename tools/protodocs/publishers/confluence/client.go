@@ -15,12 +15,6 @@ import (
 	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/validation"
 )
 
-const (
-	maxRetries     = 3
-	retryWaitTime  = 2 * time.Second
-	retryBackoff   = 2 // exponential backoff multiplier
-)
-
 // Client is a Confluence REST API client.
 type Client struct {
 	baseURL    string
@@ -130,7 +124,7 @@ func (c *Client) CreatePage(page *Page) (*Page, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -189,7 +183,7 @@ func (c *Client) UpdatePage(pageID string, page *Page) (*Page, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -241,7 +235,7 @@ func (c *Client) GetPage(pageID string) (*Page, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, nil
@@ -298,7 +292,7 @@ func (c *Client) FindPageByTitle(spaceKey, title string) (*Page, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -346,7 +340,7 @@ func (c *Client) DeletePage(pageID string) error {
 	if err != nil {
 		return errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -364,47 +358,6 @@ func (c *Client) DeletePage(pageID string) error {
 	}
 
 	return nil
-}
-
-// doRequestWithRetry executes an HTTP request with retry logic for transient failures.
-func (c *Client) doRequestWithRetry(req *http.Request) (*http.Response, error) {
-	var resp *http.Response
-	var err error
-
-	waitTime := retryWaitTime
-
-	for attempt := 0; attempt <= maxRetries; attempt++ {
-		if attempt > 0 {
-			// Wait before retry with exponential backoff
-			time.Sleep(waitTime)
-			waitTime *= retryBackoff
-		}
-
-		// Clone request for retry (body may be consumed)
-		reqCopy := req.Clone(req.Context())
-
-		resp, err = c.httpClient.Do(reqCopy)
-		if err == nil {
-			// Check for retryable status codes
-			if resp.StatusCode < 500 && resp.StatusCode != 429 {
-				// Success or client error (not retryable)
-				return resp, nil
-			}
-
-			// Server error or rate limit - retry
-			if attempt < maxRetries {
-				resp.Body.Close()
-				continue
-			}
-		}
-
-		// Network error - retry
-		if attempt < maxRetries {
-			continue
-		}
-	}
-
-	return resp, err
 }
 
 // Attachment represents a Confluence attachment.
@@ -476,7 +429,7 @@ func (c *Client) UploadAttachment(pageID string, filename string, content []byte
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -560,7 +513,7 @@ func (c *Client) UpdateAttachment(pageID, attachmentID string, filename string, 
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -611,7 +564,7 @@ func (c *Client) GetAttachments(pageID string) ([]Attachment, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)

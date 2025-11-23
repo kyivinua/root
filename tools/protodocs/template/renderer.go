@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // Renderer renders templates to strings
@@ -68,7 +71,7 @@ func (r *Renderer) RegisterDefaultFilters() {
 	})
 
 	r.RegisterFilter("title", func(value interface{}, args ...string) (interface{}, error) {
-		return strings.Title(strings.ToLower(fmt.Sprintf("%v", value))), nil
+		return cases.Title(language.English).String(strings.ToLower(fmt.Sprintf("%v", value))), nil
 	})
 
 	r.RegisterFilter("trim", func(value interface{}, args ...string) (interface{}, error) {

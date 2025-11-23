@@ -9,6 +9,8 @@ import (
 	"unicode"
 
 	"github.com/kyivinua/docgen-tool/tools/protoctx"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
@@ -337,7 +339,7 @@ func inferHTTPPath(md protoreflect.MethodDescriptor, operation string) string {
 	case "create":
 		return fmt.Sprintf("/v1/%s", servicePath)
 	case "update", "patch":
-		resource := strings.TrimPrefix(methodName, strings.Title(operation))
+		resource := strings.TrimPrefix(methodName, cases.Title(language.English).String(operation))
 		return fmt.Sprintf("/v1/%s/{%s}", servicePath, toLowerFirst(resource))
 	case "delete":
 		resource := strings.TrimPrefix(methodName, "Delete")

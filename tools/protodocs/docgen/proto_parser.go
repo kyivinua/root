@@ -121,8 +121,8 @@ func (p *ProtoParser) generateDescriptorSet() (*descriptorpb.FileDescriptorSet, 
 	if err != nil {
 		return nil, fmt.Errorf("create temp file: %w", err)
 	}
-	defer os.Remove(tmpFile.Name())
-	tmpFile.Close()
+	defer func() { _ = os.Remove(tmpFile.Name()) }()
+	_ = tmpFile.Close()
 
 	// Build protoc command
 	args := []string{

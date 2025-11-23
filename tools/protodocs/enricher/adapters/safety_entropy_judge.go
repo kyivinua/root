@@ -293,7 +293,7 @@ Criteria:
 			verdict = strings.TrimSpace(strings.TrimPrefix(line, "VERDICT:"))
 		} else if strings.HasPrefix(line, "CONFIDENCE:") {
 			confStr := strings.TrimSpace(strings.TrimPrefix(line, "CONFIDENCE:"))
-			fmt.Sscanf(confStr, "%f", &confidence)
+			_, _ = fmt.Sscanf(confStr, "%f", &confidence)
 		}
 	}
 

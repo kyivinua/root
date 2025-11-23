@@ -351,14 +351,3 @@ func checkMark(useEmoji bool) string {
 	}
 	return "*"
 }
-
-// Repeat is a helper since strings.Repeat might not be available
-type stringRepeater string
-
-func (s stringRepeater) Repeat(n int) string {
-	result := ""
-	for i := 0; i < n; i++ {
-		result += string(s)
-	}
-	return result
-}

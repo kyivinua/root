@@ -363,7 +363,7 @@ func (p *Parser) parseEnrich() (Node, error) {
 
 	// Parse max_tokens if present
 	if maxTokensStr := attributes["max_tokens"]; maxTokensStr != "" {
-		fmt.Sscanf(maxTokensStr, "%d", &node.MaxTokens)
+		_, _ = fmt.Sscanf(maxTokensStr, "%d", &node.MaxTokens)
 	}
 
 	// Parse cache setting
@@ -582,7 +582,7 @@ func OptimizeTemplate(template *Template) *Template {
 func ExtractVariables(template *Template) []string {
 	variables := make(map[string]bool)
 
-	template.Walk(func(node Node) error {
+	_ = template.Walk(func(node Node) error {
 		if varNode, ok := node.(*VariableNode); ok {
 			variables[varNode.Name] = true
 		}
@@ -600,7 +600,7 @@ func ExtractVariables(template *Template) []string {
 func ExtractEnrichNodes(template *Template) []*EnrichNode {
 	enrichNodes := []*EnrichNode{}
 
-	template.Walk(func(node Node) error {
+	_ = template.Walk(func(node Node) error {
 		if enrichNode, ok := node.(*EnrichNode); ok {
 			enrichNodes = append(enrichNodes, enrichNode)
 		}

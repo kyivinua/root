@@ -157,7 +157,7 @@ func (ce *ContextEngine) fetchOwnership(ctx context.Context, enriched *EnrichedC
 func (ce *ContextEngine) fetchSLODashboard(ctx context.Context, source ContextSource, enriched *EnrichedContext) error {
 	grafanaToken, ok := source.Config["grafana_token"].(string)
 	if !ok || grafanaToken == "" {
-		return fmt.Errorf("Grafana token not configured")
+		return fmt.Errorf("grafana token not configured")
 	}
 
 	// TODO: Implement Grafana API integration
@@ -169,7 +169,7 @@ func (ce *ContextEngine) fetchSLODashboard(ctx context.Context, source ContextSo
 func (ce *ContextEngine) fetchSecurityPolicies(ctx context.Context, source ContextSource, enriched *EnrichedContext) error {
 	vaultToken, ok := source.Config["vault_token"].(string)
 	if !ok || vaultToken == "" {
-		return fmt.Errorf("Vault token not configured")
+		return fmt.Errorf("vault token not configured")
 	}
 
 	// TODO: Implement Vault/OPA integration

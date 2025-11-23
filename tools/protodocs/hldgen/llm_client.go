@@ -141,7 +141,7 @@ type AnthropicClient struct {
 // NewAnthropicClient creates a new Anthropic client
 func NewAnthropicClient(cfg ProviderConfig) (*AnthropicClient, error) {
 	if cfg.APIKey == "" {
-		return nil, fmt.Errorf("Anthropic API key not configured")
+		return nil, fmt.Errorf("anthropic API key not configured")
 	}
 	return &AnthropicClient{cfg: cfg}, nil
 }

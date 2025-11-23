@@ -94,7 +94,7 @@ func (n *Notifier) sendViaWebhook(message *WebhookMessage) error {
 	if err != nil {
 		return fmt.Errorf("send webhook request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -132,7 +132,7 @@ func (n *Notifier) sendViaBotAPI(message *WebhookMessage) error {
 	if err != nil {
 		return fmt.Errorf("send bot API request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var result map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
@@ -180,9 +180,9 @@ func (n *Notifier) SendPipelineComplete(result *PipelineResult) error {
 		{Title: "Messages", Value: fmt.Sprintf("%d", result.TotalMessages), Short: true},
 	}
 
-	message := fmt.Sprintf("Documentation pipeline completed successfully")
+	message := "Documentation pipeline completed successfully"
 	if !result.Success {
-		message = fmt.Sprintf("Documentation pipeline failed")
+		message = "Documentation pipeline failed"
 		if len(result.Errors) > 0 {
 			message += fmt.Sprintf("\n\n*Errors:*\n```\n%s\n```", result.Errors[0])
 		}

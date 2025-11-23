@@ -109,21 +109,21 @@ func (g *Generator) GenerateSequenceDiagram(service *docgen.Service, method *doc
 
 	if method.ClientStreaming && method.ServerStreaming {
 		sb.WriteString(fmt.Sprintf("    Client->>+%s: Stream %s\n", service.Name, method.InputType))
-		sb.WriteString(fmt.Sprintf("    loop Bidirectional Streaming\n"))
+		sb.WriteString("    loop Bidirectional Streaming\n")
 		sb.WriteString(fmt.Sprintf("        %s-->>Client: Stream %s\n", service.Name, method.OutputType))
 		sb.WriteString(fmt.Sprintf("        Client->>%s: Stream %s\n", service.Name, method.InputType))
-		sb.WriteString(fmt.Sprintf("    end\n"))
+		sb.WriteString("    end\n")
 		sb.WriteString(fmt.Sprintf("    %s-->>-Client: Complete\n", service.Name))
 	} else if method.ClientStreaming {
-		sb.WriteString(fmt.Sprintf("    loop Client Streaming\n"))
+		sb.WriteString("    loop Client Streaming\n")
 		sb.WriteString(fmt.Sprintf("        Client->>%s: Stream %s\n", service.Name, method.InputType))
-		sb.WriteString(fmt.Sprintf("    end\n"))
+		sb.WriteString("    end\n")
 		sb.WriteString(fmt.Sprintf("    %s-->>Client: %s\n", service.Name, method.OutputType))
 	} else if method.ServerStreaming {
 		sb.WriteString(fmt.Sprintf("    Client->>%s: %s\n", service.Name, method.InputType))
-		sb.WriteString(fmt.Sprintf("    loop Server Streaming\n"))
+		sb.WriteString("    loop Server Streaming\n")
 		sb.WriteString(fmt.Sprintf("        %s-->>Client: Stream %s\n", service.Name, method.OutputType))
-		sb.WriteString(fmt.Sprintf("    end\n"))
+		sb.WriteString("    end\n")
 	} else {
 		sb.WriteString(fmt.Sprintf("    Client->>+%s: %s\n", service.Name, method.InputType))
 		sb.WriteString(fmt.Sprintf("    %s-->>-Client: %s\n", service.Name, method.OutputType))

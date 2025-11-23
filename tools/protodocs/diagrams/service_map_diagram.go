@@ -11,7 +11,7 @@ func (g *DiagramGenerator) generateServiceMapDiagram(model *ApiDocModel) Generat
 	metadata := DiagramMetadata{
 		Type:        DiagramTypeServiceMap,
 		Title:       "Service Relationship Map",
-		Description: fmt.Sprintf("Services and their message dependencies across all modules"),
+		Description: "Services and their message dependencies across all modules",
 		Filename:    "service-map.md",
 		GeneratedAt: time.Now(),
 		MermaidType: "graph TB",

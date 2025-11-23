@@ -57,15 +57,15 @@ func main() {
 func handleReadyz(w http.ResponseWriter, r *http.Request) {
 	if !rs.IsReady() {
 		w.WriteHeader(http.StatusServiceUnavailable)
-		fmt.Fprintf(w, "NOT_READY (status: %s)\n", rs.Status())
+		_, _ = fmt.Fprintf(w, "NOT_READY (status: %s)\n", rs.Status())
 		if err := rs.Error(); err != nil {
-			fmt.Fprintf(w, "Error: %v\n", err)
+			_, _ = fmt.Fprintf(w, "Error: %v\n", err)
 		}
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "READY\n")
+	_, _ = fmt.Fprint(w, "READY\n")
 }
 
 // handleServiceSchema returns the schema of a service.
@@ -133,7 +133,7 @@ func handleServiceSchema(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(result)
 }
 
 // handleDecode decodes wire-format bytes to JSON.
@@ -173,7 +173,7 @@ func handleDecode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonData)
+	_, _ = w.Write(jsonData)
 }
 
 // handleEncode encodes JSON to wire-format bytes.
@@ -213,5 +213,5 @@ func handleEncode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Write(wire)
+	_, _ = w.Write(wire)
 }

@@ -218,14 +218,3 @@ func sanitizeName(name string) string {
 	name = strings.ReplaceAll(name, ">", "")
 	return name
 }
-
-// escapeString escapes special characters for Mermaid
-func escapeString(s string) string {
-	s = strings.ReplaceAll(s, "\"", "'")
-	s = strings.ReplaceAll(s, "\n", " ")
-	// Truncate long descriptions
-	if len(s) > 100 {
-		s = s[:97] + "..."
-	}
-	return s
-}
