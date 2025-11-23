@@ -14,30 +14,44 @@ import (
 func main() {
 	// Command line flags
 	var (
-		protoDir   = flag.String("proto-dir", "proto", "Directory containing proto files")
-		outputDir  = flag.String("output-dir", "docs/consolidated", "Output directory for generated docs")
-		themeName  = flag.String("theme", "default", "Mermaid diagram theme (default, forest, dark, neutral)")
-		noEmoji    = flag.Bool("no-emoji", false, "Disable emoji icons")
-		noExamples = flag.Bool("no-examples", false, "Skip code examples")
-		verbose    = flag.Bool("verbose", false, "Verbose output")
+		protoDir       = flag.String("proto-dir", "", "Directory containing proto files")
+		descriptorFile = flag.String("descriptor", "", "Proto descriptor file (.pb)")
+		outputDir      = flag.String("output-dir", "docs/consolidated", "Output directory for generated docs")
+		themeName      = flag.String("theme", "default", "Mermaid diagram theme (default, forest, dark, neutral)")
+		noEmoji        = flag.Bool("no-emoji", false, "Disable emoji icons")
+		noExamples     = flag.Bool("no-examples", false, "Skip code examples")
+		verbose        = flag.Bool("verbose", false, "Verbose output")
 	)
 
 	flag.Parse()
 
+	// Validate input mode
+	if *protoDir == "" && *descriptorFile == "" {
+		fmt.Fprintf(os.Stderr, "Error: Either --proto-dir or --descriptor must be specified\n")
+		fmt.Fprintf(os.Stderr, "\nUsage:\n")
+		fmt.Fprintf(os.Stderr, "  Generate from proto files:\n")
+		fmt.Fprintf(os.Stderr, "    %s --proto-dir=./proto --output-dir=./docs\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  Generate from descriptor file:\n")
+		fmt.Fprintf(os.Stderr, "    %s --descriptor=./proto.pb --output-dir=./docs\n", os.Args[0])
+		os.Exit(1)
+	}
+
+	if *protoDir != "" && *descriptorFile != "" {
+		fmt.Fprintf(os.Stderr, "Error: Cannot specify both --proto-dir and --descriptor\n")
+		os.Exit(1)
+	}
+
 	if *verbose {
 		fmt.Println("ProtoDocs Consolidated Documentation Generator")
 		fmt.Println("===============================================")
-		fmt.Printf("Proto Directory: %s\n", *protoDir)
+		if *descriptorFile != "" {
+			fmt.Printf("Descriptor File: %s\n", *descriptorFile)
+		} else {
+			fmt.Printf("Proto Directory: %s\n", *protoDir)
+		}
 		fmt.Printf("Output Directory: %s\n", *outputDir)
 		fmt.Printf("Theme: %s\n", *themeName)
 		fmt.Println()
-	}
-
-	// Validate and sanitize proto directory path
-	validatedProtoDir, err := validation.ValidateFilePath(*protoDir)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Invalid proto directory path: %v\n", err)
-		os.Exit(1)
 	}
 
 	// Validate and sanitize output directory path
@@ -53,52 +67,86 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Find all proto files
-	protoFiles, err := findProtoFiles(validatedProtoDir)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error finding proto files: %v\n", err)
-		os.Exit(1)
-	}
+	var docs []*docgen.ServiceDocumentation
 
-	if len(protoFiles) == 0 {
-		fmt.Fprintf(os.Stderr, "No proto files found in %s\n", *protoDir)
-		os.Exit(1)
-	}
-
-	if *verbose {
-		fmt.Printf("Found %d proto files:\n", len(protoFiles))
-		for _, f := range protoFiles {
-			fmt.Printf("  - %s\n", f)
+	// Handle descriptor file mode
+	if *descriptorFile != "" {
+		if *verbose {
+			fmt.Println("Parsing descriptor file...")
 		}
-		fmt.Println()
-	}
 
-	// Determine import paths
-	importPaths := []string{
-		"/usr/include",  // For google protobuf well-known types
-		validatedProtoDir,
-		filepath.Join(validatedProtoDir, "common"),
-		filepath.Join(validatedProtoDir, "users"),
-		filepath.Join(validatedProtoDir, "payments"),
-		filepath.Join(validatedProtoDir, "notifications"),
-		filepath.Join(validatedProtoDir, "analytics"),
-	}
+		// Create parser from descriptor
+		parser, err := docgen.NewProtoParserFromDescriptor(*descriptorFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating parser from descriptor: %v\n", err)
+			os.Exit(1)
+		}
 
-	// Create parser
-	parser, err := docgen.NewProtoParser(protoFiles, importPaths)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating parser: %v\n", err)
-		os.Exit(1)
-	}
+		// Parse descriptor
+		docs, err = parser.ParseFromDescriptor()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing descriptor file: %v\n", err)
+			os.Exit(1)
+		}
 
-	// Parse proto files
-	fmt.Println("Parsing proto files...")
-	docs, err := parser.Parse()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error parsing proto files: %v\n", err)
-		fmt.Fprintf(os.Stderr, "\nNote: Make sure protoc is installed and in PATH\n")
-		fmt.Fprintf(os.Stderr, "Install: https://grpc.io/docs/protoc-installation/\n")
-		os.Exit(1)
+		if *verbose {
+			fmt.Printf("Found %d services\n\n", len(docs))
+		}
+	} else {
+		// Handle proto directory mode
+		validatedProtoDir, err := validation.ValidateFilePath(*protoDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Invalid proto directory path: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Find all proto files
+		protoFiles, err := findProtoFiles(validatedProtoDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error finding proto files: %v\n", err)
+			os.Exit(1)
+		}
+
+		if len(protoFiles) == 0 {
+			fmt.Fprintf(os.Stderr, "No proto files found in %s\n", *protoDir)
+			os.Exit(1)
+		}
+
+		if *verbose {
+			fmt.Printf("Found %d proto files:\n", len(protoFiles))
+			for _, f := range protoFiles {
+				fmt.Printf("  - %s\n", f)
+			}
+			fmt.Println()
+		}
+
+		// Determine import paths
+		importPaths := []string{
+			"/usr/include", // For google protobuf well-known types
+			validatedProtoDir,
+			filepath.Join(validatedProtoDir, "common"),
+			filepath.Join(validatedProtoDir, "users"),
+			filepath.Join(validatedProtoDir, "payments"),
+			filepath.Join(validatedProtoDir, "notifications"),
+			filepath.Join(validatedProtoDir, "analytics"),
+		}
+
+		// Create parser
+		parser, err := docgen.NewProtoParser(protoFiles, importPaths)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating parser: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Parse proto files
+		fmt.Println("Parsing proto files...")
+		docs, err = parser.Parse()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing proto files: %v\n", err)
+			fmt.Fprintf(os.Stderr, "\nNote: Make sure protoc is installed and in PATH\n")
+			fmt.Fprintf(os.Stderr, "Install: https://grpc.io/docs/protoc-installation/\n")
+			os.Exit(1)
+		}
 	}
 
 	if len(docs) == 0 {

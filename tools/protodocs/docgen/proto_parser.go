@@ -48,6 +48,55 @@ func NewProtoParser(protoFiles, importPaths []string) (*ProtoParser, error) {
 	}, nil
 }
 
+// NewProtoParserFromDescriptor creates a new proto parser for a descriptor file
+func NewProtoParserFromDescriptor(descriptorFile string) (*ProtoParser, error) {
+	// Validate descriptor file path
+	validPath, err := validation.ValidateFilePath(descriptorFile)
+	if err != nil {
+		return nil, fmt.Errorf("invalid descriptor file %q: %w", descriptorFile, err)
+	}
+
+	// Verify file exists
+	if _, err := os.Stat(validPath); err != nil {
+		return nil, fmt.Errorf("descriptor file not found: %w", err)
+	}
+
+	return &ProtoParser{
+		protoFiles:  []string{validPath}, // Store descriptor path in protoFiles[0]
+		importPaths: nil,                  // Not needed for descriptor mode
+		descGen:     NewDescriptionGenerator(),
+	}, nil
+}
+
+// ParseFromDescriptor parses a descriptor file and returns service documentation
+func (p *ProtoParser) ParseFromDescriptor() ([]*ServiceDocumentation, error) {
+	if len(p.protoFiles) == 0 {
+		return nil, fmt.Errorf("no descriptor file specified")
+	}
+
+	descriptorFile := p.protoFiles[0]
+
+	// Read descriptor file
+	data, err := os.ReadFile(descriptorFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read descriptor file %q: %w", descriptorFile, err)
+	}
+
+	// Unmarshal descriptor set
+	fds := &descriptorpb.FileDescriptorSet{}
+	if err := proto.Unmarshal(data, fds); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal descriptor set: %w", err)
+	}
+
+	// Parse descriptor set
+	docs, err := p.parseDescriptorSet(fds)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse descriptor set: %w", err)
+	}
+
+	return docs, nil
+}
+
 // Parse parses proto files and returns service documentation
 func (p *ProtoParser) Parse() ([]*ServiceDocumentation, error) {
 	// Generate FileDescriptorSet using protoc
