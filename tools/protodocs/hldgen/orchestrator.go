@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/ratelimit"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/ratelimit"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/semaphore"
 )

@@ -6,6 +6,7 @@ import (
 
 	"github.com/kyivinua/docgen-tool/tools/protodocs/enricher"
 	"github.com/tmc/langchaingo/embeddings"
+	"github.com/tmc/langchaingo/schema"
 	"github.com/tmc/langchaingo/vectorstores"
 	"github.com/tmc/langchaingo/vectorstores/weaviate"
 )
@@ -96,13 +97,13 @@ func (r *WeaviateRAGRetriever) RetrieveContext(ctx context.Context, query string
 // IndexDocument indexes a new document in the vector store
 func (r *WeaviateRAGRetriever) IndexDocument(ctx context.Context, doc enricher.RAGDocument) error {
 	// Create document for langchaingo
-	lcDoc := vectorstores.Document{
+	lcDoc := schema.Document{
 		PageContent: doc.Content,
 		Metadata:    doc.Metadata,
 	}
 
 	// Add to vector store
-	_, err := r.store.AddDocuments(ctx, []vectorstores.Document{lcDoc})
+	_, err := r.store.AddDocuments(ctx, []schema.Document{lcDoc})
 	if err != nil {
 		return fmt.Errorf("add document: %w", err)
 	}

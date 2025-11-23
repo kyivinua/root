@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/kyivinua/docgen-tool/tools/protodocs/docgen"
-	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/validation"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/validation"
 )
 
 func main() {

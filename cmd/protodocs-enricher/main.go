@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/kyivinua/root/tools/protodocs/enricher"
-	"github.com/kyivinua/root/tools/protodocs/enricher/adapters"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/enricher"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/enricher/adapters"
 	"github.com/spf13/cobra"
 )
 

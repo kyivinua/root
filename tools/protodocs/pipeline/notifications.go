@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/kyivinua/root/tools/notifications/slack"
+	"github.com/kyivinua/docgen-tool/tools/notifications/slack"
 )
 
 // NotificationManager manages pipeline notifications

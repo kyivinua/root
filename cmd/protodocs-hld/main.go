@@ -7,8 +7,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kyivinua/root/tools/protodocs/enricher"
-	"github.com/kyivinua/root/tools/protodocs/hldgen"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/enricher"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/hldgen"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 )
@@ -206,7 +206,7 @@ func printSummary(output *hldgen.HLDOutput) {
 			fmt.Printf("  - %s\n", warning)
 		}
 	}
-	fmt.Println("============================\n")
+	fmt.Println("============================")
 }
 
 func checkContent(content string) string {

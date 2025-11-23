@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/validation"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/validation"
 )
 
 // ValidationError represents a validation error

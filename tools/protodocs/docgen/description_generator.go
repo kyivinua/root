@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
 
@@ -180,7 +182,7 @@ func (dg *DescriptionGenerator) generateFieldDescription(fieldName, fieldType, t
 
 	// Join words
 	fieldDesc := strings.Join(words, " ")
-	fieldDesc = strings.Title(fieldDesc)
+	fieldDesc = cases.Title(language.English).String(fieldDesc)
 
 	// Add type context
 	var typeContext string
@@ -358,7 +360,8 @@ func (dg *DescriptionGenerator) extractEntity(methodName string) string {
 
 // splitCamelCase splits camelCase string into words
 func (dg *DescriptionGenerator) splitCamelCase(s string) []string {
-	re := regexp.MustCompile(`([A-Z][a-z]+|[A-Z]+(?![a-z])|[a-z]+|\d+)`)
+	// Go's regexp doesn't support negative lookahead, so use a simpler pattern
+	re := regexp.MustCompile(`([A-Z]+[a-z]*|[a-z]+|\d+)`)
 	matches := re.FindAllString(s, -1)
 	return matches
 }

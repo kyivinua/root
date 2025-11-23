@@ -40,7 +40,7 @@ func (idx *FileIndex) Add(fd protoreflect.FileDescriptor) {
 	info := FileInfo{
 		Name:    fd.Path(),
 		Package: string(fd.Package()),
-		Syntax:  string(fd.Syntax()),
+		Syntax:  fd.Syntax().String(),
 		Imports: make([]string, fd.Imports().Len()),
 	}
 

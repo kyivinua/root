@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/errors"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/errors"
 )
 
 // ImprovedArchitectAgent with LLM integration

@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/errors"
-	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/ratelimit"
-	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/validation"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/errors"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/ratelimit"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/validation"
 )
 
 const (

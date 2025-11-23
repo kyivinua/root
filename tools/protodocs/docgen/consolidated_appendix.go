@@ -3,6 +3,9 @@ package docgen
 import (
 	"fmt"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // writeErrorCodes writes the error codes section
@@ -284,7 +287,7 @@ func formatDiagramTitle(diagramType string) string {
 	case "data_flow":
 		return "Data Flow"
 	default:
-		return strings.Title(strings.ReplaceAll(diagramType, "_", " "))
+		return cases.Title(language.English).String(strings.ReplaceAll(diagramType, "_", " "))
 	}
 }
 

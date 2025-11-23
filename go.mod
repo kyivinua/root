@@ -5,7 +5,6 @@ go 1.24.7
 require (
 	github.com/dgraph-io/ristretto v0.2.0
 	github.com/google/uuid v1.6.0
-	github.com/kyivinua/root v0.0.0-00010101000000-000000000000
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cobra v1.8.1
@@ -13,6 +12,7 @@ require (
 	github.com/teilomillet/gollm v0.1.9
 	github.com/tmc/langchaingo v0.1.14
 	golang.org/x/sync v0.18.0
+	golang.org/x/text v0.28.0
 	google.golang.org/protobuf v1.36.10
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -69,10 +69,7 @@ require (
 	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/oauth2 v0.30.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250122153221-138b5a5a4fd4 // indirect
 	google.golang.org/grpc v1.70.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-replace github.com/kyivinua/root => ./

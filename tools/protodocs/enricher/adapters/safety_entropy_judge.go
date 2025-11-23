@@ -13,7 +13,7 @@ import (
 
 // EntropyJudgeSafetyGuard implements SafetyGuard using semantic entropy and LLM-as-judge
 type EntropyJudgeSafetyGuard struct {
-	llm                LLMClient
+	llm                enricher.LLMClient
 	judgeModel         string
 	entropyThreshold   float64
 	confidenceThreshold float64
@@ -23,7 +23,7 @@ type EntropyJudgeSafetyGuard struct {
 
 // NewEntropyJudgeSafetyGuard creates a new entropy+judge safety guard
 func NewEntropyJudgeSafetyGuard(
-	llm LLMClient,
+	llm enricher.LLMClient,
 	judgeModel string,
 	entropyThreshold float64,
 	confidenceThreshold float64,

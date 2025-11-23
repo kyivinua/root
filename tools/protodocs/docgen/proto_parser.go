@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/validation"
+	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/validation"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/descriptorpb"
 )
