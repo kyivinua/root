@@ -57,3 +57,5 @@ vendor/
 .DS_Store
 tools/protodocs/cmd/consolidated-docgen/consolidated-docgen
 consolidated-docgen
+proto-docs
+cmd/proto-docs/proto-docs
