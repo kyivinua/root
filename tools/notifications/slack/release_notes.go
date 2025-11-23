@@ -1,7 +1,9 @@
 package slack
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -287,21 +289,117 @@ func (g *ReleaseNotesGenerator) GetChangelog(notes *ReleaseNotes) string {
 
 // ParseChangelogFile parses an existing CHANGELOG.md file
 func ParseChangelogFile(filepath string) ([]*ReleaseNotes, error) {
-	// TODO: Implement changelog parsing
-	return nil, fmt.Errorf("not implemented")
+	file, err := os.Open(filepath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return []*ReleaseNotes{}, nil // Return empty slice if file doesn't exist
+		}
+		return nil, fmt.Errorf("open changelog: %w", err)
+	}
+	defer func() { _ = file.Close() }()
+
+	var releases []*ReleaseNotes
+	var current *ReleaseNotes
+	var currentSection string
+
+	scanner := bufio.NewScanner(file)
+	versionRegex := regexp.MustCompile(`^# (.+?) \((\d{4}-\d{2}-\d{2})\)`)
+	commitRegex := regexp.MustCompile(`Commit: (\S+) \| Branch: (\S+)`)
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+
+		// Parse version header
+		if matches := versionRegex.FindStringSubmatch(line); matches != nil {
+			if current != nil {
+				releases = append(releases, current)
+			}
+			date, _ := time.Parse("2006-01-02", matches[2])
+			current = &ReleaseNotes{
+				Version:         matches[1],
+				Date:            date,
+				NewFeatures:     []string{},
+				Improvements:    []string{},
+				BugFixes:        []string{},
+				BreakingChanges: []string{},
+				Deprecations:    []string{},
+			}
+			currentSection = ""
+			continue
+		}
+
+		// Parse commit info
+		if current != nil {
+			if matches := commitRegex.FindStringSubmatch(line); matches != nil {
+				current.Commit = matches[1]
+				current.Branch = matches[2]
+				continue
+			}
+		}
+
+		// Parse section headers
+		if strings.HasPrefix(line, "## ") {
+			currentSection = strings.TrimPrefix(line, "## ")
+			continue
+		}
+
+		// Parse list items
+		if strings.HasPrefix(line, "- ") && current != nil {
+			item := strings.TrimPrefix(line, "- ")
+			switch {
+			case strings.Contains(currentSection, "BREAKING CHANGES"):
+				current.BreakingChanges = append(current.BreakingChanges, item)
+			case strings.Contains(currentSection, "New Features"):
+				current.NewFeatures = append(current.NewFeatures, item)
+			case strings.Contains(currentSection, "Improvements"):
+				current.Improvements = append(current.Improvements, item)
+			case strings.Contains(currentSection, "Bug Fixes"):
+				current.BugFixes = append(current.BugFixes, item)
+			case strings.Contains(currentSection, "Deprecations"):
+				current.Deprecations = append(current.Deprecations, item)
+			}
+		}
+	}
+
+	// Add last release
+	if current != nil {
+		releases = append(releases, current)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("scan changelog: %w", err)
+	}
+
+	return releases, nil
 }
 
 // AppendToChangelog appends release notes to CHANGELOG.md
 func (g *ReleaseNotesGenerator) AppendToChangelog(notes *ReleaseNotes, changelogPath string) error {
-	// Generate markdown
-	markdown := g.GetChangelog(notes)
+	// Generate markdown for new release
+	newMarkdown := g.GetChangelog(notes)
 
 	// Read existing changelog if it exists
-	// Prepend new release notes to the top
-	// Write back to file
+	var existingContent string
+	if data, err := os.ReadFile(changelogPath); err == nil {
+		existingContent = string(data)
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("read existing changelog: %w", err)
+	}
 
-	// For now, just write the markdown
-	// TODO: Implement proper changelog management
-	fmt.Println(markdown)
+	// Prepare final content - new release at the top
+	var finalContent strings.Builder
+	finalContent.WriteString(newMarkdown)
+
+	// Add separator if there's existing content
+	if existingContent != "" {
+		finalContent.WriteString("\n---\n\n")
+		finalContent.WriteString(existingContent)
+	}
+
+	// Write to file
+	if err := os.WriteFile(changelogPath, []byte(finalContent.String()), 0644); err != nil {
+		return fmt.Errorf("write changelog: %w", err)
+	}
+
 	return nil
 }

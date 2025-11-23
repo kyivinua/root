@@ -1,8 +1,13 @@
 package hldgen
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
+	"time"
 )
 
 // LLMClient defines the interface for LLM interactions
@@ -77,10 +82,82 @@ func (r *LLMRouter) selectProvider() LLMClient {
 		return nil
 	}
 
-	// For now, just return the first provider
-	// TODO: Implement strategy-based selection (cost_then_quality, quality_first, fastest)
-	providerName := r.cfg.Providers[0].Name
-	return r.providers[providerName]
+	// Implement strategy-based provider selection
+	switch r.cfg.Router.Strategy {
+	case "cost_then_quality":
+		// Select provider with lowest cost (highest weight implies better cost/quality ratio)
+		return r.selectByWeight()
+
+	case "quality_first":
+		// Select provider with highest quality (prioritize Anthropic > OpenAI > Ollama)
+		return r.selectByQuality()
+
+	case "fastest":
+		// Select fastest provider (local Ollama > OpenAI > Anthropic)
+		return r.selectBySpeed()
+
+	default:
+		// Default: use weighted selection
+		return r.selectByWeight()
+	}
+}
+
+// selectByWeight selects provider based on weight (higher weight = better cost/quality ratio)
+func (r *LLMRouter) selectByWeight() LLMClient {
+	var bestProvider string
+	var bestWeight float64
+
+	for _, providerCfg := range r.cfg.Providers {
+		if providerCfg.Weight > bestWeight {
+			bestWeight = providerCfg.Weight
+			bestProvider = providerCfg.Name
+		}
+	}
+
+	if bestProvider == "" {
+		// Fallback to first provider if no weights set
+		bestProvider = r.cfg.Providers[0].Name
+	}
+
+	return r.providers[bestProvider]
+}
+
+// selectByQuality selects provider prioritizing quality
+func (r *LLMRouter) selectByQuality() LLMClient {
+	// Quality priority: Anthropic (Claude) > OpenAI (GPT) > Ollama
+	priorities := []string{"anthropic", "openai", "ollama"}
+
+	for _, priority := range priorities {
+		if client, ok := r.providers[priority]; ok {
+			return client
+		}
+	}
+
+	// Fallback to first available provider
+	if len(r.cfg.Providers) > 0 {
+		return r.providers[r.cfg.Providers[0].Name]
+	}
+
+	return nil
+}
+
+// selectBySpeed selects provider prioritizing speed
+func (r *LLMRouter) selectBySpeed() LLMClient {
+	// Speed priority: Ollama (local) > OpenAI > Anthropic
+	priorities := []string{"ollama", "openai", "anthropic"}
+
+	for _, priority := range priorities {
+		if client, ok := r.providers[priority]; ok {
+			return client
+		}
+	}
+
+	// Fallback to first available provider
+	if len(r.cfg.Providers) > 0 {
+		return r.providers[r.cfg.Providers[0].Name]
+	}
+
+	return nil
 }
 
 // createLLMClient creates an LLM client for a provider
@@ -135,7 +212,8 @@ func (m *MockLLMClient) GetProviderName() string {
 
 // AnthropicClient implements LLMClient for Anthropic Claude
 type AnthropicClient struct {
-	cfg ProviderConfig
+	cfg        ProviderConfig
+	httpClient *http.Client
 }
 
 // NewAnthropicClient creates a new Anthropic client
@@ -143,20 +221,115 @@ func NewAnthropicClient(cfg ProviderConfig) (*AnthropicClient, error) {
 	if cfg.APIKey == "" {
 		return nil, fmt.Errorf("anthropic API key not configured")
 	}
-	return &AnthropicClient{cfg: cfg}, nil
+	return &AnthropicClient{
+		cfg: cfg,
+		httpClient: &http.Client{
+			Timeout: 60 * time.Second,
+		},
+	}, nil
+}
+
+// AnthropicRequest represents the API request format
+type anthropicRequest struct {
+	Model       string              `json:"model"`
+	Messages    []anthropicMessage  `json:"messages"`
+	MaxTokens   int                 `json:"max_tokens"`
+	Temperature float64             `json:"temperature,omitempty"`
+}
+
+type anthropicMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+// AnthropicResponse represents the API response format
+type anthropicResponse struct {
+	ID           string                `json:"id"`
+	Type         string                `json:"type"`
+	Role         string                `json:"role"`
+	Content      []anthropicContent    `json:"content"`
+	Model        string                `json:"model"`
+	StopReason   string                `json:"stop_reason"`
+	Usage        anthropicUsage        `json:"usage"`
+}
+
+type anthropicContent struct {
+	Type string `json:"type"`
+	Text string `json:"text"`
+}
+
+type anthropicUsage struct {
+	InputTokens  int `json:"input_tokens"`
+	OutputTokens int `json:"output_tokens"`
 }
 
 // Generate generates a response using Claude
 func (a *AnthropicClient) Generate(ctx context.Context, prompt string, config LLMConfig) (*LLMResponse, error) {
-	// TODO: Implement actual Anthropic API call
-	// For now, return mock response
+	// Prepare request
+	reqBody := anthropicRequest{
+		Model: a.cfg.Model,
+		Messages: []anthropicMessage{
+			{Role: "user", Content: prompt},
+		},
+		MaxTokens:   a.cfg.MaxTokens,
+		Temperature: a.cfg.Temperature,
+	}
+
+	if reqBody.MaxTokens == 0 {
+		reqBody.MaxTokens = 4096 // Default max tokens
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	// Create HTTP request
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-API-Key", a.cfg.APIKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
+
+	// Execute request
+	resp, err := a.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("execute request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	// Read response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	// Parse response
+	var apiResp anthropicResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, fmt.Errorf("unmarshal response: %w", err)
+	}
+
+	// Extract text content
+	var content string
+	if len(apiResp.Content) > 0 {
+		content = apiResp.Content[0].Text
+	}
+
 	return &LLMResponse{
-		Content:      "Anthropic Claude response placeholder",
-		TokensUsed:   500,
-		Model:        a.cfg.Model,
+		Content:      content,
+		TokensUsed:   apiResp.Usage.InputTokens + apiResp.Usage.OutputTokens,
+		Model:        apiResp.Model,
 		Provider:     "anthropic",
 		Confidence:   0.90,
-		FinishReason: "stop",
+		FinishReason: apiResp.StopReason,
 	}, nil
 }
 
@@ -172,27 +345,125 @@ func (a *AnthropicClient) GetProviderName() string {
 
 // OpenAIClient implements LLMClient for OpenAI
 type OpenAIClient struct {
-	cfg ProviderConfig
+	cfg        ProviderConfig
+	httpClient *http.Client
 }
 
 // NewOpenAIClient creates a new OpenAI client
 func NewOpenAIClient(cfg ProviderConfig) (*OpenAIClient, error) {
 	if cfg.APIKey == "" {
-		return nil, fmt.Errorf("OpenAI API key not configured")
+		return nil, fmt.Errorf("openAI API key not configured")
 	}
-	return &OpenAIClient{cfg: cfg}, nil
+	return &OpenAIClient{
+		cfg: cfg,
+		httpClient: &http.Client{
+			Timeout: 60 * time.Second,
+		},
+	}, nil
+}
+
+// OpenAI API types
+type openAIRequest struct {
+	Model       string           `json:"model"`
+	Messages    []openAIMessage  `json:"messages"`
+	MaxTokens   int              `json:"max_tokens,omitempty"`
+	Temperature float64          `json:"temperature,omitempty"`
+}
+
+type openAIMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type openAIResponse struct {
+	ID      string          `json:"id"`
+	Object  string          `json:"object"`
+	Created int64           `json:"created"`
+	Model   string          `json:"model"`
+	Choices []openAIChoice  `json:"choices"`
+	Usage   openAIUsage     `json:"usage"`
+}
+
+type openAIChoice struct {
+	Index        int           `json:"index"`
+	Message      openAIMessage `json:"message"`
+	FinishReason string        `json:"finish_reason"`
+}
+
+type openAIUsage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
 }
 
 // Generate generates a response using GPT
 func (o *OpenAIClient) Generate(ctx context.Context, prompt string, config LLMConfig) (*LLMResponse, error) {
-	// TODO: Implement actual OpenAI API call
+	// Prepare request
+	reqBody := openAIRequest{
+		Model: o.cfg.Model,
+		Messages: []openAIMessage{
+			{Role: "user", Content: prompt},
+		},
+		MaxTokens:   o.cfg.MaxTokens,
+		Temperature: o.cfg.Temperature,
+	}
+
+	if reqBody.Model == "" {
+		reqBody.Model = "gpt-4" // Default model
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	// Create HTTP request
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.openai.com/v1/chat/completions", bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+o.cfg.APIKey)
+
+	// Execute request
+	resp, err := o.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("execute request: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	// Read response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	// Parse response
+	var apiResp openAIResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, fmt.Errorf("unmarshal response: %w", err)
+	}
+
+	// Extract text content
+	var content string
+	var finishReason string
+	if len(apiResp.Choices) > 0 {
+		content = apiResp.Choices[0].Message.Content
+		finishReason = apiResp.Choices[0].FinishReason
+	}
+
 	return &LLMResponse{
-		Content:      "OpenAI GPT response placeholder",
-		TokensUsed:   400,
-		Model:        o.cfg.Model,
+		Content:      content,
+		TokensUsed:   apiResp.Usage.TotalTokens,
+		Model:        apiResp.Model,
 		Provider:     "openai",
 		Confidence:   0.88,
-		FinishReason: "stop",
+		FinishReason: finishReason,
 	}, nil
 }
 
@@ -208,21 +479,112 @@ func (o *OpenAIClient) GetProviderName() string {
 
 // OllamaClient implements LLMClient for Ollama (local)
 type OllamaClient struct {
-	cfg ProviderConfig
+	cfg        ProviderConfig
+	baseURL    string
+	httpClient *http.Client
 }
 
 // NewOllamaClient creates a new Ollama client
 func NewOllamaClient(cfg ProviderConfig) (*OllamaClient, error) {
-	return &OllamaClient{cfg: cfg}, nil
+	baseURL := "http://localhost:11434"
+	if cfg.APIKey != "" {
+		// Allow custom base URL via API key field
+		baseURL = cfg.APIKey
+	}
+
+	return &OllamaClient{
+		cfg:     cfg,
+		baseURL: baseURL,
+		httpClient: &http.Client{
+			Timeout: 120 * time.Second, // Ollama can be slower on first run
+		},
+	}, nil
+}
+
+// Ollama API types
+type ollamaRequest struct {
+	Model       string  `json:"model"`
+	Prompt      string  `json:"prompt"`
+	Stream      bool    `json:"stream"`
+	Temperature float64 `json:"temperature,omitempty"`
+}
+
+type ollamaResponse struct {
+	Model              string `json:"model"`
+	CreatedAt          string `json:"created_at"`
+	Response           string `json:"response"`
+	Done               bool   `json:"done"`
+	Context            []int  `json:"context,omitempty"`
+	TotalDuration      int64  `json:"total_duration,omitempty"`
+	LoadDuration       int64  `json:"load_duration,omitempty"`
+	PromptEvalCount    int    `json:"prompt_eval_count,omitempty"`
+	PromptEvalDuration int64  `json:"prompt_eval_duration,omitempty"`
+	EvalCount          int    `json:"eval_count,omitempty"`
+	EvalDuration       int64  `json:"eval_duration,omitempty"`
 }
 
 // Generate generates a response using Ollama
 func (ol *OllamaClient) Generate(ctx context.Context, prompt string, config LLMConfig) (*LLMResponse, error) {
-	// TODO: Implement actual Ollama API call
+	// Prepare request
+	reqBody := ollamaRequest{
+		Model:       ol.cfg.Model,
+		Prompt:      prompt,
+		Stream:      false,
+		Temperature: ol.cfg.Temperature,
+	}
+
+	if reqBody.Model == "" {
+		reqBody.Model = "llama2" // Default model
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal request: %w", err)
+	}
+
+	// Create HTTP request
+	url := ol.baseURL + "/api/generate"
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	// Execute request
+	resp, err := ol.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("execute request (is Ollama running?): %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	// Read response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
+	// Parse response
+	var apiResp ollamaResponse
+	if err := json.Unmarshal(body, &apiResp); err != nil {
+		return nil, fmt.Errorf("unmarshal response: %w", err)
+	}
+
+	// Calculate approximate token usage (Ollama doesn't always provide it)
+	tokensUsed := apiResp.PromptEvalCount + apiResp.EvalCount
+	if tokensUsed == 0 {
+		// Rough estimate: ~4 chars per token
+		tokensUsed = (len(prompt) + len(apiResp.Response)) / 4
+	}
+
 	return &LLMResponse{
-		Content:      "Ollama local model response placeholder",
-		TokensUsed:   300,
-		Model:        ol.cfg.Model,
+		Content:      apiResp.Response,
+		TokensUsed:   tokensUsed,
+		Model:        apiResp.Model,
 		Provider:     "ollama",
 		Confidence:   0.85,
 		FinishReason: "stop",

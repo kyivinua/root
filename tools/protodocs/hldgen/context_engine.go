@@ -1,8 +1,12 @@
 package hldgen
 
 import (
+	"bufio"
 	"context"
 	"fmt"
+	"os"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -123,9 +127,38 @@ func (ce *ContextEngine) fetchRAGContext(ctx context.Context, docs *Consolidated
 
 // fetchGitHistory fetches git commit history
 func (ce *ContextEngine) fetchGitHistory(ctx context.Context, enriched *EnrichedContext) error {
-	// TODO: Implement git history fetching
-	// git log --oneline --since="1 month ago" -- <proto files>
-	enriched.GitHistory = "Git history enrichment not yet implemented"
+	// Get git log for recent changes (last month)
+	cmd := exec.CommandContext(ctx, "git", "log",
+		"--oneline",
+		"--since=1 month ago",
+		"--",
+		"*.proto", "**/*.proto")
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		// Git command failed, but this is not critical
+		ce.logger.Warn().
+			Err(err).
+			Str("output", string(output)).
+			Msg("Failed to fetch git history")
+		enriched.GitHistory = "No recent git history available"
+		return nil
+	}
+
+	history := strings.TrimSpace(string(output))
+	if history == "" {
+		enriched.GitHistory = "No proto file changes in the last month"
+	} else {
+		// Format the history nicely
+		lines := strings.Split(history, "\n")
+		if len(lines) > 20 {
+			// Limit to 20 most recent commits
+			lines = lines[:20]
+			history = strings.Join(lines, "\n") + "\n... (truncated)"
+		}
+		enriched.GitHistory = history
+	}
+
 	return nil
 }
 
@@ -144,12 +177,83 @@ func (ce *ContextEngine) fetchJIRATickets(ctx context.Context, source ContextSou
 
 // fetchOwnership fetches code ownership information
 func (ce *ContextEngine) fetchOwnership(ctx context.Context, enriched *EnrichedContext) error {
-	// TODO: Implement ownership parsing from CODEOWNERS or similar
-	enriched.Ownership = &OwnershipInfo{
-		Team:   "Platform Engineering",
-		Owners: []string{"team-platform"},
-		Slack:  "#platform-eng",
+	// Try to find CODEOWNERS file in common locations
+	codeownersFiles := []string{
+		"CODEOWNERS",
+		".github/CODEOWNERS",
+		".gitlab/CODEOWNERS",
+		"docs/CODEOWNERS",
 	}
+
+	var owners []string
+	var team string
+	var slack string
+
+	for _, path := range codeownersFiles {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			continue // Try next location
+		}
+
+		// Parse CODEOWNERS file
+		scanner := bufio.NewScanner(strings.NewReader(string(data)))
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+
+			// Skip comments and empty lines
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+
+			// Parse line: pattern @owner1 @owner2 ...
+			parts := strings.Fields(line)
+			if len(parts) < 2 {
+				continue
+			}
+
+			// Collect all @ mentions
+			for _, part := range parts[1:] {
+				if strings.HasPrefix(part, "@") {
+					owner := strings.TrimPrefix(part, "@")
+					// Deduplicate
+					found := false
+					for _, existing := range owners {
+						if existing == owner {
+							found = true
+							break
+						}
+					}
+					if !found {
+						owners = append(owners, owner)
+
+						// Try to extract team and slack from common patterns
+						if strings.Contains(strings.ToLower(owner), "platform") {
+							team = "Platform Engineering"
+							slack = "#platform-eng"
+						}
+					}
+				}
+			}
+		}
+
+		if len(owners) > 0 {
+			break // Found owners, stop searching
+		}
+	}
+
+	// Set defaults if no CODEOWNERS found
+	if len(owners) == 0 {
+		owners = []string{"team-platform"}
+		team = "Platform Engineering"
+		slack = "#platform-eng"
+	}
+
+	enriched.Ownership = &OwnershipInfo{
+		Team:   team,
+		Owners: owners,
+		Slack:  slack,
+	}
+
 	return nil
 }
 
