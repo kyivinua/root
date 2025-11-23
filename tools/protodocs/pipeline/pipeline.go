@@ -17,6 +17,7 @@ type Pipeline struct {
 	config              *PipelineConfig
 	logger              *log.Logger
 	notificationManager *NotificationManager
+	diagramManifest     *diagrams.DiagramManifest
 }
 
 // NewPipeline creates a new pipeline with the given configuration.
@@ -343,19 +344,16 @@ func (p *Pipeline) runDiagramGeneration(model *ApiDocModel) error {
 		IncludePrivateTypes:    false,
 	}
 
-	// Create diagram generator
+	// Generate static architecture diagrams (infrastructure)
 	generator := diagrams.NewDiagramGenerator(diagramConfig)
-
-	// Convert ApiDocModel to diagrams.ApiDocModel
 	diagramModel := convertTodiagramsModel(model)
 
-	// Generate all diagrams
 	results, err := generator.GenerateAll(diagramModel)
 	if err != nil {
-		p.logger.Printf("Warning: Diagram generation encountered errors: %v\n", err)
+		p.logger.Printf("Warning: Static diagram generation encountered errors: %v\n", err)
 	}
 
-	// Count successful diagrams
+	// Count successful static diagrams
 	successCount := 0
 	for _, result := range results {
 		if result.Error == nil {
@@ -363,8 +361,30 @@ func (p *Pipeline) runDiagramGeneration(model *ApiDocModel) error {
 		}
 	}
 
-	p.logger.Printf("Diagram generation complete: %d/%d diagrams generated successfully\n",
+	p.logger.Printf("Static diagram generation complete: %d/%d diagrams generated successfully\n",
 		successCount, len(results))
+
+	// Generate per-service diagrams (GraphML + Enhanced Mermaid)
+	exportConfig := &diagrams.ExportConfig{
+		OutputDir:         filepath.Join(p.config.Diagrams.OutputDir, "services"),
+		Formats:           []diagrams.DiagramExportFormat{diagrams.FormatGraphML, diagrams.FormatMermaid},
+		CreateIndex:       true,
+		IncludeTimestamp:  p.config.Diagrams.IncludeTimestamp,
+		ServiceSubfolders: true,
+	}
+
+	exporter := diagrams.NewDiagramExporter(exportConfig)
+	manifest, err := exporter.ExportAllDiagrams(diagramModel)
+	if err != nil {
+		p.logger.Printf("Warning: Service diagram export encountered errors: %v\n", err)
+	} else {
+		p.logger.Printf("Service diagram export complete: %d diagrams exported (%.2f KB total)\n",
+			manifest.Statistics["total_diagrams"],
+			float64(manifest.Statistics["total_size_bytes"])/1024)
+
+		// Store manifest path for later use in Confluence publishing
+		p.diagramManifest = manifest
+	}
 
 	return nil
 }
@@ -916,6 +936,79 @@ func (p *Pipeline) runConfluencePublishing() error {
 		for _, err := range result.Errors {
 			p.logger.Printf("  ❌ %v", err)
 		}
+	}
+
+	// Upload diagrams as attachments if available and enabled
+	if cfg.IncludeDiagrams && p.diagramManifest != nil && len(result.PageIDs) > 0 {
+		if err := p.uploadDiagramAttachments(result, publisher); err != nil {
+			p.logger.Printf("Warning: Failed to upload diagram attachments: %v", err)
+		}
+	}
+
+	return nil
+}
+
+// uploadDiagramAttachments uploads diagrams as attachments to Confluence pages
+func (p *Pipeline) uploadDiagramAttachments(result *confluence.PublishResult, publisher *confluence.Publisher) error {
+	if p.diagramManifest == nil || len(p.diagramManifest.Diagrams) == 0 {
+		return nil
+	}
+
+	p.logger.Printf("Uploading %d diagram files as attachments...", len(p.diagramManifest.Diagrams))
+
+	uploadCount := 0
+	errorCount := 0
+
+	// Group diagrams by service name
+	diagramsByService := make(map[string][]diagrams.DiagramExport)
+	for _, diagram := range p.diagramManifest.Diagrams {
+		serviceName := diagram.ServiceName
+		if serviceName == "" {
+			serviceName = "consolidated"
+		}
+		diagramsByService[serviceName] = append(diagramsByService[serviceName], diagram)
+	}
+
+	// Upload diagrams to their corresponding pages
+	for serviceName, serviceDiagrams := range diagramsByService {
+		pageID, ok := result.PageMap[serviceName]
+		if !ok {
+			// If no exact match, try to upload to the first page (consolidated)
+			if len(result.PageIDs) > 0 {
+				pageID = result.PageIDs[0]
+			} else {
+				p.logger.Printf("Warning: No page found for service '%s', skipping %d diagrams", serviceName, len(serviceDiagrams))
+				continue
+			}
+		}
+
+		// Upload each diagram for this service
+		for _, diagram := range serviceDiagrams {
+			// Read diagram file
+			content, err := os.ReadFile(diagram.FilePath)
+			if err != nil {
+				p.logger.Printf("Warning: Failed to read diagram file %s: %v", diagram.FilePath, err)
+				errorCount++
+				continue
+			}
+
+			// Upload as attachment
+			comment := fmt.Sprintf("%s - Generated: %s", diagram.Description, diagram.GeneratedAt.Format("2006-01-02 15:04:05"))
+			if err := publisher.UploadAttachment(pageID, diagram.Filename, content, comment); err != nil {
+				p.logger.Printf("Warning: Failed to upload %s to page %s: %v", diagram.Filename, pageID, err)
+				errorCount++
+				continue
+			}
+
+			uploadCount++
+			p.logger.Printf("  ✓ Uploaded %s (%s) to page %s", diagram.Filename, diagram.Format, pageID)
+		}
+	}
+
+	p.logger.Printf("Diagram upload complete: %d uploaded, %d errors", uploadCount, errorCount)
+
+	if errorCount > 0 {
+		return fmt.Errorf("%d diagram uploads failed", errorCount)
 	}
 
 	return nil

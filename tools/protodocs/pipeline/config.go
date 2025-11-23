@@ -149,6 +149,7 @@ type DiagramsConfig struct {
 	EnableServiceMap       bool   `yaml:"enable_service_map"`
 	EnableMessageHierarchy bool   `yaml:"enable_message_hierarchy"`
 	GenerateIndex          bool   `yaml:"generate_index"`
+	IncludeTimestamp       bool   `yaml:"include_timestamp"`
 	Theme                  string `yaml:"theme"` // default, forest, dark, neutral
 	MaxServicesPerDiagram  int    `yaml:"max_services_per_diagram"`
 	MaxMessagesPerDiagram  int    `yaml:"max_messages_per_diagram"`

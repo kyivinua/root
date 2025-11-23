@@ -1,0 +1,178 @@
+# Example Pipeline Configuration with Diagram Generation and Confluence Publishing
+# This configuration demonstrates the complete end-to-end documentation pipeline
+# including GraphML and enhanced Mermaid diagram generation with Confluence publishing.
+
+# Proto files root directory
+proto_root: "./proto"
+
+# Use buf for proto operations (recommended)
+use_buf: true
+
+# Lint configuration
+lint:
+  enabled: true
+  fail_on_errors: true
+
+# Breaking change detection
+breaking:
+  enabled: true
+  against_branch: "main"
+  fail_on_breaking: false
+
+# Proto descriptor build configuration
+descriptors:
+  output_file: "./build/image.bin"
+  include_source_info: true
+
+# Enrichment configuration (optional LLM-based enrichment)
+enrichment:
+  enabled: false
+  provider: "openai"
+  api_key: "${OPENAI_API_KEY}"
+  model: "gpt-4"
+  parallel_requests: 5
+  cache_enabled: true
+  cache_dir: "./.enrichment-cache"
+
+# High-Level Design (HLD) generation (optional)
+hld:
+  enabled: false
+  output_dir: "./api-docs/hld"
+  template_path: "./templates/hld.tmpl"
+  include_diagrams: true
+
+# Documentation generation
+docs:
+  output_dir: "./api-docs/markdown"
+  format: "markdown"
+  include_source_code: true
+  include_examples: true
+
+# OpenAPI generation
+openapi:
+  enabled: true
+  output_dir: "./api-docs/openapi"
+  version: "3.0"
+
+# Diagram generation configuration
+diagrams:
+  output_dir: "./api-docs/diagrams"
+
+  # Static architecture diagrams (infrastructure)
+  enable_pipeline: true      # Pipeline architecture diagram
+  enable_enricher: true      # Enricher orchestration diagram
+  enable_component: true     # Component interaction diagram
+  enable_transform: true     # Proto → Doc transformation diagram
+  enable_deploy: true        # Deployment architecture diagram
+
+  # Dynamic model-based diagrams (from proto files)
+  enable_data_model: true         # Data model ER diagram
+  enable_service_map: true        # Service relationship map
+  enable_message_hierarchy: false # Message inheritance (can be large)
+
+  # Diagram generation settings
+  generate_index: true        # Generate index.md with links to all diagrams
+  include_timestamp: true     # Add timestamp to diagram metadata
+  theme: "default"            # Mermaid theme: default, forest, dark, neutral
+
+  # Limits for large diagrams
+  max_services_per_diagram: 20
+  max_messages_per_diagram: 30
+
+  # Per-service diagram export formats
+  # These generate GraphML + Enhanced Mermaid diagrams for each service
+  export_formats:
+    - graphml  # Standards-compliant GraphML XML (yEd, Gephi, Cytoscape compatible)
+    - mermaid  # Enhanced Mermaid diagrams (10 types per service)
+
+  # Service diagram types (enhanced Mermaid)
+  # All 10 diagram types are generated for each service:
+  #   1. Architecture - Color-coded service/method/message graph
+  #   2. Sequence - Multi-participant request/response flow
+  #   3. Class - UML class diagram with relationships
+  #   4. ERD - Entity-relationship diagram with cardinality
+  #   5. State Machine - Service lifecycle states
+  #   6. Flowchart - Request processing flow
+  #   7. Mindmap - Hierarchical service overview
+  #   8. C4 Context - System context view
+  #   9. C4 Container - Container-level architecture
+  #  10. Data Flow - Input/process/output visualization
+
+# Static site assembly (MkDocs or Docusaurus)
+site:
+  enabled: false
+  generator: "mkdocs"
+  output_dir: "./site"
+  config_file: "./mkdocs.yml"
+
+# Publishers configuration
+publishers:
+  # Confluence publishing
+  confluence:
+    enabled: true
+
+    # Connection settings
+    base_url: "https://your-domain.atlassian.net/wiki"
+    username: "${CONFLUENCE_USERNAME}"
+    api_token: "${CONFLUENCE_API_TOKEN}"
+    space_key: "API"
+
+    # Page organization
+    parent_page_id: "123456"           # Parent page ID (optional)
+    create_page_per_service: true      # true: one page per service, false: consolidated page
+    page_title_prefix: "API v1.0"      # Prefix for page titles
+
+    # Content options
+    include_toc: true                  # Include table of contents macro
+    include_diagrams: true             # Upload diagrams as attachments
+    include_code_examples: true        # Include code examples in docs
+
+    # Update behavior
+    update_existing: true              # Update existing pages instead of failing
+    version_label: "Auto-updated"      # Version label for updates
+
+    # Filtering
+    visibility_filter:                 # Only publish services with these visibilities
+      - "public"
+      - "internal"
+
+# Notifications (optional)
+notifications:
+  slack:
+    enabled: false
+    webhook_url: "${SLACK_WEBHOOK_URL}"
+    channel: "#api-docs"
+    notify_on_success: true
+    notify_on_failure: true
+
+# Example usage:
+# 1. Set environment variables:
+#    export CONFLUENCE_USERNAME="your.email@company.com"
+#    export CONFLUENCE_API_TOKEN="your-api-token"
+#
+# 2. Run the pipeline:
+#    go run ./tools/protodocs/cmd/pipeline -config pipeline-config-with-diagrams.yaml
+#
+# 3. Expected output:
+#    - Markdown documentation in ./api-docs/markdown
+#    - Static architecture diagrams in ./api-docs/diagrams
+#    - Per-service diagrams in ./api-docs/diagrams/services/<ServiceName>/
+#    - GraphML files: <ServiceName>-service-graph.graphml
+#    - Mermaid diagrams: <ServiceName>-architecture.mmd, <ServiceName>-sequence.mmd, etc.
+#    - Confluence pages created/updated with diagrams attached
+#    - Diagram manifest: ./api-docs/diagrams/services/manifest.json
+#    - Diagram index: ./api-docs/diagrams/services/index.md
+#
+# 4. Diagram outputs:
+#    GraphML files can be opened in:
+#    - yEd (https://www.yworks.com/products/yed)
+#    - Gephi (https://gephi.org/)
+#    - Cytoscape (https://cytoscape.org/)
+#    - Neo4j (graph database)
+#
+#    Mermaid diagrams can be viewed in:
+#    - GitHub/GitLab markdown
+#    - VS Code with Mermaid extension
+#    - Confluence with Mermaid macro
+#    - MkDocs with mermaid2 plugin
+#    - Docusaurus with @docusaurus/theme-mermaid

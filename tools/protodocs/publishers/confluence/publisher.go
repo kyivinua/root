@@ -65,6 +65,8 @@ type PublishResult struct {
 	PagesUpdated int
 	Errors       []error
 	PageURLs     []string
+	PageIDs      []string          // IDs of created/updated pages
+	PageMap      map[string]string // Service name to page ID mapping
 }
 
 // PublishFromMarkdownFiles publishes documentation from Markdown files.
@@ -74,6 +76,8 @@ func (p *Publisher) PublishFromMarkdownFiles(docsDir string) (*PublishResult, er
 	result := &PublishResult{
 		Errors:   make([]error, 0),
 		PageURLs: make([]string, 0),
+		PageIDs:  make([]string, 0),
+		PageMap:  make(map[string]string),
 	}
 
 	// Find all markdown files
@@ -172,8 +176,16 @@ func (p *Publisher) publishFile(mdFile string, result *PublishResult) error {
 		}
 
 		result.PagesUpdated++
+		result.PageIDs = append(result.PageIDs, existingPage.ID)
 		pageURL := fmt.Sprintf("%s/pages/viewpage.action?pageId=%s", p.config.BaseURL, existingPage.ID)
 		result.PageURLs = append(result.PageURLs, pageURL)
+
+		// Map service name to page ID (extract from filename)
+		serviceName := p.extractServiceName(mdFile)
+		if serviceName != "" {
+			result.PageMap[serviceName] = existingPage.ID
+		}
+
 		p.logger.Printf("✓ Updated: %s", pageURL)
 
 	} else if existingPage == nil {
@@ -198,8 +210,16 @@ func (p *Publisher) publishFile(mdFile string, result *PublishResult) error {
 		}
 
 		result.PagesCreated++
+		result.PageIDs = append(result.PageIDs, created.ID)
 		pageURL := fmt.Sprintf("%s/pages/viewpage.action?pageId=%s", p.config.BaseURL, created.ID)
 		result.PageURLs = append(result.PageURLs, pageURL)
+
+		// Map service name to page ID (extract from filename)
+		serviceName := p.extractServiceName(mdFile)
+		if serviceName != "" {
+			result.PageMap[serviceName] = created.ID
+		}
+
 		p.logger.Printf("✓ Created: %s", pageURL)
 
 	} else {
@@ -237,6 +257,8 @@ func (p *Publisher) PublishConsolidatedPage(docsDir, title string) (*PublishResu
 	result := &PublishResult{
 		Errors:   make([]error, 0),
 		PageURLs: make([]string, 0),
+		PageIDs:  make([]string, 0),
+		PageMap:  make(map[string]string),
 	}
 
 	// Find all markdown files
@@ -300,8 +322,10 @@ func (p *Publisher) PublishConsolidatedPage(docsDir, title string) (*PublishResu
 		}
 
 		result.PagesUpdated++
+		result.PageIDs = append(result.PageIDs, existingPage.ID)
 		pageURL := fmt.Sprintf("%s/pages/viewpage.action?pageId=%s", p.config.BaseURL, existingPage.ID)
 		result.PageURLs = append(result.PageURLs, pageURL)
+		result.PageMap["consolidated"] = existingPage.ID
 
 	} else if existingPage == nil {
 		newPage := &Page{
@@ -321,10 +345,30 @@ func (p *Publisher) PublishConsolidatedPage(docsDir, title string) (*PublishResu
 		}
 
 		result.PagesCreated++
+		result.PageIDs = append(result.PageIDs, created.ID)
 		pageURL := fmt.Sprintf("%s/pages/viewpage.action?pageId=%s", p.config.BaseURL, created.ID)
 		result.PageURLs = append(result.PageURLs, pageURL)
+		result.PageMap["consolidated"] = created.ID
 	}
 
 	p.logger.Printf("Publishing complete: %d pages", result.PagesCreated+result.PagesUpdated)
 	return result, nil
+}
+
+// extractServiceName extracts the service name from a file path.
+// Assumes files are named like "ServiceName.md" or in a directory structure.
+func (p *Publisher) extractServiceName(filePath string) string {
+	base := filepath.Base(filePath)
+	// Remove extension
+	name := strings.TrimSuffix(base, filepath.Ext(base))
+	// Remove common prefixes/suffixes
+	name = strings.TrimSuffix(name, "Service")
+	name = strings.TrimSuffix(name, "API")
+	return strings.TrimSpace(name)
+}
+
+// UploadAttachment uploads a file attachment to a Confluence page
+func (p *Publisher) UploadAttachment(pageID, filename string, content []byte, comment string) error {
+	_, err := p.client.UploadAttachment(pageID, filename, content, comment)
+	return err
 }

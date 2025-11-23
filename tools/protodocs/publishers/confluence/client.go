@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"time"
 
 	"github.com/kyivinua/docgen-tool/tools/protodocs/internal/errors"
@@ -403,4 +405,233 @@ func (c *Client) doRequestWithRetry(req *http.Request) (*http.Response, error) {
 	}
 
 	return resp, err
+}
+
+// Attachment represents a Confluence attachment.
+type Attachment struct {
+	ID       string `json:"id,omitempty"`
+	Type     string `json:"type"`
+	Title    string `json:"title"`
+	Metadata AttachmentMetadata `json:"metadata,omitempty"`
+}
+
+// AttachmentMetadata represents attachment metadata.
+type AttachmentMetadata struct {
+	MediaType string `json:"mediaType,omitempty"`
+	Comment   string `json:"comment,omitempty"`
+}
+
+// AttachmentResults represents the response from attachment upload.
+type AttachmentResults struct {
+	Results []Attachment `json:"results"`
+}
+
+// UploadAttachment uploads a file attachment to a Confluence page.
+func (c *Client) UploadAttachment(pageID string, filename string, content []byte, comment string) (*Attachment, error) {
+	// Validate page ID
+	if err := validation.ValidatePageID(pageID); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
+	// Create multipart form
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Add file
+	part, err := writer.CreateFormFile("file", filepath.Base(filename))
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to create form file")
+	}
+
+	if _, err := part.Write(content); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to write file content")
+	}
+
+	// Add comment if provided
+	if comment != "" {
+		if err := writer.WriteField("comment", comment); err != nil {
+			return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to write comment field")
+		}
+	}
+
+	if err := writer.Close(); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to close writer")
+	}
+
+	// Create request
+	url := fmt.Sprintf("%s/rest/api/content/%s/child/attachment", c.baseURL, pageID)
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
+	}
+
+	req.SetBasicAuth(c.username, c.apiToken)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("X-Atlassian-Token", "no-check")
+
+	// Apply rate limiting
+	c.limiter.Wait()
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+		case http.StatusForbidden:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+		case http.StatusNotFound:
+			return nil, errors.New(errors.ErrorTypeNotFound, fmt.Sprintf("page not found: %s", string(bodyBytes)))
+		case http.StatusRequestEntityTooLarge:
+			return nil, errors.New(errors.ErrorTypeValidation, "file size exceeds limit")
+		default:
+			return nil, errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+		}
+	}
+
+	var results AttachmentResults
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
+	}
+
+	if len(results.Results) == 0 {
+		return nil, errors.New(errors.ErrorTypeInternal, "no attachment returned in response")
+	}
+
+	return &results.Results[0], nil
+}
+
+// UpdateAttachment updates an existing attachment with new content.
+func (c *Client) UpdateAttachment(pageID, attachmentID string, filename string, content []byte, comment string) (*Attachment, error) {
+	// Validate IDs
+	if err := validation.ValidatePageID(pageID); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+	if err := validation.ValidatePageID(attachmentID); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid attachment ID")
+	}
+
+	// Create multipart form
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Add file
+	part, err := writer.CreateFormFile("file", filepath.Base(filename))
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to create form file")
+	}
+
+	if _, err := part.Write(content); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to write file content")
+	}
+
+	// Add comment if provided
+	if comment != "" {
+		if err := writer.WriteField("comment", comment); err != nil {
+			return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to write comment field")
+		}
+	}
+
+	if err := writer.Close(); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to close writer")
+	}
+
+	// Create request
+	url := fmt.Sprintf("%s/rest/api/content/%s/child/attachment/%s/data", c.baseURL, pageID, attachmentID)
+	req, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
+	}
+
+	req.SetBasicAuth(c.username, c.apiToken)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Set("X-Atlassian-Token", "no-check")
+
+	// Apply rate limiting
+	c.limiter.Wait()
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+		case http.StatusForbidden:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+		case http.StatusNotFound:
+			return nil, errors.New(errors.ErrorTypeNotFound, fmt.Sprintf("attachment not found: %s", string(bodyBytes)))
+		default:
+			return nil, errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+		}
+	}
+
+	var results AttachmentResults
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
+	}
+
+	if len(results.Results) == 0 {
+		return nil, errors.New(errors.ErrorTypeInternal, "no attachment returned in response")
+	}
+
+	return &results.Results[0], nil
+}
+
+// GetAttachments retrieves all attachments for a page.
+func (c *Client) GetAttachments(pageID string) ([]Attachment, error) {
+	// Validate page ID
+	if err := validation.ValidatePageID(pageID); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
+	url := fmt.Sprintf("%s/rest/api/content/%s/child/attachment", c.baseURL, pageID)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
+	}
+
+	req.SetBasicAuth(c.username, c.apiToken)
+
+	// Apply rate limiting
+	c.limiter.Wait()
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+
+		switch resp.StatusCode {
+		case http.StatusUnauthorized:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+		case http.StatusForbidden:
+			return nil, errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+		case http.StatusNotFound:
+			return nil, errors.New(errors.ErrorTypeNotFound, fmt.Sprintf("page not found: %s", string(bodyBytes)))
+		default:
+			return nil, errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+		}
+	}
+
+	var results AttachmentResults
+	if err := json.NewDecoder(resp.Body).Decode(&results); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
+	}
+
+	return results.Results, nil
 }
