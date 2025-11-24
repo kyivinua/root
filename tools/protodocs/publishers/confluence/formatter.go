@@ -59,6 +59,7 @@ func (f *Formatter) ConvertMarkdownToStorage(markdown string) string {
 	// Convert Mermaid diagrams
 	if f.includeDiagrams {
 		content = f.convertMermaidDiagrams(content)
+		content = f.convertPlantUMLDiagrams(content)
 	}
 
 	// Convert anchors
@@ -311,6 +312,51 @@ func (f *Formatter) convertMermaidDiagrams(content string) string {
 <ac:structured-macro ac:name="info">
 <ac:rich-text-body><p>This diagram is in Mermaid format. You may need a Confluence plugin to render it properly.</p></ac:rich-text-body>
 </ac:structured-macro>`, strings.TrimSpace(diagram))
+		}
+		return match
+	})
+
+	return content
+}
+
+// convertPlantUMLDiagrams converts PlantUML diagrams to Confluence PlantUML macro.
+// Supports multiple PlantUML formats: @startuml/@enduml, @startmindmap/@endmindmap, etc.
+func (f *Formatter) convertPlantUMLDiagrams(content string) string {
+	// Pattern for fenced code blocks with plantuml language
+	re := regexp.MustCompile("```(?:plantuml|puml)\\n([\\s\\S]*?)```")
+	content = re.ReplaceAllStringFunc(content, func(match string) string {
+		parts := re.FindStringSubmatch(match)
+		if len(parts) == 2 {
+			diagram := strings.TrimSpace(parts[1])
+
+			// Ensure diagram starts with @start and ends with @end
+			if !strings.HasPrefix(diagram, "@start") {
+				// Auto-wrap in @startuml/@enduml if not present
+				diagram = "@startuml\n" + diagram + "\n@enduml"
+			}
+
+			// Use Confluence's built-in PlantUML macro
+			return fmt.Sprintf(`<ac:structured-macro ac:name="plantuml">
+<ac:parameter ac:name="atlassian-macro-output-type">BLOCK</ac:parameter>
+<ac:plain-text-body><![CDATA[%s]]></ac:plain-text-body>
+</ac:structured-macro>`, diagram)
+		}
+		return match
+	})
+
+	// Also support inline @startuml...@enduml blocks (without fenced code blocks)
+	re = regexp.MustCompile(`(?m)^@start(uml|mindmap|gantt|salt|yaml|json|ditaa|dot|actdiag|seqdiag|timing)\s*\n([\s\S]*?)^@end\1\s*$`)
+	content = re.ReplaceAllStringFunc(content, func(match string) string {
+		parts := re.FindStringSubmatch(match)
+		if len(parts) == 3 {
+			diagramType := parts[1]
+			diagramBody := parts[2]
+			fullDiagram := fmt.Sprintf("@start%s\n%s\n@end%s", diagramType, strings.TrimSpace(diagramBody), diagramType)
+
+			return fmt.Sprintf(`<ac:structured-macro ac:name="plantuml">
+<ac:parameter ac:name="atlassian-macro-output-type">BLOCK</ac:parameter>
+<ac:plain-text-body><![CDATA[%s]]></ac:plain-text-body>
+</ac:structured-macro>`, fullDiagram)
 		}
 		return match
 	})

@@ -275,13 +275,19 @@ func (c *Client) FindPageByTitle(spaceKey, title string) (*Page, error) {
 		return nil, errors.New(errors.ErrorTypeValidation, "title cannot be empty")
 	}
 
-	url := fmt.Sprintf("%s/rest/api/content?spaceKey=%s&title=%s&expand=body.storage,version",
-		c.baseURL, spaceKey, title)
-
-	req, err := http.NewRequest("GET", url, nil)
+	// Build URL with proper query parameter encoding
+	baseURL := fmt.Sprintf("%s/rest/api/content", c.baseURL)
+	req, err := http.NewRequest("GET", baseURL, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
 	}
+
+	// Add query parameters
+	q := req.URL.Query()
+	q.Add("spaceKey", spaceKey)
+	q.Add("title", title)
+	q.Add("expand", "body.storage,version")
+	req.URL.RawQuery = q.Encode()
 
 	req.SetBasicAuth(c.username, c.apiToken)
 

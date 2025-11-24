@@ -384,3 +384,266 @@ func (c *Client) FindPageByTitleWithContext(ctx context.Context, spaceKey, title
 	})
 	return result, err
 }
+
+// RestrictionOperation represents a type of restriction operation
+type RestrictionOperation string
+
+const (
+	// RestrictionOperationRead restricts who can read/view the page
+	RestrictionOperationRead RestrictionOperation = "read"
+	// RestrictionOperationUpdate restricts who can edit the page
+	RestrictionOperationUpdate RestrictionOperation = "update"
+)
+
+// RestrictionType represents the type of restriction subject
+type RestrictionType string
+
+const (
+	// RestrictionTypeUser restricts by specific user
+	RestrictionTypeUser RestrictionType = "user"
+	// RestrictionTypeGroup restricts by user group
+	RestrictionTypeGroup RestrictionType = "group"
+)
+
+// PageRestriction represents a single restriction on a page
+type PageRestriction struct {
+	Operation RestrictionOperation `json:"operation"`
+	Subject   RestrictionSubject   `json:"restrictions"`
+}
+
+// RestrictionSubject represents the subject of a restriction
+type RestrictionSubject struct {
+	User  *RestrictionResults `json:"user,omitempty"`
+	Group *RestrictionResults `json:"group,omitempty"`
+}
+
+// RestrictionResults contains restriction subjects
+type RestrictionResults struct {
+	Results []RestrictionEntity `json:"results"`
+}
+
+// RestrictionEntity represents a user or group in a restriction
+type RestrictionEntity struct {
+	Type        string `json:"type"`
+	AccountID   string `json:"accountId,omitempty"`   // For users
+	Name        string `json:"name,omitempty"`        // For groups
+	DisplayName string `json:"displayName,omitempty"` // Display name
+}
+
+// PageRestrictionsResponse represents the API response for page restrictions
+type PageRestrictionsResponse struct {
+	Results []PageRestriction `json:"results"`
+}
+
+// AddPageRestrictions adds restrictions to a page
+// operation: "read" or "update"
+// users: list of user account IDs
+// groups: list of group names
+func (c *Client) AddPageRestrictions(ctx context.Context, pageID string, operation RestrictionOperation, users []string, groups []string) error {
+	// Validate page ID
+	if err := validation.ValidatePageID(pageID); err != nil {
+		return errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
+	// Build restriction payload
+	restriction := PageRestriction{
+		Operation: operation,
+		Subject: RestrictionSubject{
+			User:  &RestrictionResults{Results: []RestrictionEntity{}},
+			Group: &RestrictionResults{Results: []RestrictionEntity{}},
+		},
+	}
+
+	// Add users
+	for _, userID := range users {
+		restriction.Subject.User.Results = append(restriction.Subject.User.Results, RestrictionEntity{
+			Type:      "known",
+			AccountID: userID,
+		})
+	}
+
+	// Add groups
+	for _, groupName := range groups {
+		restriction.Subject.Group.Results = append(restriction.Subject.Group.Results, RestrictionEntity{
+			Type: "group",
+			Name: groupName,
+		})
+	}
+
+	body, err := json.Marshal(restriction)
+	if err != nil {
+		return errors.Wrap(err, errors.ErrorTypeInternal, "failed to marshal restrictions")
+	}
+
+	url := fmt.Sprintf("%s/rest/api/content/%s/restriction", c.baseURL, pageID)
+
+	return WithExponentialBackoff(ctx, func(ctx context.Context) error {
+		req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
+		if err != nil {
+			return errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
+		}
+
+		req.SetBasicAuth(c.username, c.apiToken)
+		req.Header.Set("Content-Type", "application/json")
+
+		c.limiter.Wait()
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+
+			switch resp.StatusCode {
+			case http.StatusUnauthorized:
+				return errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+			case http.StatusForbidden:
+				return errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+			case http.StatusNotFound:
+				return errors.New(errors.ErrorTypeNotFound, fmt.Sprintf("page not found: %s", string(bodyBytes)))
+			case http.StatusTooManyRequests, http.StatusServiceUnavailable:
+				return errors.New(errors.ErrorTypeRetryable, fmt.Sprintf("service unavailable (status %d): %s", resp.StatusCode, string(bodyBytes)))
+			default:
+				return errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+			}
+		}
+
+		return nil
+	})
+}
+
+// GetPageRestrictions retrieves all restrictions for a page
+func (c *Client) GetPageRestrictions(ctx context.Context, pageID string) (*PageRestrictionsResponse, error) {
+	// Validate page ID
+	if err := validation.ValidatePageID(pageID); err != nil {
+		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
+	url := fmt.Sprintf("%s/rest/api/content/%s/restriction", c.baseURL, pageID)
+
+	var restrictions *PageRestrictionsResponse
+	err := WithExponentialBackoff(ctx, func(ctx context.Context) error {
+		req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+		if err != nil {
+			return errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
+		}
+
+		req.SetBasicAuth(c.username, c.apiToken)
+
+		c.limiter.Wait()
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusOK {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+
+			switch resp.StatusCode {
+			case http.StatusUnauthorized:
+				return errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+			case http.StatusForbidden:
+				return errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+			case http.StatusNotFound:
+				return errors.New(errors.ErrorTypeNotFound, fmt.Sprintf("page not found: %s", string(bodyBytes)))
+			case http.StatusTooManyRequests, http.StatusServiceUnavailable:
+				return errors.New(errors.ErrorTypeRetryable, fmt.Sprintf("service unavailable (status %d): %s", resp.StatusCode, string(bodyBytes)))
+			default:
+				return errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+			}
+		}
+
+		restrictions = &PageRestrictionsResponse{}
+		if err := json.NewDecoder(resp.Body).Decode(restrictions); err != nil {
+			return errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
+		}
+
+		return nil
+	})
+
+	return restrictions, err
+}
+
+// RemovePageRestrictions removes all restrictions for a specific operation from a page
+func (c *Client) RemovePageRestrictions(ctx context.Context, pageID string, operation RestrictionOperation) error {
+	// Validate page ID
+	if err := validation.ValidatePageID(pageID); err != nil {
+		return errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
+	url := fmt.Sprintf("%s/rest/api/content/%s/restriction?operation=%s", c.baseURL, pageID, operation)
+
+	return WithExponentialBackoff(ctx, func(ctx context.Context) error {
+		req, err := http.NewRequestWithContext(ctx, "DELETE", url, nil)
+		if err != nil {
+			return errors.Wrap(err, errors.ErrorTypeInternal, "failed to create request")
+		}
+
+		req.SetBasicAuth(c.username, c.apiToken)
+
+		c.limiter.Wait()
+
+		resp, err := c.httpClient.Do(req)
+		if err != nil {
+			return errors.Wrap(err, errors.ErrorTypeNetwork, "failed to execute request")
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+
+			switch resp.StatusCode {
+			case http.StatusUnauthorized:
+				return errors.New(errors.ErrorTypePermission, fmt.Sprintf("authentication failed: %s", string(bodyBytes)))
+			case http.StatusForbidden:
+				return errors.New(errors.ErrorTypePermission, fmt.Sprintf("permission denied: %s", string(bodyBytes)))
+			case http.StatusNotFound:
+				return errors.New(errors.ErrorTypeNotFound, fmt.Sprintf("restriction not found: %s", string(bodyBytes)))
+			case http.StatusTooManyRequests, http.StatusServiceUnavailable:
+				return errors.New(errors.ErrorTypeRetryable, fmt.Sprintf("service unavailable (status %d): %s", resp.StatusCode, string(bodyBytes)))
+			default:
+				return errors.New(errors.ErrorTypeAPI, fmt.Sprintf("API error (status %d): %s", resp.StatusCode, string(bodyBytes)))
+			}
+		}
+
+		return nil
+	})
+}
+
+// UpdatePageRestrictions updates page restrictions by removing old ones and adding new ones
+// This is a helper method that combines RemovePageRestrictions and AddPageRestrictions
+func (c *Client) UpdatePageRestrictions(ctx context.Context, pageID string, operation RestrictionOperation, users []string, groups []string) error {
+	// First remove existing restrictions for this operation
+	if err := c.RemovePageRestrictions(ctx, pageID, operation); err != nil {
+		// If restriction doesn't exist, that's fine - continue
+		if !errors.IsType(err, errors.ErrorTypeNotFound) {
+			return fmt.Errorf("failed to remove existing restrictions: %w", err)
+		}
+	}
+
+	// Then add new restrictions
+	return c.AddPageRestrictions(ctx, pageID, operation, users, groups)
+}
+
+// MakePagePublic removes all restrictions from a page, making it accessible to all space members
+func (c *Client) MakePagePublic(ctx context.Context, pageID string) error {
+	// Remove both read and update restrictions
+	if err := c.RemovePageRestrictions(ctx, pageID, RestrictionOperationRead); err != nil {
+		if !errors.IsType(err, errors.ErrorTypeNotFound) {
+			return err
+		}
+	}
+
+	if err := c.RemovePageRestrictions(ctx, pageID, RestrictionOperationUpdate); err != nil {
+		if !errors.IsType(err, errors.ErrorTypeNotFound) {
+			return err
+		}
+	}
+
+	return nil
+}

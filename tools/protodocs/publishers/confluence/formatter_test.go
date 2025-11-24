@@ -290,6 +290,76 @@ func TestFormatter_ConvertMermaidDiagrams(t *testing.T) {
 	assert.Contains(t, result, "Mermaid format")
 }
 
+func TestFormatter_ConvertPlantUMLDiagrams(t *testing.T) {
+	formatter := NewFormatter(true)
+
+	tests := []struct {
+		name     string
+		input    string
+		contains []string
+	}{
+		{
+			name:  "fenced code block with plantuml",
+			input: "```plantuml\nAlice -> Bob: Hello\n```",
+			contains: []string{
+				`<ac:structured-macro ac:name="plantuml">`,
+				"@startuml",
+				"Alice -> Bob: Hello",
+				"@enduml",
+			},
+		},
+		{
+			name:  "fenced code block with puml",
+			input: "```puml\nAlice -> Bob: Hello\n```",
+			contains: []string{
+				`<ac:structured-macro ac:name="plantuml">`,
+				"@startuml",
+				"Alice -> Bob: Hello",
+				"@enduml",
+			},
+		},
+		{
+			name: "explicit @startuml/@enduml",
+			input: "```plantuml\n@startuml\nAlice -> Bob: Hello\n@enduml\n```",
+			contains: []string{
+				`<ac:structured-macro ac:name="plantuml">`,
+				"@startuml",
+				"Alice -> Bob: Hello",
+				"@enduml",
+			},
+		},
+		{
+			name: "inline @startuml without fences",
+			input: "@startuml\nAlice -> Bob: Test\n@enduml",
+			contains: []string{
+				`<ac:structured-macro ac:name="plantuml">`,
+				"@startuml",
+				"Alice -> Bob: Test",
+				"@enduml",
+			},
+		},
+		{
+			name: "mindmap diagram",
+			input: "@startmindmap\n* Root\n** Branch 1\n@endmindmap",
+			contains: []string{
+				`<ac:structured-macro ac:name="plantuml">`,
+				"@startmindmap",
+				"Branch 1",
+				"@endmindmap",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := formatter.convertPlantUMLDiagrams(tt.input)
+			for _, substr := range tt.contains {
+				assert.Contains(t, result, substr)
+			}
+		})
+	}
+}
+
 func TestFormatter_ConvertAnchors(t *testing.T) {
 	formatter := NewFormatter(false)
 

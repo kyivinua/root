@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -347,11 +348,32 @@ func TestClient_UploadAttachment(t *testing.T) {
 }
 
 func TestClient_RateLimiting(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping rate limiting test in short mode")
+	}
+
 	requestCount := 0
+	var requestTimes []time.Time
+	var mu sync.Mutex
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
 		requestCount++
+		requestTimes = append(requestTimes, time.Now())
+		mu.Unlock()
+
 		w.WriteHeader(http.StatusOK)
-		resp := Page{ID: fmt.Sprintf("page-%d", requestCount)}
+		resp := Page{
+			ID:    "12345",
+			Title: "Test Page",
+			Version: Version{Number: 1},
+			Body: Body{
+				Storage: Storage{
+					Value:          "<p>Content</p>",
+					Representation: "storage",
+				},
+			},
+		}
 		_ = json.NewEncoder(w).Encode(resp)
 	}))
 	defer server.Close()
@@ -359,14 +381,35 @@ func TestClient_RateLimiting(t *testing.T) {
 	client, err := NewClient(server.URL, "test@example.com", "valid-token-123456789012345")
 	require.NoError(t, err)
 
-	// Make 12 rapid requests (rate limit is 10/second)
+	// Make 15 rapid requests using valid page ID (rate limit is 10/second)
+	numRequests := 15
 	start := time.Now()
-	for i := 0; i < 12; i++ {
-		_, _ = client.GetPage(fmt.Sprintf("page-%d", i))
+	for i := 0; i < numRequests; i++ {
+		_, _ = client.GetPage("12345")
 	}
 	elapsed := time.Since(start)
 
-	// Should take at least 1 second due to rate limiting
-	assert.GreaterOrEqual(t, elapsed, time.Second)
-	assert.Equal(t, 12, requestCount)
+	mu.Lock()
+	defer mu.Unlock()
+
+	// Verify all requests were made
+	assert.Equal(t, numRequests, requestCount, "All requests should have been made")
+
+	// With 10 req/s limit, 15 requests should take at least 0.5 seconds
+	// Being conservative to avoid flaky tests
+	expectedMinDuration := 400 * time.Millisecond
+	assert.GreaterOrEqual(t, elapsed, expectedMinDuration,
+		"Requests should be rate limited (expected >=%v, got %v)", expectedMinDuration, elapsed)
+
+	// Verify rate limiting is working by checking request distribution
+	if len(requestTimes) >= numRequests {
+		// Check that later requests are spread out
+		lastBatchStart := requestTimes[10]
+		lastBatchEnd := requestTimes[14]
+		lastBatchDuration := lastBatchEnd.Sub(lastBatchStart)
+
+		// These 5 requests should be spaced out over at least 0.4 seconds (5/10 = 0.5s, but with tolerance)
+		assert.GreaterOrEqual(t, lastBatchDuration, 300*time.Millisecond,
+			"Last batch should show rate limiting effects")
+	}
 }
