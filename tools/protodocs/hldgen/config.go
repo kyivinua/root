@@ -138,9 +138,12 @@ type RefinementConfig struct {
 
 // LLMConfig represents LLM configuration
 type LLMConfig struct {
-	Router        RouterConfig    `yaml:"router"`
-	Providers     []ProviderConfig `yaml:"providers"`
-	FallbackChain []string        `yaml:"fallback_chain"`
+	Router          RouterConfig      `yaml:"router"`
+	Providers       []ProviderConfig  `yaml:"providers"`
+	FallbackChain   []string          `yaml:"fallback_chain"`
+	SemanticCache   SemanticCacheConfig `yaml:"semantic_cache,omitempty"`
+	Temperature     float64           `yaml:"temperature,omitempty"`
+	MaxTokens       int               `yaml:"max_tokens,omitempty"`
 }
 
 type RouterConfig struct {
@@ -155,6 +158,12 @@ type ProviderConfig struct {
 	MaxTokens   int     `yaml:"max_tokens"`
 	APIKey      string  `yaml:"api_key"`
 	BaseURL     string  `yaml:"base_url,omitempty"` // Optional base URL (for Ollama, custom endpoints)
+}
+
+type SemanticCacheConfig struct {
+	Enabled    bool   `yaml:"enabled"`
+	TTL        string `yaml:"ttl"`         // Duration string (e.g., "1h", "30m")
+	MaxEntries int    `yaml:"max_entries"`
 }
 
 // OutputConfig represents output configuration

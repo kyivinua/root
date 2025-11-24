@@ -141,6 +141,9 @@ func (t *TracedLLMClient) Generate(ctx context.Context, prompt string, config LL
 		return nil, err
 	}
 
+	// Check if this was a cache hit
+	cacheHit := resp.FinishReason == "cache_hit"
+
 	// Record success metrics
 	span.SetAttributes(
 		attribute.Bool("llm.error", false),
@@ -148,10 +151,15 @@ func (t *TracedLLMClient) Generate(ctx context.Context, prompt string, config LL
 		attribute.Int("llm.response_length", len(resp.Content)),
 		attribute.Float64("llm.confidence", resp.Confidence),
 		attribute.String("llm.finish_reason", resp.FinishReason),
+		attribute.Bool("llm.cache_hit", cacheHit),
 	)
 
 	// Calculate and record cost (simplified cost model)
-	cost := calculateCost(t.client.GetProviderName(), resp.TokensUsed)
+	// Cache hits have zero cost
+	cost := 0.0
+	if !cacheHit {
+		cost = calculateCost(t.client.GetProviderName(), resp.TokensUsed)
+	}
 	span.SetAttributes(attribute.Float64("llm.cost_usd", cost))
 
 	return resp, nil
