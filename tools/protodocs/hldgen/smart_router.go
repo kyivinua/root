@@ -34,8 +34,19 @@ const (
 
 // NewSmartRouter creates a new smart router
 func NewSmartRouter(providers map[string]LLMClient, strategy string, gpuMonitor *GPUMonitor, fallbackChain []string) *SmartRouter {
+	// Validate providers map
+	if providers == nil {
+		providers = make(map[string]LLMClient)
+	}
+
+	// Set default strategy
 	if strategy == "" {
 		strategy = "balanced"
+	}
+
+	// Ensure fallback chain is not nil
+	if fallbackChain == nil {
+		fallbackChain = []string{}
 	}
 
 	return &SmartRouter{
@@ -48,6 +59,13 @@ func NewSmartRouter(providers map[string]LLMClient, strategy string, gpuMonitor 
 
 // Route selects the best provider for the given task
 func (sr *SmartRouter) Route(ctx context.Context, prompt string, config LLMConfig) (LLMClient, error) {
+	// Check context cancellation
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
 	// Classify task complexity
 	complexity := sr.classifyComplexity(prompt)
 

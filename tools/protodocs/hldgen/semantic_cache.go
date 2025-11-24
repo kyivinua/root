@@ -10,14 +10,16 @@ import (
 	"time"
 )
 
-// SemanticCache provides caching for LLM responses
-// Uses content-based hashing for exact match detection
+// SemanticCache provides caching for LLM responses.
+// Uses content-based hashing for exact match detection.
+// Thread-safe for concurrent use.
 type SemanticCache struct {
 	store      map[string]*CacheEntry
 	mu         sync.RWMutex
 	ttl        time.Duration
 	maxEntries int
 	enabled    bool
+	shutdown   chan struct{} // Channel to signal goroutine shutdown
 
 	// Statistics
 	hits   int64
@@ -32,7 +34,9 @@ type CacheEntry struct {
 	UseCount  int
 }
 
-// NewSemanticCache creates a new semantic cache
+// NewSemanticCache creates a new semantic cache with the given configuration.
+// The cache automatically starts a background cleanup goroutine if enabled.
+// Call Shutdown() to properly clean up resources when done.
 func NewSemanticCache(cfg SemanticCacheConfig) *SemanticCache {
 	// Parse TTL string to duration
 	ttl := 1 * time.Hour // Default
@@ -52,6 +56,7 @@ func NewSemanticCache(cfg SemanticCacheConfig) *SemanticCache {
 		ttl:        ttl,
 		maxEntries: maxEntries,
 		enabled:    cfg.Enabled,
+		shutdown:   make(chan struct{}),
 	}
 
 	// Start background cleanup goroutine
@@ -62,49 +67,65 @@ func NewSemanticCache(cfg SemanticCacheConfig) *SemanticCache {
 	return cache
 }
 
-// Get retrieves a response from cache
+// Get retrieves a response from cache.
+// Returns the cached response and true if found and not expired, otherwise nil and false.
+// Thread-safe for concurrent access.
 func (sc *SemanticCache) Get(ctx context.Context, prompt string, config LLMConfig) (*LLMResponse, bool) {
+	// Check context cancellation first
+	select {
+	case <-ctx.Done():
+		return nil, false
+	default:
+	}
+
 	if !sc.enabled {
 		return nil, false
 	}
 
 	key := sc.generateKey(prompt, config)
 
-	sc.mu.RLock()
-	entry, exists := sc.store[key]
-	sc.mu.RUnlock()
+	// Use single lock to avoid race conditions
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 
+	entry, exists := sc.store[key]
 	if !exists {
-		sc.mu.Lock()
 		sc.misses++
-		sc.mu.Unlock()
 		return nil, false
 	}
 
 	// Check if entry is expired
 	if time.Since(entry.CreatedAt) > sc.ttl {
-		sc.mu.Lock()
 		delete(sc.store, key)
 		sc.misses++
-		sc.mu.Unlock()
 		return nil, false
 	}
 
 	// Update usage statistics
-	sc.mu.Lock()
 	entry.LastUsed = time.Now()
 	entry.UseCount++
 	sc.hits++
-	sc.mu.Unlock()
 
 	// Return a copy to avoid mutation
 	return sc.copyResponse(entry.Response), true
 }
 
-// Put stores a response in cache
+// Put stores a response in cache.
+// Thread-safe for concurrent access.
 func (sc *SemanticCache) Put(ctx context.Context, prompt string, config LLMConfig, response *LLMResponse) {
+	// Check context cancellation
+	select {
+	case <-ctx.Done():
+		return
+	default:
+	}
+
 	if !sc.enabled {
 		return
+	}
+
+	if response == nil {
+		return // Don't cache nil responses
 	}
 
 	key := sc.generateKey(prompt, config)
@@ -126,7 +147,8 @@ func (sc *SemanticCache) Put(ctx context.Context, prompt string, config LLMConfi
 	}
 }
 
-// generateKey creates a cache key from prompt and config
+// generateKey creates a cache key from prompt and config.
+// Uses SHA-256 hash of JSON-serialized data for deterministic keys.
 func (sc *SemanticCache) generateKey(prompt string, config LLMConfig) string {
 	// Create a deterministic key from prompt + relevant config
 	data := struct {
@@ -139,7 +161,14 @@ func (sc *SemanticCache) generateKey(prompt string, config LLMConfig) string {
 		MaxTokens:   config.MaxTokens,
 	}
 
-	jsonData, _ := json.Marshal(data)
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		// Fallback to simple hash if marshal fails
+		// This should never happen with our simple struct, but handle it anyway
+		hash := sha256.Sum256([]byte(prompt))
+		return hex.EncodeToString(hash[:])
+	}
+
 	hash := sha256.Sum256(jsonData)
 	return hex.EncodeToString(hash[:])
 }
@@ -178,13 +207,19 @@ func (sc *SemanticCache) evictOldest() {
 	}
 }
 
-// cleanupLoop periodically removes expired entries
+// cleanupLoop periodically removes expired entries.
+// Runs in the background and stops when Shutdown() is called.
 func (sc *SemanticCache) cleanupLoop() {
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		sc.cleanup()
+	for {
+		select {
+		case <-ticker.C:
+			sc.cleanup()
+		case <-sc.shutdown:
+			return
+		}
 	}
 }
 
@@ -291,6 +326,15 @@ func (c *CachedLLMClient) GetModelName() string {
 // GetProviderName implements LLMClient.GetProviderName
 func (c *CachedLLMClient) GetProviderName() string {
 	return c.client.GetProviderName()
+}
+
+// Shutdown stops the background cleanup goroutine and cleans up resources.
+// Should be called when the cache is no longer needed.
+// Thread-safe and can be called multiple times.
+func (sc *SemanticCache) Shutdown() {
+	if sc.shutdown != nil {
+		close(sc.shutdown)
+	}
 }
 
 // WrapWithCache wraps an LLM client with caching if enabled

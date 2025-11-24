@@ -43,14 +43,18 @@ func InitTracing(cfg TracingConfig) (func(context.Context) error, error) {
 		otlptracehttp.WithInsecure(), // Use HTTP (not HTTPS) for local development
 	)
 
-	exporter, err := otlptrace.New(context.Background(), client)
+	// Use timeout context for initialization (10 seconds should be enough)
+	initCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	exporter, err := otlptrace.New(initCtx, client)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create OTLP exporter: %w", err)
 	}
 
 	// Create resource with service information
 	res, err := resource.New(
-		context.Background(),
+		initCtx,
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String(serviceName),
 			semconv.ServiceVersionKey.String("1.0.0"),
