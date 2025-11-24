@@ -169,6 +169,8 @@ func createLLMClient(cfg ProviderConfig) (LLMClient, error) {
 		return NewOpenAIClient(cfg)
 	case "ollama":
 		return NewOllamaClient(cfg)
+	case "google", "gemini":
+		return NewGeminiClient(cfg)
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", cfg.Name)
 	}
@@ -477,28 +479,84 @@ func (o *OpenAIClient) GetProviderName() string {
 	return "openai"
 }
 
-// OllamaClient implements LLMClient for Ollama (local)
+// OllamaClient implements LLMClient for Ollama (local) with enhanced reliability
 type OllamaClient struct {
-	cfg        ProviderConfig
-	baseURL    string
-	httpClient *http.Client
+	cfg         ProviderConfig
+	baseURL     string
+	httpClient  *http.Client
+	healthCheck *time.Time
+	isHealthy   bool
 }
 
-// NewOllamaClient creates a new Ollama client
+// NewOllamaClient creates a new Ollama client with health checking and model warm-up
 func NewOllamaClient(cfg ProviderConfig) (*OllamaClient, error) {
 	baseURL := "http://localhost:11434"
-	if cfg.APIKey != "" {
-		// Allow custom base URL via API key field
+	if cfg.BaseURL != "" {
+		baseURL = cfg.BaseURL
+	} else if cfg.APIKey != "" {
+		// Fallback: Allow custom base URL via API key field for backward compatibility
 		baseURL = cfg.APIKey
 	}
 
-	return &OllamaClient{
+	client := &OllamaClient{
 		cfg:     cfg,
 		baseURL: baseURL,
 		httpClient: &http.Client{
-			Timeout: 120 * time.Second, // Ollama can be slower on first run
+			Timeout: 60 * time.Second, // Reduced from 120s for faster failure detection
+			Transport: &http.Transport{
+				MaxIdleConns:       10,
+				IdleConnTimeout:    30 * time.Second,
+				DisableCompression: false,
+			},
 		},
-	}, nil
+	}
+
+	// Initial health check
+	if err := client.checkHealth(); err != nil {
+		return nil, fmt.Errorf("ollama server unhealthy at %s: %w", baseURL, err)
+	}
+
+	// Warm up model in background (non-blocking)
+	go client.warmUp()
+
+	return client, nil
+}
+
+// checkHealth verifies Ollama server is responsive
+func (ol *OllamaClient) checkHealth() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", ol.baseURL+"/api/tags", nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := ol.httpClient.Do(req)
+	if err != nil {
+		ol.isHealthy = false
+		return fmt.Errorf("health check failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	ol.isHealthy = resp.StatusCode == http.StatusOK
+	now := time.Now()
+	ol.healthCheck = &now
+
+	if !ol.isHealthy {
+		return fmt.Errorf("health check returned status %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+// warmUp pre-loads the model into memory for faster first request
+func (ol *OllamaClient) warmUp() {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	// Minimal prompt to trigger model load without wasting resources
+	_, _ = ol.generateOnce(ctx, "Hi", LLMConfig{})
 }
 
 // Ollama API types
@@ -523,8 +581,51 @@ type ollamaResponse struct {
 	EvalDuration       int64  `json:"eval_duration,omitempty"`
 }
 
-// Generate generates a response using Ollama
+// Generate generates a response using Ollama with retry logic
 func (ol *OllamaClient) Generate(ctx context.Context, prompt string, config LLMConfig) (*LLMResponse, error) {
+	// Check health every 5 minutes
+	if ol.healthCheck == nil || time.Since(*ol.healthCheck) > 5*time.Minute {
+		if err := ol.checkHealth(); err != nil {
+			return nil, fmt.Errorf("health check failed: %w", err)
+		}
+	}
+
+	if !ol.isHealthy {
+		return nil, fmt.Errorf("ollama server is unhealthy")
+	}
+
+	// Retry with exponential backoff
+	var lastErr error
+	for attempt := 0; attempt < 3; attempt++ {
+		resp, err := ol.generateOnce(ctx, prompt, config)
+		if err == nil {
+			return resp, nil
+		}
+
+		lastErr = err
+
+		// Don't retry on context errors
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+
+		// Exponential backoff: 1s, 2s, 4s
+		if attempt < 2 {
+			backoff := time.Duration(1<<uint(attempt)) * time.Second
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(backoff):
+				// Continue to next attempt
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("ollama failed after 3 attempts: %w", lastErr)
+}
+
+// generateOnce makes a single generation attempt
+func (ol *OllamaClient) generateOnce(ctx context.Context, prompt string, config LLMConfig) (*LLMResponse, error) {
 	// Prepare request
 	reqBody := ollamaRequest{
 		Model:       ol.cfg.Model,
@@ -534,7 +635,7 @@ func (ol *OllamaClient) Generate(ctx context.Context, prompt string, config LLMC
 	}
 
 	if reqBody.Model == "" {
-		reqBody.Model = "llama2" // Default model
+		reqBody.Model = "llama3.1:70b" // Updated default to better model
 	}
 
 	jsonData, err := json.Marshal(reqBody)
@@ -554,7 +655,7 @@ func (ol *OllamaClient) Generate(ctx context.Context, prompt string, config LLMC
 	// Execute request
 	resp, err := ol.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("execute request (is Ollama running?): %w", err)
+		return nil, fmt.Errorf("execute request (is Ollama running at %s?): %w", ol.baseURL, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 

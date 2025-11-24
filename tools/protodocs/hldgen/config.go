@@ -154,6 +154,7 @@ type ProviderConfig struct {
 	Temperature float64 `yaml:"temperature"`
 	MaxTokens   int     `yaml:"max_tokens"`
 	APIKey      string  `yaml:"api_key"`
+	BaseURL     string  `yaml:"base_url,omitempty"` // Optional base URL (for Ollama, custom endpoints)
 }
 
 // OutputConfig represents output configuration
