@@ -22,6 +22,7 @@ type Client struct {
 	apiToken   string
 	httpClient *http.Client
 	limiter    *ratelimit.Limiter
+	cache      *PageCache // Optional cache for pages
 }
 
 // NewClient creates a new Confluence API client.
@@ -52,7 +53,23 @@ func NewClient(baseURL, username, apiToken string) (*Client, error) {
 			Timeout: 30 * time.Second,
 		},
 		limiter: limiter,
+		cache:   nil, // No cache by default
 	}, nil
+}
+
+// NewClientWithCache creates a new Confluence API client with caching enabled.
+func NewClientWithCache(baseURL, username, apiToken string, cacheConfig *CacheConfig) (*Client, error) {
+	client, err := NewClient(baseURL, username, apiToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Enable cache if config provided
+	if cacheConfig != nil {
+		client.cache = NewPageCache(cacheConfig)
+	}
+
+	return client, nil
 }
 
 // Page represents a Confluence page.
@@ -153,6 +170,14 @@ func (c *Client) CreatePage(page *Page) (*Page, error) {
 		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
 	}
 
+	// Cache the created page if cache is available
+	if c.cache != nil {
+		c.cache.SetPage(&created)
+		if created.Space.Key != "" {
+			c.cache.SetPageByTitle(created.Space.Key, created.Title, &created)
+		}
+	}
+
 	return &created, nil
 }
 
@@ -161,6 +186,14 @@ func (c *Client) UpdatePage(pageID string, page *Page) (*Page, error) {
 	// Validate page ID
 	if err := validation.ValidatePageID(pageID); err != nil {
 		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
+	// Invalidate cache before update
+	if c.cache != nil {
+		c.cache.DeletePage(pageID)
+		if page.Space.Key != "" {
+			c.cache.DeletePageByTitle(page.Space.Key, page.Title)
+		}
 	}
 
 	body, err := json.Marshal(page)
@@ -211,6 +244,14 @@ func (c *Client) UpdatePage(pageID string, page *Page) (*Page, error) {
 		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
 	}
 
+	// Cache the updated page if cache is available
+	if c.cache != nil {
+		c.cache.SetPage(&updated)
+		if updated.Space.Key != "" {
+			c.cache.SetPageByTitle(updated.Space.Key, updated.Title, &updated)
+		}
+	}
+
 	return &updated, nil
 }
 
@@ -219,6 +260,13 @@ func (c *Client) GetPage(pageID string) (*Page, error) {
 	// Validate page ID
 	if err := validation.ValidatePageID(pageID); err != nil {
 		return nil, errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
+	// Check cache first if available
+	if c.cache != nil {
+		if page, exists := c.cache.GetPage(pageID); exists {
+			return page, nil
+		}
 	}
 
 	req, err := http.NewRequest("GET", c.baseURL+"/rest/api/content/"+pageID+"?expand=body.storage,version", nil)
@@ -259,6 +307,11 @@ func (c *Client) GetPage(pageID string) (*Page, error) {
 		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to decode response")
 	}
 
+	// Cache the result if cache is available
+	if c.cache != nil {
+		c.cache.SetPage(&page)
+	}
+
 	return &page, nil
 }
 
@@ -273,6 +326,13 @@ func (c *Client) FindPageByTitle(spaceKey, title string) (*Page, error) {
 	title = validation.SanitizeString(title)
 	if title == "" {
 		return nil, errors.New(errors.ErrorTypeValidation, "title cannot be empty")
+	}
+
+	// Check cache first if available
+	if c.cache != nil {
+		if page, exists := c.cache.GetPageByTitle(spaceKey, title); exists {
+			return page, nil
+		}
 	}
 
 	// Build URL with proper query parameter encoding
@@ -322,7 +382,14 @@ func (c *Client) FindPageByTitle(spaceKey, title string) (*Page, error) {
 		return nil, nil
 	}
 
-	return &pageResp.Results[0], nil
+	page := &pageResp.Results[0]
+
+	// Cache the result if cache is available
+	if c.cache != nil {
+		c.cache.SetPageByTitle(spaceKey, title, page)
+	}
+
+	return page, nil
 }
 
 // DeletePage deletes a page by ID.
@@ -330,6 +397,18 @@ func (c *Client) DeletePage(pageID string) error {
 	// Validate page ID
 	if err := validation.ValidatePageID(pageID); err != nil {
 		return errors.Wrap(err, errors.ErrorTypeValidation, "invalid page ID")
+	}
+
+	// Get page info before deletion for cache invalidation
+	var pageToDelete *Page
+	if c.cache != nil {
+		// Try to get from cache first
+		if cached, exists := c.cache.GetPage(pageID); exists {
+			pageToDelete = cached
+		} else {
+			// Fetch from API if not in cache
+			pageToDelete, _ = c.GetPage(pageID)
+		}
 	}
 
 	req, err := http.NewRequest("DELETE", c.baseURL+"/rest/api/content/"+pageID, nil)
@@ -363,15 +442,29 @@ func (c *Client) DeletePage(pageID string) error {
 		}
 	}
 
+	// Invalidate cache after successful deletion
+	if c.cache != nil {
+		c.cache.DeletePage(pageID)
+		if pageToDelete != nil && pageToDelete.Space.Key != "" {
+			c.cache.DeletePageByTitle(pageToDelete.Space.Key, pageToDelete.Title)
+		}
+	}
+
 	return nil
 }
 
 // Attachment represents a Confluence attachment.
 type Attachment struct {
-	ID       string `json:"id,omitempty"`
-	Type     string `json:"type"`
-	Title    string `json:"title"`
+	ID       string             `json:"id,omitempty"`
+	Type     string             `json:"type"`
+	Title    string             `json:"title"`
 	Metadata AttachmentMetadata `json:"metadata,omitempty"`
+	Links    AttachmentLinks    `json:"_links,omitempty"`
+}
+
+// AttachmentLinks contains URLs for attachment operations
+type AttachmentLinks struct {
+	Download string `json:"download,omitempty"`
 }
 
 // AttachmentMetadata represents attachment metadata.
