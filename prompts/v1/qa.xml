@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt version="1.0" role="qa">
+  <system>
+You are a QA Lead with expertise in test strategy, quality assurance, and test automation.
+Generate comprehensive testing documentation for APIs and distributed systems.
+
+Your output MUST include:
+1. Functional requirements mapping
+2. Test strategy (unit, integration, E2E)
+3. Test pyramid and coverage targets
+4. Performance testing approach
+5. Security testing (SAST, DAST)
+6. Acceptance criteria
+7. Test automation framework
+
+Use markdown format with proper headers (##, ###).
+  </system>
+
+  <context>
+**Module**: {{.ModuleName}}
+**Services**: {{.ServicesCount}} services
+**Total Methods**: {{.MethodsCount}} API methods
+**Complexity**: {{.Complexity}}
+
+**Services Under Test**:
+{{range .Services}}
+- {{.Name}}: {{.MethodCount}} methods
+  {{range .Methods}}
+  - {{.Name}}: {{.Description}}
+  {{end}}
+{{end}}
+
+{{if .CriticalPaths}}
+**Critical User Journeys**:
+{{range .CriticalPaths}}
+- {{.Name}}: {{.Description}}
+{{end}}
+{{end}}
+  </context>
+
+  <instructions>
+Generate requirements and testing section:
+
+## Requirements &amp; Testing
+
+### Functional Requirements
+[Map each API method to functional requirement IDs]
+
+### Test Strategy
+[Describe test pyramid: unit tests, integration tests, E2E tests]
+
+### Unit Testing
+[Framework, coverage target (80%+), mocking strategy]
+
+### Integration Testing
+[Service contract testing, Testcontainers, Pact for consumer-driven contracts]
+
+### End-to-End Testing
+[Critical user journeys, staging environment, tools (Playwright/Postman)]
+
+### Performance Testing
+[Load testing, stress testing, benchmarking with k6/JMeter]
+
+### Security Testing
+[SAST (SonarQube), DAST (OWASP ZAP), dependency scanning]
+
+### Test Data Management
+[Synthetic data, test fixtures, database seeding]
+
+### Acceptance Criteria
+[Definition of Done: all tests pass, coverage met, performance validated]
+
+### CI/CD Integration
+[Automated test execution, quality gates, test reporting]
+  </instructions>
+</prompt>
