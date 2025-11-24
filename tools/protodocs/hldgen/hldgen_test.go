@@ -294,6 +294,277 @@ func BenchmarkValidateConfig(b *testing.B) {
 	}
 }
 
+// TestValidateHLDOutput tests HLD output validation
+func TestValidateHLDOutput(t *testing.T) {
+	tests := []struct {
+		name    string
+		output  *HLDOutput
+		wantErr bool
+	}{
+		{
+			name:    "nil output",
+			output:  nil,
+			wantErr: true,
+		},
+		{
+			name: "valid output",
+			output: &HLDOutput{
+				Architecture:    "Test architecture",
+				Markdown:        "# Test markdown",
+				ConsensusScore:  0.90,
+				FinalScore:      0.85,
+				RoundsCompleted: 2,
+				Metadata: Metadata{
+					ModuleName: "test.module",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty architecture",
+			output: &HLDOutput{
+				Architecture:    "",
+				Markdown:        "# Test",
+				ConsensusScore:  0.90,
+				FinalScore:      0.85,
+				RoundsCompleted: 1,
+				Metadata:        Metadata{ModuleName: "test"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty markdown",
+			output: &HLDOutput{
+				Architecture:    "Test",
+				Markdown:        "",
+				ConsensusScore:  0.90,
+				FinalScore:      0.85,
+				RoundsCompleted: 1,
+				Metadata:        Metadata{ModuleName: "test"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid consensus score",
+			output: &HLDOutput{
+				Architecture:    "Test",
+				Markdown:        "# Test",
+				ConsensusScore:  1.5,
+				FinalScore:      0.85,
+				RoundsCompleted: 1,
+				Metadata:        Metadata{ModuleName: "test"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "negative rounds",
+			output: &HLDOutput{
+				Architecture:    "Test",
+				Markdown:        "# Test",
+				ConsensusScore:  0.90,
+				FinalScore:      0.85,
+				RoundsCompleted: -1,
+				Metadata:        Metadata{ModuleName: "test"},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateHLDOutput(tt.output)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateHLDOutput() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+// TestValidateAgentResponse tests agent response validation
+func TestValidateAgentResponse(t *testing.T) {
+	tests := []struct {
+		name    string
+		resp    *AgentResponse
+		wantErr bool
+	}{
+		{
+			name:    "nil response",
+			resp:    nil,
+			wantErr: true,
+		},
+		{
+			name: "valid response",
+			resp: &AgentResponse{
+				Role:        RoleArchitect,
+				Content:     "Test content",
+				Confidence:  0.85,
+				TokensUsed:  100,
+				GeneratedAt: time.Now(),
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty role",
+			resp: &AgentResponse{
+				Role:       "",
+				Content:    "Test",
+				Confidence: 0.85,
+				TokensUsed: 100,
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty content",
+			resp: &AgentResponse{
+				Role:       RoleArchitect,
+				Content:    "",
+				Confidence: 0.85,
+				TokensUsed: 100,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid confidence",
+			resp: &AgentResponse{
+				Role:       RoleArchitect,
+				Content:    "Test",
+				Confidence: 1.5,
+				TokensUsed: 100,
+			},
+			wantErr: true,
+		},
+		{
+			name: "negative tokens",
+			resp: &AgentResponse{
+				Role:       RoleArchitect,
+				Content:    "Test",
+				Confidence: 0.85,
+				TokensUsed: -10,
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateAgentResponse(tt.resp)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateAgentResponse() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+// TestValidateCriticism tests criticism validation
+func TestValidateCriticism(t *testing.T) {
+	tests := []struct {
+		name    string
+		crit    *Criticism
+		wantErr bool
+	}{
+		{
+			name: "valid criticism",
+			crit: &Criticism{
+				Agent:      "architect",
+				Score:      0.90,
+				Confidence: 0.85,
+				Issues: []Issue{
+					{
+						Type:     "clarity",
+						Severity: "medium",
+						Message:  "Test message",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty agent",
+			crit: &Criticism{
+				Agent:      "",
+				Score:      0.90,
+				Confidence: 0.85,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid score",
+			crit: &Criticism{
+				Agent:      "architect",
+				Score:      -0.5,
+				Confidence: 0.85,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid confidence",
+			crit: &Criticism{
+				Agent:      "architect",
+				Score:      0.90,
+				Confidence: 1.5,
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty issue type",
+			crit: &Criticism{
+				Agent:      "architect",
+				Score:      0.90,
+				Confidence: 0.85,
+				Issues: []Issue{
+					{
+						Type:     "",
+						Severity: "high",
+						Message:  "Test",
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty issue severity",
+			crit: &Criticism{
+				Agent:      "architect",
+				Score:      0.90,
+				Confidence: 0.85,
+				Issues: []Issue{
+					{
+						Type:     "clarity",
+						Severity: "",
+						Message:  "Test",
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "empty issue message",
+			crit: &Criticism{
+				Agent:      "architect",
+				Score:      0.90,
+				Confidence: 0.85,
+				Issues: []Issue{
+					{
+						Type:     "clarity",
+						Severity: "high",
+						Message:  "",
+					},
+				},
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateCriticism(tt.crit)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateCriticism() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 // BenchmarkMerge benchmarks response merging
 func BenchmarkMerge(b *testing.B) {
 	merger := NewResponseMerger("priority_merge")
