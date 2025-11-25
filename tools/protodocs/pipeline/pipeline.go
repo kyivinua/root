@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -18,6 +19,10 @@ type Pipeline struct {
 	logger              *log.Logger
 	notificationManager *NotificationManager
 	diagramManifest     *diagrams.DiagramManifest
+
+	// Monorepo-specific fields
+	serviceGroups       map[string]*ServiceGroup
+	consolidationResults map[string]*ConsolidationResult
 }
 
 // NewPipeline creates a new pipeline with the given configuration.
@@ -172,6 +177,11 @@ func (p *Pipeline) runDiscovery() (*Scope, error) {
 	var scope *Scope
 	var err error
 
+	// Check if monorepo mode is enabled
+	if p.config.Discovery.MonorepoMode {
+		return p.runMonorepoDiscovery()
+	}
+
 	// Use incremental discovery if enabled
 	if p.config.Discovery.Incremental {
 		baseRef := p.config.Discovery.BaseRef
@@ -203,6 +213,149 @@ func (p *Pipeline) runDiscovery() (*Scope, error) {
 	p.logger.Printf("Discovered %d proto files in %d packages", len(scope.ProtoFiles), len(scope.ProtoPackages))
 
 	return scope, nil
+}
+
+// runMonorepoDiscovery executes monorepo-specific discovery with service grouping and optional consolidation.
+func (p *Pipeline) runMonorepoDiscovery() (*Scope, error) {
+	p.logger.Println("Using monorepo discovery mode")
+
+	// Create monorepo discovery config
+	discoveryConfig := &MonorepoDiscoveryConfig{
+		RootDir:         p.config.ProtoRoot,
+		ProtoPatterns:   p.config.Discovery.Patterns,
+		ExcludePatterns: p.config.Discovery.ExcludePatterns,
+		MaxConcurrency:  p.config.Discovery.MaxConcurrency,
+	}
+
+	// Set detection strategy
+	switch p.config.Discovery.ServiceDetectionStrategy {
+	case "directory":
+		discoveryConfig.ServiceDetection = DetectByDirectory
+	case "package":
+		discoveryConfig.ServiceDetection = DetectByPackage
+	case "service_definition":
+		discoveryConfig.ServiceDetection = DetectByServiceDefinition
+	case "hybrid", "":
+		discoveryConfig.ServiceDetection = DetectByHybrid
+	default:
+		p.logger.Printf("Warning: Unknown detection strategy %s, using hybrid", p.config.Discovery.ServiceDetectionStrategy)
+		discoveryConfig.ServiceDetection = DetectByHybrid
+	}
+
+	// Apply defaults
+	if len(discoveryConfig.ProtoPatterns) == 0 {
+		discoveryConfig.ProtoPatterns = []string{"**/*.proto"}
+	}
+	if discoveryConfig.MaxConcurrency == 0 {
+		discoveryConfig.MaxConcurrency = 10
+	}
+
+	// Create discovery instance
+	discovery := NewMonorepoDiscovery(discoveryConfig)
+
+	// Discover all services
+	ctx := p.getContext()
+	serviceGroups, err := discovery.DiscoverAll(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("monorepo discovery failed: %w", err)
+	}
+
+	p.serviceGroups = serviceGroups
+	p.logger.Printf("Discovered %d services in monorepo", len(serviceGroups))
+
+	// Log service details
+	for serviceName, group := range serviceGroups {
+		p.logger.Printf("  - %s: %d proto files, %d service definitions", serviceName, group.TotalFiles, group.TotalServices)
+	}
+
+	// Run consolidation if enabled
+	if p.config.Discovery.EnableConsolidation {
+		if err := p.runConsolidation(); err != nil {
+			return nil, fmt.Errorf("consolidation failed: %w", err)
+		}
+	}
+
+	// Convert service groups to scope for backward compatibility
+	scope := p.convertServiceGroupsToScope()
+
+	p.logger.Printf("Discovered %d proto files in %d packages across %d services",
+		len(scope.ProtoFiles), len(scope.ProtoPackages), len(serviceGroups))
+
+	return scope, nil
+}
+
+// runConsolidation consolidates proto files by service.
+func (p *Pipeline) runConsolidation() error {
+	p.logger.Println("Stage 0.5: Proto Consolidation")
+
+	config := &ConsolidationConfig{
+		OutputRoot:           p.config.Discovery.ConsolidatedOutputDir,
+		CreateBufConfig:      p.config.Discovery.CreateBufConfig,
+		PreserveDirStructure: p.config.Discovery.PreserveDirStructure,
+	}
+
+	consolidator := NewProtoConsolidator(config)
+
+	ctx := p.getContext()
+	results, err := consolidator.ConsolidateAll(ctx, p.serviceGroups)
+	if err != nil {
+		return err
+	}
+
+	p.consolidationResults = results
+
+	// Log consolidation results
+	totalFiles := 0
+	totalErrors := 0
+	for serviceName, result := range results {
+		totalFiles += result.FilesCopied
+		totalErrors += len(result.Errors)
+
+		if len(result.Errors) > 0 {
+			p.logger.Printf("  - %s: %d files copied, %d errors", serviceName, result.FilesCopied, len(result.Errors))
+			for _, err := range result.Errors {
+				p.logger.Printf("    Error: %v", err)
+			}
+		} else {
+			p.logger.Printf("  - %s: %d files copied to %s", serviceName, result.FilesCopied, result.OutputPath)
+		}
+	}
+
+	p.logger.Printf("Consolidated %d proto files across %d services (%d errors)",
+		totalFiles, len(results), totalErrors)
+
+	return nil
+}
+
+// convertServiceGroupsToScope converts service groups to a Scope for backward compatibility.
+func (p *Pipeline) convertServiceGroupsToScope() *Scope {
+	scope := &Scope{
+		ProtoFiles:    []string{},
+		ProtoPackages: []string{},
+	}
+
+	// Track unique packages
+	packageSet := make(map[string]bool)
+
+	for _, group := range p.serviceGroups {
+		for _, protoFile := range group.ProtoFiles {
+			scope.ProtoFiles = append(scope.ProtoFiles, protoFile.FilePath)
+
+			if protoFile.PackageName != "" && !packageSet[protoFile.PackageName] {
+				scope.ProtoPackages = append(scope.ProtoPackages, protoFile.PackageName)
+				packageSet[protoFile.PackageName] = true
+			}
+		}
+	}
+
+	return scope
+}
+
+// getContext returns a context for pipeline operations.
+func (p *Pipeline) getContext() context.Context {
+	// For now, return background context
+	// In the future, this could be enhanced with timeout/cancellation
+	return context.Background()
 }
 
 // runLint executes the lint stage.

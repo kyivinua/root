@@ -32,6 +32,19 @@ type DiscoveryConfig struct {
 	Incremental bool   `yaml:"incremental"` // Enable incremental discovery via git diff
 	BaseRef     string `yaml:"base_ref"`    // Base git ref for comparison (e.g., "main", "origin/main")
 	HeadRef     string `yaml:"head_ref"`    // Head git ref (default: "HEAD")
+
+	// Monorepo settings
+	MonorepoMode           bool                     `yaml:"monorepo_mode"`             // Enable monorepo discovery mode
+	ServiceDetectionStrategy string                 `yaml:"service_detection_strategy"` // "hybrid", "directory", "package", "service_definition"
+	Patterns               []string                 `yaml:"patterns"`                  // Glob patterns for finding proto files (e.g., "services/**/api/**/*.proto")
+	ExcludePatterns        []string                 `yaml:"exclude_patterns"`          // Patterns to exclude (e.g., "vendor/**", "*_test.proto")
+	MaxConcurrency         int                      `yaml:"max_concurrency"`           // Maximum concurrent file parsing (default: 10)
+
+	// Consolidation settings
+	EnableConsolidation    bool   `yaml:"enable_consolidation"`     // Enable proto consolidation by service
+	ConsolidatedOutputDir  string `yaml:"consolidated_output_dir"`  // Output directory for consolidated protos
+	PreserveDirStructure   bool   `yaml:"preserve_dir_structure"`   // Preserve original directory structure
+	CreateBufConfig        bool   `yaml:"create_buf_config"`        // Create buf.yaml for each service
 }
 
 // LintConfig holds lint configuration.
@@ -218,6 +231,17 @@ func DefaultConfig() *PipelineConfig {
 	return &PipelineConfig{
 		ProtoRoot: "./proto",
 		UseBuf:    true,
+		Discovery: DiscoveryConfig{
+			MonorepoMode:           false,
+			ServiceDetectionStrategy: "hybrid",
+			Patterns:               []string{"**/*.proto"},
+			ExcludePatterns:        []string{"vendor/**", "third_party/**", "node_modules/**", "*_test.proto"},
+			MaxConcurrency:         10,
+			EnableConsolidation:    false,
+			ConsolidatedOutputDir:  "./consolidated-protos",
+			PreserveDirStructure:   true,
+			CreateBufConfig:        true,
+		},
 		Lint: LintConfig{
 			EnableBufLint:      true,
 			EnableCommentsCheck: true,
