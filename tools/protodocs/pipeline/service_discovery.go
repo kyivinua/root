@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/errors"
 )
@@ -42,6 +43,11 @@ type MonorepoDiscoveryConfig struct {
 	MaxConcurrency     int  // Maximum concurrent file parsing
 	ParseDependencies  bool // Whether to parse import statements
 	GroupByDirectory   bool // Group by directory structure in addition to service definitions
+
+	// Optional callbacks and logging
+	Logger           Logger           // Logger for debug/info messages
+	ProgressCallback ProgressCallback // Progress callback for UI updates
+	EnableMetrics    bool             // Enable detailed metrics collection
 }
 
 // ServiceDetectionStrategy defines how to detect service ownership
@@ -133,9 +139,10 @@ func (c *MonorepoDiscoveryConfig) Validate() error {
 
 // MonorepoDiscovery handles discovery and grouping of proto files in monorepo
 type MonorepoDiscovery struct {
-	config *MonorepoDiscoveryConfig
-	mu     sync.RWMutex
-	cache  map[string]*ServiceProtoFile // Cache parsed files
+	config  *MonorepoDiscoveryConfig
+	cache   sync.Map // Cache parsed files (thread-safe without explicit locking)
+	metrics *DiscoveryMetrics
+	logger  Logger
 }
 
 // NewMonorepoDiscovery creates a new monorepo discovery instance
@@ -149,54 +156,136 @@ func NewMonorepoDiscovery(config *MonorepoDiscoveryConfig) *MonorepoDiscovery {
 		config.MaxConcurrency = 10
 	}
 
+	// Set default logger if not provided
+	logger := config.Logger
+	if logger == nil {
+		logger = &DefaultLogger{}
+	}
+
+	// Initialize metrics if enabled
+	var metrics *DiscoveryMetrics
+	if config.EnableMetrics {
+		metrics = NewMetrics()
+	}
+
 	// Note: Validation is optional here to allow flexibility
 	// Call config.Validate() explicitly if validation is needed
 
 	return &MonorepoDiscovery{
-		config: config,
-		cache:  make(map[string]*ServiceProtoFile),
+		config:  config,
+		cache:   sync.Map{},
+		metrics: metrics,
+		logger:  logger,
 	}
 }
 
 // DiscoverAll finds and groups all proto files in the monorepo
 func (md *MonorepoDiscovery) DiscoverAll(ctx context.Context) (map[string]*ServiceGroup, error) {
+	startTime := time.Now()
+
+	if md.metrics != nil {
+		defer func() {
+			md.metrics.Duration = time.Since(startTime)
+			md.logger.Info(md.metrics.Summary())
+		}()
+	}
+
+	md.logger.Info("Starting proto discovery in: %s", md.config.RootDir)
+
 	// Find all proto files matching patterns
+	findStart := time.Now()
 	protoFiles, err := md.findProtoFiles()
 	if err != nil {
+		md.logger.Error("Failed to find proto files: %v", err)
 		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to find proto files")
 	}
 
+	if md.metrics != nil {
+		md.metrics.FilesFound = len(protoFiles)
+	}
+
+	md.logger.Info("Found %d proto files in %v", len(protoFiles), time.Since(findStart))
+
 	if len(protoFiles) == 0 {
+		md.logger.Warn("No proto files found matching patterns")
 		return make(map[string]*ServiceGroup), nil
 	}
 
+	// Report progress
+	if md.config.ProgressCallback != nil {
+		md.config.ProgressCallback("discovery", 0, len(protoFiles), "Starting file parsing")
+	}
+
 	// Parse files concurrently
+	parseStart := time.Now()
 	parsedFiles, err := md.parseProtoFilesConcurrent(ctx, protoFiles)
 	if err != nil {
+		md.logger.Error("Failed to parse proto files: %v", err)
 		return nil, errors.Wrap(err, errors.ErrorTypeInternal, "failed to parse proto files")
 	}
 
+	if md.metrics != nil {
+		md.metrics.FilesParsed = len(parsedFiles)
+		md.metrics.ParseDuration = time.Since(parseStart)
+	}
+
+	md.logger.Info("Parsed %d proto files in %v", len(parsedFiles), time.Since(parseStart))
+
 	// Group files by service
+	groupStart := time.Now()
 	serviceGroups := md.groupByService(parsedFiles)
 
+	if md.metrics != nil {
+		md.metrics.ServicesFound = len(serviceGroups)
+		md.metrics.GroupingDuration = time.Since(groupStart)
+
+		// Count total service definitions
+		totalDefs := 0
+		for _, group := range serviceGroups {
+			totalDefs += group.TotalServices
+		}
+		md.metrics.TotalServiceDefs = totalDefs
+	}
+
+	md.logger.Info("Grouped into %d services in %v", len(serviceGroups), time.Since(groupStart))
+
+	// Report completion
+	if md.config.ProgressCallback != nil {
+		md.config.ProgressCallback("discovery", len(protoFiles), len(protoFiles), "Discovery completed")
+	}
+
 	return serviceGroups, nil
+}
+
+// GetMetrics returns discovery metrics (if enabled)
+func (md *MonorepoDiscovery) GetMetrics() *DiscoveryMetrics {
+	return md.metrics
 }
 
 // findProtoFiles finds all proto files matching configured patterns
 func (md *MonorepoDiscovery) findProtoFiles() ([]string, error) {
 	var allFiles []string
 	fileSet := make(map[string]bool)
+	excludedCount := 0
 
 	// Search for each pattern
 	for _, pattern := range md.config.ProtoPatterns {
 		files, err := md.globProtoFiles(pattern)
 		if err != nil {
-			continue // Skip patterns that fail
+			if md.metrics != nil {
+				md.metrics.AddWarning(fmt.Sprintf("Pattern %s failed: %v", pattern, err))
+			}
+			md.logger.Warn("Pattern %s failed: %v", pattern, err)
+			continue
 		}
+
+		md.logger.Debug("Pattern %s matched %d files", pattern, len(files))
 
 		for _, file := range files {
 			// Check if file should be excluded
 			if md.shouldExclude(file) {
+				excludedCount++
+				md.logger.Debug("Excluded file: %s", file)
 				continue
 			}
 
@@ -207,6 +296,12 @@ func (md *MonorepoDiscovery) findProtoFiles() ([]string, error) {
 			}
 		}
 	}
+
+	if md.metrics != nil {
+		md.metrics.FilesExcluded = excludedCount
+	}
+
+	md.logger.Debug("Found %d files, excluded %d", len(allFiles), excludedCount)
 
 	return allFiles, nil
 }
@@ -382,13 +477,24 @@ func (md *MonorepoDiscovery) parseProtoFilesConcurrent(ctx context.Context, file
 	// Create semaphore for concurrency control
 	sem := make(chan struct{}, md.config.MaxConcurrency)
 
+	// Progress tracking
+	var processed int32
+
 	var wg sync.WaitGroup
 
 	// Parse files concurrently
-	for _, file := range files {
+	for i, file := range files {
 		wg.Add(1)
-		go func(filePath string) {
+		go func(index int, filePath string) {
 			defer wg.Done()
+			defer func() {
+				processed++
+				// Report progress every 10 files or on last file
+				if md.config.ProgressCallback != nil && (processed%10 == 0 || int(processed) == len(files)) {
+					md.config.ProgressCallback("parsing", int(processed), len(files),
+						fmt.Sprintf("Parsing %s", filepath.Base(filePath)))
+				}
+			}()
 
 			// Acquire semaphore
 			sem <- struct{}{}
@@ -402,29 +508,31 @@ func (md *MonorepoDiscovery) parseProtoFilesConcurrent(ctx context.Context, file
 			default:
 			}
 
-			// Check cache first
-			md.mu.RLock()
-			if cached, ok := md.cache[filePath]; ok {
-				md.mu.RUnlock()
-				results <- cached
+			// Check cache first (using sync.Map)
+			if cached, ok := md.cache.Load(filePath); ok {
+				md.logger.Debug("Cache hit for %s", filePath)
+				results <- cached.(*ServiceProtoFile)
 				return
 			}
-			md.mu.RUnlock()
+
+			md.logger.Debug("Parsing file %d/%d: %s", index+1, len(files), filePath)
 
 			// Parse file
 			parsed, err := md.parseProtoFile(filePath)
 			if err != nil {
+				md.logger.Error("Failed to parse %s: %v", filePath, err)
+				if md.metrics != nil {
+					md.metrics.AddError(err)
+				}
 				errChan <- errors.Wrap(err, errors.ErrorTypeInternal, "failed to parse "+filePath)
 				return
 			}
 
-			// Cache result
-			md.mu.Lock()
-			md.cache[filePath] = parsed
-			md.mu.Unlock()
+			// Cache result (using sync.Map - thread-safe without explicit locking)
+			md.cache.Store(filePath, parsed)
 
 			results <- parsed
-		}(file)
+		}(i, file)
 	}
 
 	// Wait for all goroutines
@@ -446,9 +554,17 @@ func (md *MonorepoDiscovery) parseProtoFilesConcurrent(ctx context.Context, file
 		errs = append(errs, err)
 	}
 
-	// Return first error if any
+	// Log errors but don't fail completely if we parsed some files
 	if len(errs) > 0 {
-		return parsedFiles, errs[0]
+		md.logger.Warn("Encountered %d errors during parsing", len(errs))
+		if md.metrics != nil {
+			md.metrics.ParseErrors += len(errs)
+		}
+
+		// Only fail if we couldn't parse ANY files
+		if len(parsedFiles) == 0 {
+			return nil, errs[0]
+		}
 	}
 
 	return parsedFiles, nil

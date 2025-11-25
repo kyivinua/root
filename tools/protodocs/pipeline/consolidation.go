@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/kyivinua/docgen-tool/tools/protodocs/pkg/errors"
 )
@@ -27,6 +28,11 @@ type ConsolidationConfig struct {
 
 	// FlattenStructure puts all proto files in a single directory per service
 	FlattenStructure bool
+
+	// Optional callbacks and logging
+	Logger           Logger           // Logger for consolidation operations
+	ProgressCallback ProgressCallback // Progress callback for UI updates
+	EnableMetrics    bool             // Enable detailed metrics collection
 }
 
 // ConsolidationResult contains information about consolidated services
@@ -41,7 +47,9 @@ type ConsolidationResult struct {
 
 // ProtoConsolidator handles consolidation of proto files by service
 type ProtoConsolidator struct {
-	config *ConsolidationConfig
+	config  *ConsolidationConfig
+	logger  Logger
+	metrics *ConsolidationMetrics
 }
 
 // NewProtoConsolidator creates a new proto consolidator
@@ -56,29 +64,99 @@ func NewProtoConsolidator(config *ConsolidationConfig) *ProtoConsolidator {
 		}
 	}
 
-	return &ProtoConsolidator{
-		config: config,
+	// Set default logger if not provided
+	logger := config.Logger
+	if logger == nil {
+		logger = &DefaultLogger{}
 	}
+
+	// Initialize metrics if enabled
+	var metrics *ConsolidationMetrics
+	if config.EnableMetrics {
+		metrics = &ConsolidationMetrics{
+			ServiceMetrics: make(map[string]*ServiceConsolidationMetrics),
+		}
+	}
+
+	return &ProtoConsolidator{
+		config:  config,
+		logger:  logger,
+		metrics: metrics,
+	}
+}
+
+// GetMetrics returns consolidation metrics (if enabled)
+func (pc *ProtoConsolidator) GetMetrics() *ConsolidationMetrics {
+	return pc.metrics
 }
 
 // ConsolidateAll consolidates all service groups into separate directories
 func (pc *ProtoConsolidator) ConsolidateAll(ctx context.Context, serviceGroups map[string]*ServiceGroup) (map[string]*ConsolidationResult, error) {
+	startTime := time.Now()
+
+	if pc.metrics != nil {
+		defer func() {
+			pc.metrics.Duration = time.Since(startTime)
+		}()
+	}
+
+	pc.logger.Info("Starting consolidation of %d services to: %s", len(serviceGroups), pc.config.OutputRoot)
+
 	results := make(map[string]*ConsolidationResult)
+	current := 0
 
 	for serviceName, group := range serviceGroups {
+		current++
+
 		select {
 		case <-ctx.Done():
+			pc.logger.Warn("Consolidation cancelled by context")
 			return results, ctx.Err()
 		default:
 		}
 
+		// Report progress
+		if pc.config.ProgressCallback != nil {
+			pc.config.ProgressCallback("consolidation", current, len(serviceGroups),
+				fmt.Sprintf("Consolidating %s", serviceName))
+		}
+
+		pc.logger.Info("Consolidating service %d/%d: %s", current, len(serviceGroups), serviceName)
+
 		result, err := pc.ConsolidateService(ctx, group)
 		if err != nil {
+			pc.logger.Error("Failed to consolidate %s: %v", serviceName, err)
 			return nil, errors.Wrap(err, errors.ErrorTypeInternal, fmt.Sprintf("failed to consolidate service %s", serviceName))
 		}
 
 		results[serviceName] = result
+
+		// Update metrics
+		if pc.metrics != nil {
+			pc.metrics.ServicesProcessed++
+			pc.metrics.TotalFilesCopied += result.FilesCopied
+			pc.metrics.TotalErrors += len(result.Errors)
+			if result.BufConfigCreated {
+				pc.metrics.BufConfigsCreated++
+			}
+			pc.metrics.ReadmesCreated++ // README is always created
+		}
+
+		pc.logger.Info("Consolidated %s: %d files copied to %s",
+			serviceName, result.FilesCopied, result.OutputPath)
 	}
+
+	// Report completion
+	if pc.config.ProgressCallback != nil {
+		pc.config.ProgressCallback("consolidation", len(serviceGroups), len(serviceGroups), "Consolidation completed")
+	}
+
+	totalFiles := 0
+	if pc.metrics != nil {
+		totalFiles = pc.metrics.TotalFilesCopied
+	}
+	pc.logger.Info("Consolidation completed: %d services, %d files, took %v",
+		len(results), totalFiles, time.Since(startTime))
 
 	return results, nil
 }

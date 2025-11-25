@@ -225,6 +225,7 @@ func (p *Pipeline) runMonorepoDiscovery() (*Scope, error) {
 		ProtoPatterns:   p.config.Discovery.Patterns,
 		ExcludePatterns: p.config.Discovery.ExcludePatterns,
 		MaxConcurrency:  p.config.Discovery.MaxConcurrency,
+		EnableMetrics:   true, // Enable metrics for pipeline
 	}
 
 	// Set detection strategy
@@ -250,6 +251,11 @@ func (p *Pipeline) runMonorepoDiscovery() (*Scope, error) {
 		discoveryConfig.MaxConcurrency = 10
 	}
 
+	// Validate configuration
+	if err := discoveryConfig.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid monorepo discovery config: %w", err)
+	}
+
 	// Create discovery instance
 	discovery := NewMonorepoDiscovery(discoveryConfig)
 
@@ -258,6 +264,11 @@ func (p *Pipeline) runMonorepoDiscovery() (*Scope, error) {
 	serviceGroups, err := discovery.DiscoverAll(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("monorepo discovery failed: %w", err)
+	}
+
+	// Log discovery metrics
+	if metrics := discovery.GetMetrics(); metrics != nil {
+		p.logger.Printf("Discovery metrics: %s", metrics.Summary())
 	}
 
 	p.serviceGroups = serviceGroups
@@ -292,6 +303,7 @@ func (p *Pipeline) runConsolidation() error {
 		OutputRoot:           p.config.Discovery.ConsolidatedOutputDir,
 		CreateBufConfig:      p.config.Discovery.CreateBufConfig,
 		PreserveDirStructure: p.config.Discovery.PreserveDirStructure,
+		EnableMetrics:        true, // Enable metrics for pipeline
 	}
 
 	consolidator := NewProtoConsolidator(config)
@@ -303,6 +315,12 @@ func (p *Pipeline) runConsolidation() error {
 	}
 
 	p.consolidationResults = results
+
+	// Log consolidation metrics
+	if metrics := consolidator.GetMetrics(); metrics != nil {
+		p.logger.Printf("Consolidation metrics: %d services, %d files, %d errors in %v",
+			metrics.ServicesProcessed, metrics.TotalFilesCopied, metrics.TotalErrors, metrics.Duration)
+	}
 
 	// Log consolidation results
 	totalFiles := 0
