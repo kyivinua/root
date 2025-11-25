@@ -344,22 +344,27 @@ func (f *Formatter) convertPlantUMLDiagrams(content string) string {
 		return match
 	})
 
-	// Also support inline @startuml...@enduml blocks (without fenced code blocks)
-	re = regexp.MustCompile(`(?m)^@start(uml|mindmap|gantt|salt|yaml|json|ditaa|dot|actdiag|seqdiag|timing)\s*\n([\s\S]*?)^@end\1\s*$`)
-	content = re.ReplaceAllStringFunc(content, func(match string) string {
-		parts := re.FindStringSubmatch(match)
-		if len(parts) == 3 {
-			diagramType := parts[1]
-			diagramBody := parts[2]
-			fullDiagram := fmt.Sprintf("@start%s\n%s\n@end%s", diagramType, strings.TrimSpace(diagramBody), diagramType)
+	// Also support inline @start...@end blocks (without fenced code blocks)
+	// Match each diagram type separately since Go doesn't support backreferences
+	diagramTypes := []string{"uml", "mindmap", "gantt", "salt", "yaml", "json", "ditaa", "dot", "actdiag", "seqdiag", "timing"}
 
-			return fmt.Sprintf(`<ac:structured-macro ac:name="plantuml">
+	for _, diagType := range diagramTypes {
+		pattern := fmt.Sprintf(`(?m)^@start%s\s*\n([\s\S]*?)^@end%s\s*$`, diagType, diagType)
+		re = regexp.MustCompile(pattern)
+		content = re.ReplaceAllStringFunc(content, func(match string) string {
+			parts := re.FindStringSubmatch(match)
+			if len(parts) == 2 {
+				diagramBody := parts[1]
+				fullDiagram := fmt.Sprintf("@start%s\n%s\n@end%s", diagType, strings.TrimSpace(diagramBody), diagType)
+
+				return fmt.Sprintf(`<ac:structured-macro ac:name="plantuml">
 <ac:parameter ac:name="atlassian-macro-output-type">BLOCK</ac:parameter>
 <ac:plain-text-body><![CDATA[%s]]></ac:plain-text-body>
 </ac:structured-macro>`, fullDiagram)
-		}
-		return match
-	})
+			}
+			return match
+		})
+	}
 
 	return content
 }

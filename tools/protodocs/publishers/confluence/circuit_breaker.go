@@ -227,6 +227,12 @@ func (cb *CircuitBreaker) onFailure(state CircuitBreakerState, now time.Time) {
 	cb.counts.ConsecutiveFailures++
 	cb.counts.ConsecutiveSuccesses = 0
 
+	// In half-open state, any failure should trip the breaker back to open
+	if state == StateHalfOpen {
+		cb.setState(StateOpen, now)
+		return
+	}
+
 	if cb.shouldTrip(cb.counts) {
 		cb.setState(StateOpen, now)
 	}

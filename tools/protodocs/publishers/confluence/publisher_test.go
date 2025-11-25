@@ -283,7 +283,7 @@ func TestPublisher_PublishConsolidatedPage(t *testing.T) {
 }
 
 func TestPublisher_UpdateExistingPage(t *testing.T) {
-	existingPageID := "existing-123"
+	existingPageID := "123456789"
 
 	// Create test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -405,7 +405,7 @@ func TestPublisher_WithTitlePrefix(t *testing.T) {
 func TestPublisher_EnvironmentVariables(t *testing.T) {
 	// Set environment variables
 	os.Setenv("CONFLUENCE_USERNAME", "env-user@example.com")
-	os.Setenv("CONFLUENCE_API_TOKEN", "env-token-456")
+	os.Setenv("CONFLUENCE_API_TOKEN", "env-token-456-valid-long-token")
 	defer func() {
 		os.Unsetenv("CONFLUENCE_USERNAME")
 		os.Unsetenv("CONFLUENCE_API_TOKEN")
@@ -413,8 +413,8 @@ func TestPublisher_EnvironmentVariables(t *testing.T) {
 
 	config := &PublisherConfig{
 		BaseURL:  "https://test.atlassian.net/wiki",
-		Username: "original-user@example.com", // Should be overridden
-		APIToken: "original-token",            // Should be overridden
+		Username: "original-user@example.com",           // Should be overridden
+		APIToken: "original-token-valid-length-token", // Should be overridden
 		SpaceKey: "TEST",
 	}
 
@@ -423,5 +423,5 @@ func TestPublisher_EnvironmentVariables(t *testing.T) {
 
 	// Environment variables should have been applied
 	assert.Equal(t, "env-user@example.com", publisher.config.Username)
-	assert.Equal(t, "env-token-456", publisher.config.APIToken)
+	assert.Equal(t, "env-token-456-valid-long-token", publisher.config.APIToken)
 }

@@ -9,9 +9,20 @@
 - ✅ Поддержка консолидированной страницы для всех сервисов
 - ✅ Конвертация Markdown в Confluence Storage Format (HTML)
 - ✅ Поддержка Mermaid диаграмм
+- ✅ Поддержка PlantUML диаграмм (встроенная поддержка)
 - ✅ Автоматическое создание Table of Contents
 - ✅ Обновление существующих страниц с версионированием
 - ✅ Фильтрация по visibility (PUBLIC, PARTNER, INTERNAL)
+- ✅ Поддержка attachments (загрузка и скачивание файлов)
+- ✅ Batch operations для ускорения публикации
+- ✅ Labels и metadata для страниц
+- ✅ Page restrictions (управление доступом)
+- ✅ Diff checking для избежания лишних обновлений
+- ✅ Retry logic с exponential backoff
+- ✅ Content caching для снижения API calls
+- ✅ Prometheus metrics для мониторинга
+- ✅ Circuit breaker для fault tolerance
+- ✅ Space export (полный экспорт пространства в ZIP)
 
 ## Конфигурация
 
@@ -139,25 +150,84 @@ Publisher автоматически конвертирует:
 
 ```
 publishers/confluence/
-├── client.go      # Confluence REST API client
-├── formatter.go   # Markdown → Storage Format converter
-└── publisher.go   # Main publisher logic
+├── client.go               # Confluence REST API client
+├── client_test.go          # API client tests
+├── client_extensions.go    # Extended API operations (labels, batch, diff, restrictions)
+├── formatter.go            # Markdown → Storage Format converter
+├── formatter_test.go       # Formatter tests
+├── publisher.go            # Main publisher logic
+├── publisher_test.go       # Publisher tests
+├── retry.go                # Retry logic with exponential backoff
+├── cache.go                # LRU cache with TTL
+├── cache_test.go           # Cache tests
+├── metrics.go              # Prometheus metrics
+├── circuit_breaker.go      # Circuit breaker pattern
+├── circuit_breaker_test.go # Circuit breaker tests
+├── space_export.go         # Space export to ZIP
+└── space_export_test.go    # Space export tests
 ```
 
-### client.go
+### Core Components
+
+**client.go**
 - REST API взаимодействие с Confluence
 - CRUD операции для страниц
 - Поиск страниц по title
+- Attachment upload/download
+- Rate limiting (10 req/s)
 
-### formatter.go
+**formatter.go**
 - Конвертация Markdown → Confluence Storage Format
 - Обработка кода, таблиц, списков
-- Специальная обработка Mermaid диаграмм
+- Поддержка Mermaid диаграмм
+- Поддержка PlantUML диаграмм (нативная)
 
-### publisher.go
+**publisher.go**
 - Оркестрация процесса публикации
 - Логика создания/обновления страниц
 - Обработка visibility filters
+
+### Extended Features
+
+**client_extensions.go**
+- Labels API (добавление, удаление, получение)
+- Batch operations (параллельное создание/обновление страниц)
+- Diff checking (hash-based для избежания лишних обновлений)
+- Page restrictions (read/update permissions для users/groups)
+
+**retry.go**
+- Exponential backoff с jitter
+- Настраиваемые retry attempts
+- Retry только для определенных типов ошибок
+- Context cancellation support
+
+**cache.go**
+- LRU cache с TTL
+- Thread-safe операции
+- Background cleanup для expired entries
+- PageCache wrapper с typed методами
+- Интеграция с метриками
+
+**metrics.go**
+- Prometheus metrics
+- API request tracking (total, duration, errors)
+- Cache performance (hits, misses, evictions)
+- Circuit breaker state
+- Publisher operations
+
+**circuit_breaker.go**
+- Три состояния: Closed, HalfOpen, Open
+- Configurable failure thresholds
+- Automatic recovery testing
+- Failure ratio tracking
+- Metrics integration
+
+**space_export.go**
+- Экспорт всего Confluence space в ZIP
+- Поддержка attachments
+- Paginated page retrieval
+- Context cancellation
+- Export statistics
 
 ## Best Practices
 
@@ -170,13 +240,184 @@ publishers/confluence/
 ## Ограничения
 
 - Mermaid диаграммы сохраняются как код-блоки (требуется плагин для рендеринга)
-- Сложные HTML в Markdown может потребовать доработки formatter
-- Rate limiting Confluence API (10 requests/second)
+- PlantUML диаграммы используют встроенный Confluence macro (работает out-of-the-box)
+- Rate limiting Confluence API (10 requests/second) - автоматически обрабатывается
+- Cache по умолчанию отключен (используйте NewClientWithCache для включения)
+
+## Production Features
+
+### Caching
+Используйте кеширование для снижения нагрузки на API:
+
+```go
+cacheConfig := &confluence.CacheConfig{
+    MaxSize:         1000,             // максимум 1000 страниц в кеше
+    TTL:             10 * time.Minute, // время жизни записи
+    CleanupInterval: 1 * time.Minute,  // частота очистки
+}
+
+client, err := confluence.NewClientWithCache(baseURL, username, apiToken, cacheConfig)
+// Автоматически использует cache для GetPage/FindPageByTitle
+```
+
+### Metrics
+Интегрируйте Prometheus metrics для мониторинга:
+
+```go
+metrics := confluence.NewMetrics("confluence_publisher")
+
+// Используйте metrics в клиенте
+cacheConfig := &confluence.CacheConfig{
+    Metrics: metrics,
+}
+
+// Metrics автоматически записываются:
+// - confluence_api_requests_total
+// - confluence_api_request_duration_seconds
+// - confluence_cache_hits_total
+// - confluence_cache_misses_total
+// - confluence_circuit_breaker_state
+```
+
+### Circuit Breaker
+Защитите систему от cascading failures:
+
+```go
+cbConfig := confluence.DefaultCircuitBreakerConfig("confluence")
+cbConfig.MaxFailures = 5
+cbConfig.Timeout = 30 * time.Second
+
+cb := confluence.NewCircuitBreaker(cbConfig)
+
+// Используйте circuit breaker для критичных операций
+err := cb.Execute(ctx, func(ctx context.Context) error {
+    _, err := client.CreatePage(page)
+    return err
+})
+```
+
+### Batch Operations
+Ускорьте публикацию с параллельными операциями:
+
+```go
+pages := []*confluence.Page{page1, page2, page3}
+
+results, err := client.BatchCreatePages(ctx, pages, 5) // 5 concurrent requests
+for pageID, result := range results {
+    if result.Error != nil {
+        log.Printf("Failed to create page %s: %v", pageID, result.Error)
+    }
+}
+```
+
+### Page Restrictions
+Управляйте доступом к страницам:
+
+```go
+// Ограничить просмотр для определенных пользователей
+err := client.AddPageRestrictions(ctx, pageID,
+    confluence.RestrictionOperationRead,
+    []string{"user1-id", "user2-id"}, // users
+    []string{"developers"},            // groups
+)
+
+// Сделать страницу публичной
+err := client.MakePagePublic(ctx, pageID)
+```
+
+### Space Export
+Экспортируйте весь space для бэкапа или миграции:
+
+```go
+config := &confluence.SpaceExportConfig{
+    SpaceKey:           "APIDOCS",
+    OutputPath:         "backup.zip",
+    IncludeAttachments: true,
+    MaxConcurrency:     5,
+    Timeout:            30 * time.Minute,
+}
+
+result, err := client.ExportSpace(ctx, config)
+fmt.Printf("Exported %d pages, %d attachments (%d bytes) in %v\n",
+    result.PagesExported,
+    result.AttachmentsExported,
+    result.TotalSize,
+    result.Duration,
+)
+```
+
+### Diff Checking
+Избегайте лишних обновлений с проверкой изменений:
+
+```go
+page, _ := client.FindPageByTitle(spaceKey, title)
+
+hasChanged, err := client.HasContentChanged(page.ID, newContent)
+if !hasChanged {
+    log.Println("Content unchanged, skipping update")
+    return
+}
+
+// Обновляем только если есть изменения
+updated, err := client.UpdatePage(page.ID, updatedPage)
+```
+
+## Advanced Usage
+
+### PlantUML Diagrams
+PlantUML диаграммы автоматически конвертируются в Confluence macro:
+
+```markdown
+\`\`\`plantuml
+@startuml
+Alice -> Bob: Hello
+Bob -> Alice: Hi!
+@enduml
+\`\`\`
+```
+
+Также поддерживаются другие типы диаграмм:
+- `@startmindmap` / `@endmindmap` - mind maps
+- `@startgantt` / `@endgantt` - Gantt charts
+- `@startsalt` / `@endsalt` - wireframes
+- и другие PlantUML типы
+
+### Labels и Metadata
+Добавляйте labels для организации документации:
+
+```go
+// Добавить labels к странице
+err := client.AddLabels(ctx, pageID, []string{"api", "v1", "public"})
+
+// Получить labels
+labels, err := client.GetLabels(ctx, pageID)
+
+// Удалить label
+err := client.RemoveLabel(ctx, pageID, "draft")
+```
+
+## Test Coverage
+
+Проект имеет comprehensive test coverage:
+
+- ✅ API client tests (30+ tests)
+- ✅ Formatter tests (20+ tests)
+- ✅ Publisher tests (15+ tests)
+- ✅ Cache tests (11 tests)
+- ✅ Circuit breaker tests (11 tests)
+- ✅ Space export tests (8 tests)
+- ✅ Retry logic tests
+
+Запустить все тесты:
+```bash
+go test ./publishers/confluence/... -v
+```
 
 ## Future Improvements
 
-- [ ] Поддержка attachments (изображения, файлы)
-- [ ] Batch operations для ускорения публикации
-- [ ] Поддержка labels и metadata
-- [ ] Экспорт в Confluence Space format
-- [ ] Интеграция с PlantUML для диаграмм
+### Low Priority
+- [ ] Add webhook support for page updates
+- [ ] Implement page templates
+- [ ] Add search API integration
+- [ ] Support for Confluence analytics
+- [ ] Bulk delete operations
