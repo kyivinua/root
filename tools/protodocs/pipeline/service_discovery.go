@@ -86,6 +86,51 @@ func DefaultMonorepoDiscoveryConfig(rootDir string) *MonorepoDiscoveryConfig {
 	}
 }
 
+// Validate checks if the configuration is valid
+func (c *MonorepoDiscoveryConfig) Validate() error {
+	if c.RootDir == "" {
+		return errors.New(errors.ErrorTypeValidation, "RootDir is required")
+	}
+
+	// Check if RootDir exists and is a directory
+	info, err := os.Stat(c.RootDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return errors.Wrap(err, errors.ErrorTypeValidation, "RootDir does not exist")
+		}
+		return errors.Wrap(err, errors.ErrorTypeValidation, "failed to stat RootDir")
+	}
+
+	if !info.IsDir() {
+		return errors.New(errors.ErrorTypeValidation, "RootDir must be a directory")
+	}
+
+	// Check if ProtoPatterns is not empty
+	if len(c.ProtoPatterns) == 0 {
+		return errors.New(errors.ErrorTypeValidation, "ProtoPatterns cannot be empty")
+	}
+
+	// Validate ServiceDetection strategy
+	validStrategies := map[ServiceDetectionStrategy]bool{
+		DetectByServiceDefinition: true,
+		DetectByDirectory:         true,
+		DetectByPackage:           true,
+		DetectByHybrid:            true,
+	}
+
+	if !validStrategies[c.ServiceDetection] {
+		return errors.New(errors.ErrorTypeValidation,
+			fmt.Sprintf("invalid ServiceDetection strategy: %s", c.ServiceDetection))
+	}
+
+	// Set defaults for zero values
+	if c.MaxConcurrency <= 0 {
+		c.MaxConcurrency = 10
+	}
+
+	return nil
+}
+
 // MonorepoDiscovery handles discovery and grouping of proto files in monorepo
 type MonorepoDiscovery struct {
 	config *MonorepoDiscoveryConfig
@@ -99,9 +144,13 @@ func NewMonorepoDiscovery(config *MonorepoDiscoveryConfig) *MonorepoDiscovery {
 		config = DefaultMonorepoDiscoveryConfig(".")
 	}
 
+	// Apply defaults for zero values
 	if config.MaxConcurrency <= 0 {
 		config.MaxConcurrency = 10
 	}
+
+	// Note: Validation is optional here to allow flexibility
+	// Call config.Validate() explicitly if validation is needed
 
 	return &MonorepoDiscovery{
 		config: config,
@@ -182,20 +231,21 @@ func (md *MonorepoDiscovery) globProtoFiles(pattern string) ([]string, error) {
 func (md *MonorepoDiscovery) walkPattern(pattern string) ([]string, error) {
 	var matches []string
 
-	// Split pattern at ** to get base and suffix
-	parts := strings.Split(pattern, "**")
+	// Split pattern at first ** to get base directory
+	parts := strings.SplitN(pattern, "**", 2)
 	if len(parts) == 0 {
 		return matches, nil
 	}
 
-	baseDir := parts[0]
+	baseDir := strings.TrimSuffix(parts[0], "/")
 	if baseDir == "" {
 		baseDir = md.config.RootDir
 	}
 
-	suffix := ""
+	// Get the pattern after **
+	var suffixPattern string
 	if len(parts) > 1 {
-		suffix = parts[1]
+		suffixPattern = strings.TrimPrefix(parts[1], "/")
 	}
 
 	// Walk directory tree
@@ -208,16 +258,25 @@ func (md *MonorepoDiscovery) walkPattern(pattern string) ([]string, error) {
 			return nil
 		}
 
-		// Check if path matches suffix
-		if suffix != "" {
-			matched, _ := filepath.Match(suffix, filepath.Base(path))
-			if !matched && !strings.HasSuffix(path, suffix) {
-				return nil
-			}
+		// Must be .proto file
+		if filepath.Ext(path) != ".proto" {
+			return nil
 		}
 
-		// Must be .proto file
-		if filepath.Ext(path) == ".proto" {
+		// If no suffix pattern, match all .proto files under baseDir
+		if suffixPattern == "" {
+			matches = append(matches, path)
+			return nil
+		}
+
+		// Get relative path from baseDir
+		relativePath, err := filepath.Rel(baseDir, path)
+		if err != nil {
+			return nil
+		}
+
+		// Check if relative path matches the suffix pattern
+		if md.matchGlobPattern(relativePath, suffixPattern) {
 			matches = append(matches, path)
 		}
 
@@ -227,23 +286,90 @@ func (md *MonorepoDiscovery) walkPattern(pattern string) ([]string, error) {
 	return matches, err
 }
 
+// matchGlobPattern checks if a path matches a glob pattern (supports ** and *)
+func (md *MonorepoDiscovery) matchGlobPattern(path, pattern string) bool {
+	// Normalize paths
+	path = filepath.ToSlash(path)
+	pattern = filepath.ToSlash(pattern)
+
+	// Handle ** - matches any number of directories
+	if strings.Contains(pattern, "**") {
+		// Split by ** and check each part
+		parts := strings.Split(pattern, "**")
+
+		// For pattern like "api/**/*.proto", parts = ["api/", "/*.proto"]
+		// We need to check if path contains "api/" anywhere and ends with .proto
+
+		// Check prefix (if not empty)
+		if parts[0] != "" {
+			prefix := strings.Trim(parts[0], "/")
+			if prefix != "" {
+				// Path should contain this prefix (as a directory component)
+				if !strings.Contains(path, "/"+prefix+"/") &&
+				   !strings.HasPrefix(path, prefix+"/") {
+					return false
+				}
+			}
+		}
+
+		// Check suffix (if not empty)
+		if len(parts) > 1 && parts[len(parts)-1] != "" {
+			suffix := strings.Trim(parts[len(parts)-1], "/")
+			if suffix != "" {
+				// For suffix like "/*.proto", check if filename matches
+				if strings.HasPrefix(suffix, "/") {
+					suffix = strings.TrimPrefix(suffix, "/")
+				}
+
+				// Try to match the suffix part
+				if strings.Contains(suffix, "/") {
+					// Suffix has directory structure like "v1/*.proto"
+					// Check if path ends with matching structure
+					if !strings.HasSuffix(path, suffix) {
+						// Try glob matching on just the filename
+						suffixBase := filepath.Base(suffix)
+						pathBase := filepath.Base(path)
+						matched, _ := filepath.Match(suffixBase, pathBase)
+						if !matched {
+							return false
+						}
+					}
+				} else {
+					// Suffix is just a filename pattern like "*.proto"
+					pathBase := filepath.Base(path)
+					matched, _ := filepath.Match(suffix, pathBase)
+					if !matched {
+						return false
+					}
+				}
+			}
+		}
+
+		return true
+	}
+
+	// No ** - use standard glob matching
+	matched, _ := filepath.Match(pattern, path)
+	return matched
+}
+
 // shouldExclude checks if file should be excluded based on patterns
 func (md *MonorepoDiscovery) shouldExclude(filePath string) bool {
-	// Convert to relative path for pattern matching
-	relativePath := strings.TrimPrefix(filePath, md.config.RootDir+"/")
-	relativePath = strings.TrimPrefix(relativePath, md.config.RootDir)
-	relativePath = strings.TrimPrefix(relativePath, "/")
+	// Get relative path from root directory
+	relativePath, err := filepath.Rel(md.config.RootDir, filePath)
+	if err != nil {
+		// If we can't get relative path, try simple trim
+		relativePath = strings.TrimPrefix(filePath, md.config.RootDir)
+		relativePath = strings.TrimPrefix(relativePath, "/")
+	}
 
+	// Check against each exclude pattern
 	for _, pattern := range md.config.ExcludePatterns {
-		// Convert ** pattern to regex
-		regexPattern := strings.ReplaceAll(pattern, "**", ".*")
-		regexPattern = strings.ReplaceAll(regexPattern, "*", "[^/]*")
-		regexPattern = "^" + regexPattern + "$"
-
-		if matched, _ := regexp.MatchString(regexPattern, relativePath); matched {
+		if md.matchGlobPattern(relativePath, pattern) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -453,6 +579,7 @@ func (md *MonorepoDiscovery) detectByDirectory(spf *ServiceProtoFile) string {
 // Examples:
 //   - package user.v1 -> user
 //   - package com.company.billing.v1 -> billing
+//   - package notifications.internal -> notifications
 func (md *MonorepoDiscovery) detectByPackage(spf *ServiceProtoFile) string {
 	if spf.PackageName == "" {
 		return "unknown"
@@ -461,21 +588,23 @@ func (md *MonorepoDiscovery) detectByPackage(spf *ServiceProtoFile) string {
 	// Split package by dots
 	parts := strings.Split(spf.PackageName, ".")
 
-	// Skip common prefixes (com, org, io, etc.)
+	// Skip common domain prefixes (com, org, io, etc.)
 	startIdx := 0
 	if len(parts) > 0 {
 		first := parts[0]
 		if first == "com" || first == "org" || first == "io" || first == "net" {
 			startIdx = 1
+			// Skip company name after domain prefix ONLY if we have more than 3 parts total
+			// Examples:
+			//   com.company.billing.v1 (4 parts) -> skip company (index 1), start at billing (index 2)
+			//   com.billing.v1 (3 parts) -> DON'T skip billing, start at billing (index 1)
+			if len(parts) > 3 {
+				startIdx++ // Skip company name
+			}
 		}
 	}
 
-	// Skip company name after domain prefix (e.g., com.company.billing -> billing)
-	if len(parts) > startIdx+1 && startIdx > 0 {
-		startIdx++
-	}
-
-	// Common suffixes to skip (internal, common, shared, api, v1, v2, etc.)
+	// Common suffixes to skip (internal, common, shared, api)
 	commonSuffixes := map[string]bool{
 		"internal": true,
 		"common":   true,
@@ -483,25 +612,42 @@ func (md *MonorepoDiscovery) detectByPackage(spf *ServiceProtoFile) string {
 		"api":      true,
 	}
 
-	// Find first non-version, non-suffix part
+	// Find first meaningful service name
 	for i := startIdx; i < len(parts); i++ {
 		part := parts[i]
+
 		// Skip version parts (v1, v2, etc.)
 		if matched, _ := regexp.MatchString(`^v\d+$`, part); matched {
 			continue
 		}
-		// Skip common suffixes if not the only part left
-		if commonSuffixes[part] && i < len(parts)-1 {
-			continue
+
+		// Skip common suffixes UNLESS it's the last non-version part
+		if commonSuffixes[part] {
+			// Count remaining non-version parts
+			hasMoreParts := false
+			for j := i + 1; j < len(parts); j++ {
+				if matched, _ := regexp.MatchString(`^v\d+$`, parts[j]); !matched {
+					hasMoreParts = true
+					break
+				}
+			}
+
+			if hasMoreParts {
+				continue // Skip this suffix, there are more meaningful parts ahead
+			}
+
+			// This is the last non-version part but it's a suffix
+			// Try to use the previous part if available
+			if i > startIdx {
+				return parts[i-1]
+			}
 		}
-		// If this is a suffix but it's the only non-version part, use the previous part
-		if commonSuffixes[part] && i > startIdx {
-			return parts[i-1]
-		}
+
+		// Found a good service name
 		return part
 	}
 
-	// Fallback to first non-version part
+	// Fallback to first non-version part from start
 	for i := startIdx; i < len(parts); i++ {
 		part := parts[i]
 		if matched, _ := regexp.MatchString(`^v\d+$`, part); !matched {
@@ -509,25 +655,30 @@ func (md *MonorepoDiscovery) detectByPackage(spf *ServiceProtoFile) string {
 		}
 	}
 
-	return parts[0]
+	// Last resort: return first part
+	if len(parts) > 0 {
+		return parts[0]
+	}
+
+	return "unknown"
 }
 
 // detectByHybrid uses multiple strategies and picks the best match
 func (md *MonorepoDiscovery) detectByHybrid(spf *ServiceProtoFile) string {
-	// Priority:
-	// 1. Service definition (most explicit)
-	// 2. Directory structure (very reliable)
-	// 3. Package name (less reliable but useful)
+	// Priority for monorepo:
+	// 1. Directory structure (most consistent with infrastructure)
+	// 2. Service definition (explicit but uses PascalCase)
+	// 3. Package name (less reliable but useful fallback)
 
-	// If file defines services, use that
-	if len(spf.Services) > 0 {
-		return spf.Services[0]
-	}
-
-	// Try directory-based detection
+	// Try directory-based detection first (gives kebab-case names)
 	dirService := md.detectByDirectory(spf)
 	if dirService != "unknown" && dirService != "" {
 		return dirService
+	}
+
+	// If file defines services, use service definition
+	if len(spf.Services) > 0 {
+		return spf.Services[0]
 	}
 
 	// Fallback to package-based detection
